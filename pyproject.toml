@@ -1,0 +1,9 @@
+[project]
+name = "virtunet"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "nicegui>=3.7.1",
+    "pywebview>=6.1",
+]
