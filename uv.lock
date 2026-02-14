@@ -533,6 +533,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mininet"
+version = "2.3.0.dev6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "setuptools" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0c/18/8b324a3f81f342c4d47ce63dde87bee79d68e248843ee2fb1cc59a1f7cb7/mininet-2.3.0.dev6.tar.gz", hash = "sha256:4d93983ab2709bf39764006d85b60b6ce1ee8897f8ebf1c3f848b7840f0632b8", size = 132034, upload-time = "2020-09-24T00:57:10.274Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/28/84a4ec5e4f018b67196f73b8152f1020de764fe5d37c201b36fe785e45d9/mininet-2.3.0.dev6-py2.py3-none-any.whl", hash = "sha256:2175d04efa37dd6df86d1ff80e1f55d0d388c0edd0c8f0fc467c52a72799a85b", size = 152007, upload-time = "2020-09-24T00:57:13.41Z" },
+]
+
+[[package]]
 name = "multidict"
 version = "6.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1153,6 +1165,15 @@ wheels = [
 ]
 
 [[package]]
+name = "setuptools"
+version = "82.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/f3/748f4d6f65d1756b9ae577f329c951cda23fb900e4de9f70900ced962085/setuptools-82.0.0.tar.gz", hash = "sha256:22e0a2d69474c6ae4feb01951cb69d515ed23728cf96d05513d36e42b62b37cb", size = 1144893, upload-time = "2026-02-08T15:08:40.206Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e1/c6/76dc613121b793286a3f91621d7b75a2b493e0390ddca50f11993eadf192/setuptools-82.0.0-py3-none-any.whl", hash = "sha256:70b18734b607bd1da571d097d236cfcfacaf01de45717d59e6e04b96877532e0", size = 1003468, upload-time = "2026-02-08T15:08:38.723Z" },
+]
+
+[[package]]
 name = "simple-websocket"
 version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1259,12 +1280,14 @@ name = "virtunet"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "mininet" },
     { name = "nicegui" },
     { name = "pywebview" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "mininet", specifier = ">=2.3.0.dev6" },
     { name = "nicegui", specifier = ">=3.7.1" },
     { name = "pywebview", specifier = ">=6.1" },
 ]
