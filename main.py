@@ -1,8 +1,9 @@
 from nicegui import ui
 
-ui.dark_mode().enable()
+if __name__ == '__main__':
+    ui.dark_mode().enable()
 
-ui.label('This is in dark mode!')
-ui.button('A dark button', on_click=lambda: ui.label('Lasse er en fucking adam'))
+    ui.label('This is in dark mode!')
+    ui.button('A dark button', on_click=lambda: ui.label('Lasse er en fucking adam'))
 
-ui.run(native=True)
+    ui.run(native=True, reload=False)
