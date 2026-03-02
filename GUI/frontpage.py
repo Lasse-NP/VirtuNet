@@ -7,7 +7,7 @@ async def initialize_and_go():
     ui.notify('Initializing OpenVPN...')
     try:
         await asyncio.to_thread(initialize)
-        ui.navigate.to('/Trainees')
+        ui.navigate.to('/Lobby')
     except RuntimeError as e:
         ui.notify(str(e), type='negative')
         return

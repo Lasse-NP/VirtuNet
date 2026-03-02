@@ -53,7 +53,7 @@ def add_trainee(name):
             render_trainees(trainee_list)
 
 
-@ui.page('/')
+@ui.page('/Lobby')
 def create_lobby():
     ui.dark_mode().enable()
     ui.add_head_html("""
