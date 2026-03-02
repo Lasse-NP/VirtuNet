@@ -3,6 +3,7 @@ from Networking.openvpn import stop_openvpn
 
 import GUI.frontpage
 import GUI.Lobby
+import GUI.SessionSetting
 import shutil
 import asyncio
 import sys
