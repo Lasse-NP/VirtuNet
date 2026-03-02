@@ -1,7 +1,7 @@
 from nicegui import ui, app
 from pathlib import Path
 import asyncio
-from Networking.openvpn import initialize
+from Networking.OpenVPN.server import initialize
 
 async def initialize_and_go():
     ui.notify('Initializing OpenVPN...')
