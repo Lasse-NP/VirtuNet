@@ -1,6 +1,6 @@
 import os
 import sys
-from config import BASE_DIR, CLIENT_DIR, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN
+from config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE
 from network import detect_server_ip
 from serverconfig import write_server_conf
 from terminal import run
@@ -36,6 +36,33 @@ def setup_pki():
         run(f'openvpn --genkey secret {tls_key}')
 
     write_server_conf()
+
+
+def get_connected_clients():
+    connected_clients = []
+
+    if not os.path.isdir(STATUS_FILE):
+        return connected_clients
+
+    with open(STATUS_FILE, 'r') as f:
+        lines = f.readlines()
+
+    in_client_list = False
+    for line in lines:
+        line = line.strip()
+        if line == 'OpenVPN CLIENT LIST':
+            in_client_list = True
+            continue
+        if line == 'ROUTING TABLE':
+            break
+        if not in_client_list or line.startswith('Updated') or line.startswith('Common Name'):
+            continue
+
+        parts = line.split(',')
+        if len(parts) >= 5:
+            connected_clients.append({'name': parts[0], 'ip': parts[1], 'connected_since': parts[4]})
+
+    return connected_clients
 
 
 def gen_client(name, port=1194):
@@ -95,3 +122,20 @@ def gen_client(name, port=1194):
     out_path = f'{CLIENT_DIR}/{name}.ovpn'
     with open(out_path, 'w') as f:
         f.write(traineeconfig)
+
+
+def remove_connected_client(name):
+    easyrsa = EASYRSA_BIN
+
+    result = run(f'cd {EASY_RSA_DIR} && {easyrsa} --batch revoke {name}')
+    if result.returncode != 0:
+        error('Failed to revoke the client')
+        return False
+
+    run(f'cd {EASY_RSA_DIR} && {easyrsa} gen-crl')
+    run(f'kill -SIGHUP $(cat {OPENVPN_PID})')
+    ovpn_path = f'{CLIENT_DIR}/{name}.ovpn'
+    if os.path.exists(ovpn_path):
+        os.remove(ovpn_path)
+
+    return True

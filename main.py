@@ -7,6 +7,8 @@ from Networking.OpenVPN.server import stop_openvpn
 import shutil
 import asyncio
 import sys
+import os
+import subprocess
 
 REQUIRED_COMMANDS = [
     'openvpn',      #OpenVPN
@@ -30,10 +32,16 @@ def check_dependencies():
 
     print('All dependencies satisfied.')
 
+def ensure_root():
+    if os.geteuid() != 0:
+        subprocess.run(['pkexec', 'python3'] + sys.argv)
+        sys.exit(0)
+
 async def on_shutdown():
     await asyncio.to_thread(stop_openvpn)
 
 if __name__ == '__main__':
     check_dependencies()
+    ensure_root()
     app.on_shutdown(on_shutdown)
     ui.run(native=True, reload=False, window_size=(600, 1000))

@@ -5,7 +5,7 @@ import time
 from config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID
 from serverconfig import write_server_conf
 from pki import setup_pki
-from terminal import run, sudo_run
+from terminal import run
 from mininet.log import error, info
 
 
@@ -18,7 +18,7 @@ def start_openvpn():
         sys.exit(1)
 
     info('*** Starting OpenVPN server\n')
-    sudo_run(f'openvpn --config {SERVER_CONF} --daemon')
+    run(f'openvpn --config {SERVER_CONF} --daemon')
 
     for _ in range(20):
         result = subprocess.run(['ip', 'link', 'show', TAP_IFACE], capture_output=True, text=True)
@@ -40,10 +40,10 @@ def stop_openvpn():
     if os.path.exists(OPENVPN_PID):
         with open(OPENVPN_PID) as f:
             pid = f.read().strip()
-        sudo_run(f'kill {pid}', check=False)
+        run(f'kill {pid}', check=False)
         run(f'rm -f {OPENVPN_PID}', check=False)
     else:
-        sudo_run('pkill -f "openvpn --config"', check=False)
+        run('pkill -f "openvpn --config"', check=False)
     info('*** OpenVPN server stopped\n')
 
 
