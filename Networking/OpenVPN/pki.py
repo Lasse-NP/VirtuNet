@@ -1,9 +1,9 @@
 import os
 import sys
-from config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE
-from network import detect_server_ip
-from serverconfig import write_server_conf
-from terminal import run
+from .config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE
+from .network import detect_server_ip
+from .serverconfig import write_server_conf
+from .terminal import run
 from mininet.log import error, info
 
 def setup_pki():

@@ -2,10 +2,10 @@ import os
 import sys
 import subprocess
 import time
-from config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID
-from serverconfig import write_server_conf
-from pki import setup_pki
-from terminal import run
+from .config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID
+from .serverconfig import write_server_conf
+from .pki import setup_pki
+from .terminal import run
 from mininet.log import error, info
 
 

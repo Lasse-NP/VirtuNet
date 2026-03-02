@@ -1,5 +1,5 @@
 from network import get_netmask, get_base_ip, get_server_ip
-from config import SERVER_CONF, TAP_IFACE, LOG_FILE, STATUS_FILE, BASE_DIR, PKI_DIR, OPENVPN_PID
+from .config import SERVER_CONF, TAP_IFACE, LOG_FILE, STATUS_FILE, BASE_DIR, PKI_DIR, OPENVPN_PID
 
 def write_server_conf(subnet='192.168.100.0/24', port=1194):
     netmask = get_netmask(subnet)
