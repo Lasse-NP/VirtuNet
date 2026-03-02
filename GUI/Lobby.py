@@ -6,7 +6,7 @@ trainees = [
     {"name": "Trainee3", "connected": True},
 ]
 
-
+@ui.page('/Trainees')
 def create_lobby():
     ui.dark_mode().enable()
     ui.add_head_html("""
@@ -161,9 +161,4 @@ def create_lobby():
             ui.button('Generate Join File', on_click=lambda: ui.notify('Join file generated!')) \
                 .classes('btn-generate')
 
-            ui.button('Continue', on_click=lambda: ui.notify('Continuing...')) \
-                .classes('btn-continue')
-
-
-create_lobby()
-ui.run(native=True, reload=False, window_size=(600, 1000))
+            ui.button('Continue', on_click=lambda: ui.notify('Continuing...')).classes('btn-continue')
