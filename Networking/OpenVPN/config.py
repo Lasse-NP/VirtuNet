@@ -1,6 +1,6 @@
 import os
 
-BASE_DIR        = os.path.expanduser('~/virtunet')
+BASE_DIR        = os.environ.get('VIRTUNET_BASE_DIR', '/var/lib/virtunet')
 EASY_RSA_DIR    = f'{BASE_DIR}/easy-rsa'
 EASYRSA_BIN     = '/usr/bin/easyrsa'
 PKI_DIR         = f'{EASY_RSA_DIR}/pki'

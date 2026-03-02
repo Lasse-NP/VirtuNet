@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import time
-from .config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID
+from .config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID, CLIENT_DIR
 from .serverconfig import write_server_conf
 from .pki import setup_pki
 from .terminal import run
@@ -24,6 +24,9 @@ def start_openvpn():
         result = subprocess.run(['ip', 'link', 'show', TAP_IFACE], capture_output=True, text=True)
         if result.returncode == 0:
             info(f'*** TAP Interface {TAP_IFACE} is up \n')
+            run(f'ip addr add 192.168.100.1/24 dev {TAP_IFACE}')
+            run(f'ip link set {TAP_IFACE} promisc on')
+            run(f'ip link set {TAP_IFACE} up')
             _openvpn_running = True
             return
         time.sleep(0.5)
@@ -42,6 +45,8 @@ def stop_openvpn():
             pid = f.read().strip()
         run(f'kill {pid}', check=False)
         run(f'rm -f {OPENVPN_PID}', check=False)
+        if os.path.exists(CLIENT_DIR):
+            run(f'rm -rf {CLIENT_DIR}/*', check=False)
     else:
         run('pkill -f "openvpn --config"', check=False)
     info('*** OpenVPN server stopped\n')

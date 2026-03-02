@@ -1,5 +1,6 @@
 from nicegui import ui
 from nicegui.elements.list import List
+import asyncio
 from Networking.OpenVPN import pki
 
 known_trainees = {}
@@ -10,7 +11,7 @@ def refresh_trainees():
     for name in known_trainees:
         if name in connected:
             known_trainees[name]['connected'] = True
-            known_trainees[name]['ip'] = connected[name]['address']
+            known_trainees[name]['ip'] = connected[name]['ip']
             known_trainees[name]['connected_since'] = connected[name]['connected_since']
         else:
             known_trainees[name]['connected'] = False
@@ -39,6 +40,21 @@ def render_trainees(trainees_list):
                         with ui.row().classes('items-center gap-2'):
                             ui.item_label('Disconnected').props('caption').style('color: #ff6347 !important;')
                             ui.element('div').classes('w-3 h-3 rounded-full bg-red-500')
+
+
+async def generate_join_file(name: str):
+    name = (name or '').strip()
+    if not name:
+        ui.notify('Please enter a trainee name', type='warning')
+        return
+
+    ui.notify(f'Generating {name}.ovpn ...')
+    try:
+        await asyncio.to_thread(pki.gen_client, name)
+        add_trainee(name)
+        ui.notify(f'Created {name}.ovpn in {pki.CLIENT_DIR}', type='positive')
+    except Exception as e:
+        ui.notify(f'Failed to generate client file: {e}', type='negative')
 
 
 def add_trainee(name):
@@ -102,5 +118,5 @@ def create_lobby():
         with ui.column().style('width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
 
             name_input = ui.input(placeholder='Trainee Name').props('outlined').style('background-color: #383838; border-radius: 5px 5px 0 0; width: max(20em, 10%)')
-            ui.button('Generate Join File', on_click=lambda: add_trainee(name_input.value)).classes('btn-generate')
+            ui.button('Generate Join File', on_click=lambda: generate_join_file(name_input.value)).classes('btn-generate')
             ui.button('Continue', on_click=lambda: ui.notify('Continuing...')).classes('btn-continue')

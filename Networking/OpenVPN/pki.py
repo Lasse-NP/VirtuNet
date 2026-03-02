@@ -1,7 +1,8 @@
 import os
 import sys
+import re
 from .config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE
-from .network import detect_server_ip
+from .network import get_local_ip
 from .serverconfig import write_server_conf
 from .terminal import run
 from mininet.log import error, info
@@ -41,7 +42,7 @@ def setup_pki():
 def get_connected_clients():
     connected_clients = []
 
-    if not os.path.isdir(STATUS_FILE):
+    if not os.path.exists(STATUS_FILE):
         return connected_clients
 
     with open(STATUS_FILE, 'r') as f:
@@ -60,14 +61,23 @@ def get_connected_clients():
 
         parts = line.split(',')
         if len(parts) >= 5:
-            connected_clients.append({'name': parts[0], 'ip': parts[1], 'connected_since': parts[4]})
+            connected_clients.append({'name': parts[0], 'ip': parts[1].split(':')[1], 'connected_since': parts[4]})
 
     return connected_clients
 
 
+def _pem_block(text: str, kind: str) -> str:
+    pattern = rf"-----BEGIN {re.escape(kind)}-----.*?-----END {re.escape(kind)}-----"
+    m = re.search(pattern, text, flags=re.DOTALL)
+    if not m:
+        raise RuntimeError(f'No PEM {kind} block found')
+    return m.group(0).strip()
+
+
 def gen_client(name, port=1194):
     easyrsa = EASYRSA_BIN
-    server_ip = detect_server_ip()
+    server_ip = get_local_ip()
+    print(server_ip)
 
     if not os.path.isdir(PKI_DIR):
         error('PKI is not initialized.')
@@ -84,40 +94,43 @@ def gen_client(name, port=1194):
             return f.read().strip()
 
     ca = read(f'{PKI_DIR}/ca.crt')
-    cert = read(cert_path)
-    key = read(f'{PKI_DIR}/private/{name}.key')
+    cert = _pem_block(read(cert_path), "CERTIFICATE")
+    key = _pem_block(read(f'{PKI_DIR}/private/{name}.key'), "PRIVATE KEY")
     tls_key = read(f'{BASE_DIR}/ta.key')
 
-    traineeconfig = f""" client
-            dev tap
-            dev-type tap
-            proto udp
-            remote {server_ip} {port}
+    traineeconfig = f"""client
+dev tap
+dev-type tap
+proto udp
+remote {server_ip} {port}
 
-            resolv-retry infinite
-            nobind
-            persist-key
-            persist-tun
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
 
-            cipher AES-256-GCM
-            auth SHA256
-            tls-version-min 1.2
-            key-direction 1
-            verb 3
+cipher AES-256-GCM
+auth SHA256
+tls-version-min 1.2
+key-direction 1
+verb 3
 
-            <ca>
-            {ca}
-            </ca>
-            <cert>
-            {cert}
-            </cert>
-            <key>
-            {key}
-            </key>
-            <tls-auth>
-            {tls_key}
-            </tls-auth>
-        """
+<ca>
+{ca}
+</ca>
+
+<cert>
+{cert}
+</cert>
+
+<key>
+{key}
+</key>
+
+<tls-auth>
+{tls_key}
+</tls-auth>
+"""
 
     out_path = f'{CLIENT_DIR}/{name}.ovpn'
     with open(out_path, 'w') as f:

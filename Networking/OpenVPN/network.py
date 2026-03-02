@@ -12,9 +12,6 @@ def get_server_ip(subnet):
 def get_netmask(subnet):
     return str(ipaddress.IPv4Network(subnet, strict=False).netmask)
 
-def get_public_ip():
-    return urllib.request.urlopen("https://api.ipify.org").read().decode()
-
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -23,9 +20,3 @@ def get_local_ip():
     finally:
         s.close()
     return ip
-
-def detect_server_ip():
-    try:
-        return get_public_ip()
-    except:
-        return get_local_ip()
