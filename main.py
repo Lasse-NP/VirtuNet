@@ -5,7 +5,7 @@ import sys
 REQUIRED_COMMANDS = [
     'openvpn',      #OpenVPN
     'ovs-vsctl',    #OVSwitch
-    'easy-rsa',     #EasyRSA
+    'easyrsa',     #EasyRSA
     'mn'            #MiniNet
 ]
 
@@ -26,4 +26,4 @@ def check_dependencies():
 
 if __name__ == '__main__':
     check_dependencies()
-    frontpage.startgui()
+    frontpage.start_gui()
