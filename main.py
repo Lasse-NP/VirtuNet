@@ -1,9 +1,9 @@
-from GUI import frontpage
+from nicegui import ui
+
+import GUI.frontpage
+import GUI.Lobby
 import shutil
 import sys
-
-from GUI import frontpage
-from GUI import Lobby
 
 REQUIRED_COMMANDS = [
     'openvpn',      #OpenVPN
@@ -29,4 +29,4 @@ def check_dependencies():
 
 if __name__ == '__main__':
     check_dependencies()
-    frontpage.start_gui()
+    ui.run(native=True, reload=False, window_size=(600, 1000))

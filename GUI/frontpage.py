@@ -14,7 +14,4 @@ def start_gui():
         with ui.element('div').style('width: min(500px, 60%); height: auto;'):
             ui.image('/assets/placeholder.png').style('width: 100%; height: 100%;')
         ui.space()
-        ui.button('Initialize').style('font-size: clamp(2rem, 3vw + 1rem, 4rem); padding: 0 4vw; border-radius: 2px, margin-bottom: 20px')
-        ui.button('Initialize', on_click=lambda: ui.navigate.to('/Trainees'))
-
-    ui.run(native=True, reload=False, window_size=(600, 1000))
+        ui.button('Initialize', on_click=lambda: ui.navigate.to('/Trainees')).style('font-size: clamp(2rem, 3vw + 1rem, 4rem); padding: 0 4vw; border-radius: 2px, margin-bottom: 20px')

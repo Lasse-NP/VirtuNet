@@ -163,7 +163,3 @@ def create_lobby():
 
             ui.button('Continue', on_click=lambda: ui.notify('Continuing...')) \
                 .classes('btn-continue')
-
-
-create_lobby()
-ui.run(native=True, reload=False, window_size=(600, 1000))
