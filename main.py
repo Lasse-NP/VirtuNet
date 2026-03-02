@@ -2,6 +2,9 @@ from GUI import frontpage
 import shutil
 import sys
 
+from GUI import frontpage
+from GUI import Lobby
+
 REQUIRED_COMMANDS = [
     'openvpn',      #OpenVPN
     'ovs-vsctl',    #OVSwitch

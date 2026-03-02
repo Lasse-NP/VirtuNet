@@ -6,7 +6,7 @@ trainees = [
     {"name": "Trainee3", "connected": True},
 ]
 
-
+@ui.page('/Trainees')
 def create_lobby():
     ui.dark_mode().enable()
     ui.add_head_html("""
