@@ -163,3 +163,4 @@ def create_lobby():
 
             ui.button('Continue', on_click=lambda: ui.notify('Continuing...')) \
                 .classes('btn-continue')
+            ui.button('Continue', on_click=lambda: ui.navigate.to('/Session'))
