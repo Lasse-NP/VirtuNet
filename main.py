@@ -34,8 +34,8 @@ def check_dependencies():
 
 def ensure_root():
     if os.geteuid() != 0:
-        subprocess.run(['pkexec', 'python3'] + sys.argv)
-        sys.exit(0)
+        print('You need root privileges to run this application.')
+        sys.exit(1)
 
 async def on_shutdown():
     await asyncio.to_thread(stop_openvpn)
