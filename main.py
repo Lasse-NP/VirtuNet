@@ -1,8 +1,10 @@
-from nicegui import ui
+from nicegui import ui, app
+from Networking.openvpn import stop_openvpn
 
 import GUI.frontpage
 import GUI.Lobby
 import shutil
+import asyncio
 import sys
 
 REQUIRED_COMMANDS = [
@@ -27,6 +29,10 @@ def check_dependencies():
 
     print('All dependencies satisfied.')
 
+async def on_shutdown():
+    await asyncio.to_thread(stop_openvpn)
+
 if __name__ == '__main__':
     check_dependencies()
+    app.on_shutdown(on_shutdown)
     ui.run(native=True, reload=False, window_size=(600, 1000))

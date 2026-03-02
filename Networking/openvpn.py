@@ -4,21 +4,30 @@ import os
 import sys
 import time
 import subprocess
+import socket
+import urllib.request
 from mininet.log import error, info
 
-BASE_DIR        = '/etc/openvpn/virtunet'
+BASE_DIR        = os.path.expanduser('~/virtunet')
 EASY_RSA_DIR    = f'{BASE_DIR}/easy-rsa'
+EASYRSA_BIN     = '/usr/bin/easyrsa'
 PKI_DIR         = f'{EASY_RSA_DIR}/pki'
 SERVER_CONF     = f'{BASE_DIR}/server.conf'
 CLIENT_DIR      = f'{BASE_DIR}/clients'
-TAP_IFACE      = 'tap0'
-LOG_FILE       = '/var/log/openvpn-virtunet.log'
-STATUS_FILE    = '/var/run/openvpn-virtunet-status.log'
-OPENVPN_PID    = '/var/run/openvpn-virtunet.pid'
+TAP_IFACE       = 'tap0'
+LOG_FILE        = f'{BASE_DIR}/openvpn.log'
+STATUS_FILE     = f'{BASE_DIR}/openvpn-status.log'
+OPENVPN_PID     = f'{BASE_DIR}/openvpn.pid'
 
 def run(cmd, check=True, capture=False):
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if check and result.returncode != 0:
+        raise RuntimeError(f'Command failed: {cmd}\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}')
+    return result
+
+def sudo_run(cmd, check=True, capture=False):
     result = subprocess.run(
-        cmd, shell=True,
+        f"pkexec {cmd}", shell=True,
         capture_output=True,
         text=True
     )
@@ -26,6 +35,24 @@ def run(cmd, check=True, capture=False):
         stderr = result.stderr if capture else ''
         error(f'Command failed: {cmd} \n {stderr} \n ')
         sys.exit(1)
+
+def get_public_ip():
+    return urllib.request.urlopen("https://api.ipify.org").read().decode()
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))  # doesn't actually send packets
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
+
+def detect_server_ip():
+    try:
+        return get_public_ip()
+    except:
+        return get_local_ip()
 
 def get_base_ip(subnet):
     return '.'.join(subnet.split('/')[0].split('.')[:3])
@@ -37,12 +64,12 @@ def get_server_ip(subnet):
 def get_netmask(subnet):
     return str(ipaddress.IPv4Network(subnet, strict=False).netmask)
 
-def setup_pki(arg_server_ip):
+def setup_pki():
     os.makedirs(BASE_DIR, exist_ok=True)
     os.makedirs(CLIENT_DIR, exist_ok=True)
 
     if not os.path.isdir(EASY_RSA_DIR):
-        run(f'cp -r /etc/easy-rsa {EASY_RSA_DIR}')
+        run(f'cp -r /etc/easy-rsa {BASE_DIR}')
 
     vars_file = f'{EASY_RSA_DIR}/vars'
     if not os.path.exists(vars_file):
@@ -51,7 +78,7 @@ def setup_pki(arg_server_ip):
             f.write('set_var EASYRSA_DIGEST sha512\n')
             f.write('set_var EASYRSA_CERT_EXPIRE 3650\n')
 
-    easyrsa = f'{EASY_RSA_DIR}/easyrsa'
+    easyrsa = EASYRSA_BIN
 
     if not os.path.isdir(PKI_DIR):
         run(f'cd {EASY_RSA_DIR} && {easyrsa} init-pki')
@@ -66,7 +93,7 @@ def setup_pki(arg_server_ip):
     if not os.path.exists(tls_key):
         run(f'openvpn --genkey secret {tls_key}')
 
-    write_server_conf(arg_server_ip)
+    write_server_conf()
 
 def write_server_conf(subnet='192.168.100.0/24', port=1194):
     netmask = get_netmask(subnet)
@@ -74,41 +101,40 @@ def write_server_conf(subnet='192.168.100.0/24', port=1194):
     server_pool_start = f'{base_ip}.150'
     server_pool_end = f'{base_ip}.250'
 
-    config = \
-        f"""
-            VirtuNet - OpenVPN Server Config (TAP Mode)
-            port        {port}
-            proto       udp
-            dev         {TAP_IFACE}
-            dev-type    tap
-            
-            ca          {PKI_DIR}/ca.crt
-            cert        {PKI_DIR}/issued/server.crt
-            key         {PKI_DIR}/private/server.key
-            tls-auth    {BASE_DIR}/ta.key 0
-            
-            server-bridge   {get_server_ip(subnet)} {netmask} {server_pool_start} {server_pool_end}
-            
-            persist-tun
-            persist-key
-            
-            status      {STATUS_FILE} 10
-            log         {LOG_FILE}
-            verb        3
-            
-            tls-version-min     1.2
-            cipher              AES-256-GCM
-            auth                SHA256
-            
-            keepalive   10 120
-            writepid    {OPENVPN_PID}
-        """
+    config = f"""# VirtuNet - OpenVPN Server Config (TAP Mode)
+    port {port}
+    proto udp
+    dev {TAP_IFACE}
+    dev-type tap
+    
+    ca {PKI_DIR}/ca.crt
+    cert {PKI_DIR}/issued/server.crt
+    key {PKI_DIR}/private/server.key
+    tls-auth {BASE_DIR}/ta.key 0
+    
+    server-bridge {get_server_ip(subnet)} {netmask} {server_pool_start} {server_pool_end}
+    
+    persist-tun
+    persist-key
+    
+    status {STATUS_FILE} 10
+    log {LOG_FILE}
+    verb 3
+    
+    tls-version-min 1.2
+    cipher AES-256-GCM
+    auth SHA256
+    
+    keepalive 10 120
+    writepid {OPENVPN_PID}
+    """
 
     with open(SERVER_CONF, 'w') as f:
         f.write(config)
 
-def gen_client(name, arg_server_ip, port=1194):
-    easyrsa = f'{EASY_RSA_DIR}/easyrsa'
+def gen_client(name, port=1194):
+    easyrsa = EASYRSA_BIN
+    server_ip = detect_server_ip()
 
     if not os.path.isdir(PKI_DIR):
         error('PKI is not initialized.')
@@ -129,13 +155,11 @@ def gen_client(name, arg_server_ip, port=1194):
     key = read(f'{PKI_DIR}/private/{name}.key')
     tls_key = read(f'{BASE_DIR}/ta.key')
 
-    traineeconfig = \
-        f"""
-            client
+    traineeconfig = f""" client
             dev tap
             dev-type tap
             proto udp
-            remote {arg_server_ip} {port}
+            remote {server_ip} {port}
             
             resolv-retry infinite
             nobind
@@ -172,7 +196,7 @@ def start_openvpn():
         sys.exit(1)
 
     info('*** Starting OpenVPN server\n')
-    run(f'openvpn --config {SERVER_CONF} --daemon')
+    sudo_run(f'openvpn --config {SERVER_CONF} --daemon')
 
     for _ in range(20):
         result = subprocess.run(['ip', 'link', 'show', TAP_IFACE], capture_output=True, text=True)
@@ -186,32 +210,21 @@ def start_openvpn():
 
 def stop_openvpn():
     if os.path.exists(OPENVPN_PID):
-        run(f'kill $(cat {OPENVPN_PID})', check=False)
+        with open(OPENVPN_PID) as f:
+            pid = f.read().strip()
+        sudo_run(f'kill {pid}', check=False)
         run(f'rm -f {OPENVPN_PID}', check=False)
     else:
-        run('pkill -f "openvcpn --config"', check=False)
+        sudo_run('pkill -f "openvpn --config"', check=False)
     info('*** OpenVPN server stopped\n')
 
 
 def initialize():
-    parser = argparse.ArgumentParser(description='MiniNet-OpenVPN Virtual Network')
-    parser.add_argument('--setup', action='store_true', help='One-time PKI and server config generation.')
-    parser.add_argument('--gen-client', metavar='NAME', help='Generate a .ovpn file for a trainee.')
-    parser.add_argument('--server-ip', default='YOUR_SERVER_IP', help='Public IP or hostname of the instructor machine.')
-    parser.add_argument('--subnet', default='192.168.100.0/24', help='VPN + MiniNet subnet (default: 192.168.100.0/24).')
-    parser.add_argument('--hosts', type=int, default=3, help='Number of MiniNet hosts (default: 3).')
-    parser.add_argument('--port', type=int, default=1194, help='OpenVPN UDP port (default: 1194).')
-    args = parser.parse_args()
+    if not os.path.exists(f'{PKI_DIR}/ca.crt'):
+        setup_pki()
 
-    if args.setup:
-        setup_pki(args.server_ip)
-        return
+    if not os.path.exists(SERVER_CONF):
+        write_server_conf()
 
-    if args.gen_client:
-        gen_client(args.gen_client, args.server_ip, args.port)
-        return
-
-    try:
+    if not os.path.exists(OPENVPN_PID):
         start_openvpn()
-    finally:
-        stop_openvpn()
