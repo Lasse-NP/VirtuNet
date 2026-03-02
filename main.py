@@ -2,6 +2,7 @@ from nicegui import ui
 
 import GUI.frontpage
 import GUI.Lobby
+import GUI.SessionSetting
 import shutil
 import sys
 

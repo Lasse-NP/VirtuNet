@@ -1,5 +1,6 @@
 from nicegui import ui
 
+ui.dark_mode().enable()
+
 @ui.page('/Session')
-def create_device_row():
-    ui.dark_mode().enable()
+def session_settings_page():
