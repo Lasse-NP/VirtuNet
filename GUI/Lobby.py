@@ -161,6 +161,4 @@ def create_lobby():
             ui.button('Generate Join File', on_click=lambda: ui.notify('Join file generated!')) \
                 .classes('btn-generate')
 
-            ui.button('Continue', on_click=lambda: ui.notify('Continuing...')) \
-                .classes('btn-continue')
-            ui.button('Continue', on_click=lambda: ui.navigate.to('/Session'))
+            ui.button('Continue', on_click=lambda: ui.notify('Continuing...')).classes('btn-continue')

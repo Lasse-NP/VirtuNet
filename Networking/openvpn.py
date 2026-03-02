@@ -8,6 +8,8 @@ import socket
 import urllib.request
 from mininet.log import error, info
 
+_openvpn_running = False
+
 BASE_DIR        = os.path.expanduser('~/virtunet')
 EASY_RSA_DIR    = f'{BASE_DIR}/easy-rsa'
 EASYRSA_BIN     = '/usr/bin/easyrsa'
@@ -191,6 +193,7 @@ def gen_client(name, port=1194):
         f.write(traineeconfig)
 
 def start_openvpn():
+    global _openvpn_running
     if not os.path.exists(SERVER_CONF):
         error(f'Server config not found at {SERVER_CONF}. Run --setup first.\n')
         sys.exit(1)
@@ -202,6 +205,7 @@ def start_openvpn():
         result = subprocess.run(['ip', 'link', 'show', TAP_IFACE], capture_output=True, text=True)
         if result.returncode == 0:
             info(f'*** TAP Interface {TAP_IFACE} is up \n')
+            _openvpn_running = True
             return
         time.sleep(0.5)
 
@@ -209,6 +213,11 @@ def start_openvpn():
     sys.exit(1)
 
 def stop_openvpn():
+    global _openvpn_running
+    if not _openvpn_running:
+        info('*** OpenVPN was not running, nothing to stop \n')
+        return
+
     if os.path.exists(OPENVPN_PID):
         with open(OPENVPN_PID) as f:
             pid = f.read().strip()
