@@ -1,6 +1,12 @@
 from nicegui import ui, app
 from Networking.server import stop_openvpn
 
+import GUI.Frontpage
+import GUI.Lobby
+import GUI.SessionSetting
+import GUI.ControlCenter
+import GUI.AfterActionReport
+
 import shutil
 import asyncio
 import sys
