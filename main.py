@@ -44,6 +44,6 @@ async def on_shutdown():
 
 if __name__ == '__main__':
     check_dependencies()
-    #ensure_root()
+    ensure_root()
     app.on_shutdown(on_shutdown)
     ui.run(native=True, reload=False, window_size=(600, 1000))

@@ -25,7 +25,6 @@ def start_openvpn():
         if result.returncode == 0:
             info(f'*** TAP Interface {TAP_IFACE} is up \n')
             run(f'ip addr add 192.168.100.1/24 dev {TAP_IFACE}')
-            run(f'ip link set {TAP_IFACE} promisc on')
             run(f'ip link set {TAP_IFACE} up')
             _openvpn_running = True
             return
