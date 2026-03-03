@@ -1,4 +1,6 @@
 from nicegui import ui
+import asyncio
+from Networking.mininet import mininet_configuration
 
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
@@ -9,6 +11,16 @@ session_rows = [
     {'count': 1, 'device': 'Køleskab', 'os': 'Android'},
 ]
 
+async def configure_and_go():
+    ui.notify('Configuring Mininet...')
+    try:
+        await asyncio.to_thread(mininet_configuration, buiid_host_list())
+        ui.navigate.to('/ControlCenter')
+    except RuntimeError as e:
+        ui.notify(str(e), type='negative')
+        return
+
+
 def buiid_host_list():
     hosts = []
     for row in session_rows:
@@ -18,6 +30,7 @@ def buiid_host_list():
                 'device': row['device'],
                 'os': row['os'],
             })
+    return hosts
 
 
 @ui.page('/Session')
@@ -236,6 +249,4 @@ def session_settings_page():
                 'font-family: "Orbitron", sans-serif; font-size: 14px; width: 100%;'
             ).props('outlined rounded')
 
-            ui.button('Start Server', on_click=lambda: ui.notify('Server started!', type='positive')) \
-                .classes('btn-start')
-            ui.button('Start Server', on_click=lambda: ui.navigate.to('/ControlCenter'))
+            ui.button('Start Server', on_click=configure_and_go).classes('btn-start')

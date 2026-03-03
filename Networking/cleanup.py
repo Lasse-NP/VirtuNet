@@ -1,15 +1,12 @@
+from .state import get_net
 from Networking.mininet import teardown_topo, stop_mininet
 from Networking.server import stop_openvpn
 
-_net = None
-
-def set_net(net):
-    global _net
-    _net = net
-
 def cleanup():
-    if _net is not None:
+    net = get_net()
+
+    if net is not None:
         teardown_topo()
-        stop_mininet(_net)
+        stop_mininet(net)
 
     stop_openvpn()

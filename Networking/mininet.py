@@ -1,4 +1,4 @@
-from .cleanup import set_net
+from .state import set_net
 from .config import TAP_IFACE, LAB_SUBNET, LAB_SERVER_IP, LAB_PREFIX
 from .network import get_base_ip
 from .terminal import run
@@ -15,7 +15,7 @@ def mininet_configuration(host_list):
     s1 = net.addSwitch('s1', cls=OVSBridge, failMode='standalone')
 
     hosted_hosts= []
-    for index in range(1, host_list.length + 1):
+    for index, host in enumerate(host_list, start=1):
         ip = f'{base_ip}.{index + 2}/{LAB_PREFIX}'
         mac = f'00:00:00:00:00:{index:02x}'
         h = net.addHost(f'h{index}', ip=ip, mac=mac)
@@ -25,6 +25,11 @@ def mininet_configuration(host_list):
     net.build()
     c0.start()
     s1.start([c0])
+
+    for h in hosted_hosts:
+        print(f'{h.name}: {h.IP()}')
+
+    build_topo()
 
 
 def build_topo():

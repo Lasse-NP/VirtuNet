@@ -12,6 +12,7 @@ import GUI.AfterActionReport
 import shutil
 import asyncio
 import sys
+import subprocess
 import os
 
 REQUIRED_COMMANDS = [
@@ -32,6 +33,12 @@ def check_dependencies():
         for dep in missing:
             print(f' - {dep}')
         print('\nPlease install them before running this application.')
+        sys.exit(1)
+
+    result = subprocess.run(['ovs-vsctl', 'show'], capture_output=True)
+    if result.returncode != 0:
+        print('Error: ovs-vswitchd (Open vSwitch) service is not running.')
+        print('Run: sudo systemctl start ovs-vswitchd')
         sys.exit(1)
 
     print('All dependencies satisfied.')
