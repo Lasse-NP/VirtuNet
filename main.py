@@ -1,16 +1,10 @@
 from nicegui import ui, app
-from Networking.OpenVPN.server import stop_openvpn
+from Networking.server import stop_openvpn
 
-import GUI.frontpage
-import GUI.Lobby
-import GUI.SessionSetting
-import GUI.AfterActionReport
-import GUI.ControlCenter
 import shutil
 import asyncio
 import sys
 import os
-import subprocess
 
 REQUIRED_COMMANDS = [
     'openvpn',      #OpenVPN

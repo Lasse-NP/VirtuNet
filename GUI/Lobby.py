@@ -1,7 +1,7 @@
 from nicegui import ui
 from nicegui.elements.list import List
 import asyncio
-from Networking.OpenVPN import pki
+from Networking import pki
 
 known_trainees = {}
 trainee_list: List | None = None
