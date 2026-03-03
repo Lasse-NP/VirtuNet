@@ -9,6 +9,16 @@ session_rows = [
     {'count': 1, 'device': 'Køleskab', 'os': 'Android'},
 ]
 
+def buiid_host_list():
+    hosts = []
+    for row in session_rows:
+        for i in range(1, row['count'] + 1):
+            hosts.append({
+                'name': f'{row["device"]}{i}',
+                'device': row['device'],
+                'os': row['os'],
+            })
+
 
 @ui.page('/Session')
 def session_settings_page():

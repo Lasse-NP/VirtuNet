@@ -22,7 +22,7 @@ def refresh_trainees():
 def render_trainees(trainees_list):
     trainees_list.clear()
     with trainees_list:
-        ui.item_label('Trainees').props('header').classes('item-header text-bold')
+        ui.item_label('Trainees').props('header').classes('item-header text-bold justify-center')
         ui.separator()
         for trainee in known_trainees.values():
             with ui.item():
@@ -80,7 +80,7 @@ def create_lobby():
             background-color: white;
             color: #333;
             border-radius: 20px;
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Orbitron', sans-serif;
             font-size: 14px;
             font-weight: 600;
             padding: 8px 24px;
@@ -110,8 +110,8 @@ def create_lobby():
     with ui.column().style('height: calc(100vh - 50px); width: 100%').classes('items-center'):
         ui.label('Trainee Lobby').style('font-family: "Orbitron", sans-serif; font-size: 32px; font-weight: 700; color: #4a7cdc;')
 
-        with ui.element('div').style('flex: 1; width: 100%; max-width: 60rem; overflow-y: auto; border-radius: 20px; background-color: #383838;'):
-            trainee_list = ui.list().props('bordered separator').style('height: auto; width: 100%; border-radius: 20px; background-color: #383838')
+        with ui.element('div').style('flex: 1; width: 100%; max-width: 60rem; border: 2px solid gray; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
+            trainee_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
             render_trainees(trainee_list)
             ui.timer(10.0, lambda: [refresh_trainees(), render_trainees(trainee_list)])
 

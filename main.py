@@ -1,4 +1,6 @@
 from nicegui import ui, app
+
+from Networking.cleanup import cleanup
 from Networking.server import stop_openvpn
 
 import GUI.Frontpage
@@ -40,7 +42,7 @@ def ensure_root():
         sys.exit(1)
 
 async def on_shutdown():
-    await asyncio.to_thread(stop_openvpn)
+    await asyncio.to_thread(cleanup)
 
 if __name__ == '__main__':
     check_dependencies()

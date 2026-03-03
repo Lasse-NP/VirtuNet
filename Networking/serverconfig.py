@@ -1,7 +1,7 @@
 from .network import get_netmask, get_base_ip, get_server_ip
-from .config import SERVER_CONF, TAP_IFACE, LOG_FILE, STATUS_FILE, BASE_DIR, PKI_DIR, OPENVPN_PID
+from .config import SERVER_CONF, TAP_IFACE, LOG_FILE, STATUS_FILE, BASE_DIR, PKI_DIR, OPENVPN_PID, LAB_SUBNET
 
-def write_server_conf(subnet='192.168.100.0/24', port=1194):
+def write_server_conf(subnet=LAB_SUBNET, port=1194):
     netmask = get_netmask(subnet)
     base_ip = get_base_ip(subnet)
     server_pool_start = f'{base_ip}.150'
