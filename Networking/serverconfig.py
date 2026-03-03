@@ -13,6 +13,8 @@ proto udp
 dev {TAP_IFACE}
 dev-type tap
 
+disable-dco
+
 ca {PKI_DIR}/ca.crt
 cert {PKI_DIR}/issued/server.crt
 key {PKI_DIR}/private/server.key

@@ -1,6 +1,6 @@
 from nicegui import ui, app
 
-from Networking.cleanup import cleanup
+from Networking.cleanup import run_cleanup
 from Networking.server import stop_openvpn
 
 import GUI.Frontpage
@@ -12,6 +12,7 @@ import GUI.AfterActionReport
 import shutil
 import asyncio
 import sys
+import signal
 import subprocess
 import os
 
@@ -49,10 +50,17 @@ def ensure_root():
         sys.exit(1)
 
 async def on_shutdown():
-    await asyncio.to_thread(cleanup)
+    await asyncio.to_thread(run_cleanup)
+
+async def handle_signal(sig, frame):
+    run_cleanup()
+    sys.exit
 
 if __name__ == '__main__':
     check_dependencies()
     ensure_root()
+    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGINT, handle_signal)
     app.on_shutdown(on_shutdown)
     ui.run(native=True, reload=False, window_size=(600, 1000))
+    run_cleanup()

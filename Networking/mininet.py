@@ -5,6 +5,7 @@ from .terminal import run
 from mininet.net import Mininet
 from mininet.node import Controller, OVSBridge
 from mininet.link import TCLink
+from mininet.cli import CLI
 
 def mininet_configuration(host_list):
     base_ip = get_base_ip(LAB_SUBNET)
@@ -31,6 +32,11 @@ def mininet_configuration(host_list):
 
     build_topo()
 
+    for index in range(1, len(hosted_hosts) + 1):
+        ip = f'{base_ip}.{index + 2}'
+        run(f'ping -c 1 -W 1 {ip}', check=False)
+        print(f'*** ARP primed for {ip}')
+
 
 def build_topo():
     run(f'ovs-vsctl add-port s1 {TAP_IFACE}')
@@ -39,6 +45,10 @@ def build_topo():
     run(f'ip addr del {LAB_SERVER_IP}/{LAB_PREFIX} dev {TAP_IFACE}', check=False)
     run(f'ip addr add {LAB_SERVER_IP}/{LAB_PREFIX} dev s1')
     run(f'ip link set s1 up')
+
+    run(f'ovs-ofctl add-flow s1 priority=100,arp,actions=flood')
+    run(f'ovs-ofctl add-flow s1 priority=100,icmp,actions=flood')
+    run(f'ovs-ofctl add-flow s1 priority=1,actions=normal')
 
 def teardown_topo():
     run(f'ip addr del {LAB_SERVER_IP}/{LAB_PREFIX} dev s1', check=False)

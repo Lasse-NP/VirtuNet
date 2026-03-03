@@ -1,6 +1,7 @@
 from nicegui import ui
 import asyncio
 from Networking.mininet import mininet_configuration
+from Networking.server import initialize
 
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
@@ -11,11 +12,13 @@ session_rows = [
     {'count': 1, 'device': 'Køleskab', 'os': 'Android'},
 ]
 
-async def configure_and_go():
-    ui.notify('Configuring Mininet...')
+async def initialize_configure_and_go():
     try:
+        await asyncio.to_thread(initialize)
+        ui.notify('Starting OpenVPN...')
         await asyncio.to_thread(mininet_configuration, buiid_host_list())
-        ui.navigate.to('/ControlCenter')
+        ui.notify('Configuring MiniNet...')
+        ui.navigate.to('/Lobby')
     except RuntimeError as e:
         ui.notify(str(e), type='negative')
         return
@@ -249,4 +252,4 @@ def session_settings_page():
                 'font-family: "Orbitron", sans-serif; font-size: 14px; width: 100%;'
             ).props('outlined rounded')
 
-            ui.button('Start Server', on_click=configure_and_go).classes('btn-start')
+            ui.button('Start Server', on_click=initialize_configure_and_go).classes('btn-start')

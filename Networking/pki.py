@@ -104,6 +104,8 @@ dev-type tap
 proto udp
 remote {server_ip} {port}
 
+disable-dco
+
 resolv-retry infinite
 nobind
 persist-key

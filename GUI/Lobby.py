@@ -119,4 +119,4 @@ def create_lobby():
 
             name_input = ui.input(placeholder='Trainee Name').props('outlined').style('background-color: #383838; border-radius: 5px 5px 0 0; width: max(20em, 10%)')
             ui.button('Generate Join File', on_click=lambda: generate_join_file(name_input.value)).classes('btn-generate')
-            ui.button('Continue', on_click=lambda: ui.navigate.to('/Session')).classes('btn-continue')
+            ui.button('Continue', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue')

@@ -1,16 +1,6 @@
 from nicegui import ui, app
 from pathlib import Path
-import asyncio
-from Networking.server import initialize
 
-async def initialize_and_go():
-    ui.notify('Initializing OpenVPN...')
-    try:
-        await asyncio.to_thread(initialize)
-        ui.navigate.to('/Lobby')
-    except RuntimeError as e:
-        ui.notify(str(e), type='negative')
-        return
 
 
 @ui.page('/')
@@ -31,6 +21,6 @@ def start_gui():
         with ui.element('div').style('width: min(600px, 70%); height: auto;'):
             ui.image('/assets/VirtuNetIcon.png').style('width: 100%; height: 100%;')
         ui.space()
-        ui.button('Initialize', on_click=initialize_and_go
+        ui.button('Initialize', on_click=lambda: ui.navigate.to('/Session')
                   ).style('font-size: clamp(2rem, 3vw + 1rem, 4rem); padding: 2vw 6vw; border-radius: 2px; '
                           'margin-bottom: 80px; background-color: #4a7cdc !important; font-family: "Orbitron", sans-serif;')

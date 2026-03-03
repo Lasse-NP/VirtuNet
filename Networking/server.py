@@ -23,8 +23,7 @@ def start_openvpn():
     for _ in range(20):
         result = subprocess.run(['ip', 'link', 'show', TAP_IFACE], capture_output=True, text=True)
         if result.returncode == 0:
-            info(f'*** TAP Interface {TAP_IFACE} is up \n')
-            run(f'ip addr add {LAB_SERVER_IP}/{LAB_PREFIX} dev {TAP_IFACE}')
+            info(f'*** TAP Interface {TAP_IFACE} is up\n')
             run(f'ip link set {TAP_IFACE} up')
             _openvpn_running = True
             return
@@ -54,6 +53,14 @@ def stop_openvpn():
     info('*** OpenVPN server stopped\n')
     _openvpn_running = False
 
+def _openvpn_is_running():
+    if not os.path.exists(OPENVPN_PID):
+        return False
+    with open(OPENVPN_PID) as f:
+        pid = f.read().strip()
+    result = subprocess.run(['kill', '-0', pid], capture_output=True)
+    return result.returncode == 0
+
 
 def initialize():
     if not os.path.exists(f'{PKI_DIR}/ca.crt'):
@@ -62,7 +69,9 @@ def initialize():
     if not os.path.exists(SERVER_CONF):
         write_server_conf()
 
-    if not os.path.exists(OPENVPN_PID):
+    if not _openvpn_is_running():
+        if os.path.exists(OPENVPN_PID):
+            os.remove(OPENVPN_PID)
         start_openvpn()
 
     return _openvpn_running
