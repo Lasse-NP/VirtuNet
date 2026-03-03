@@ -270,7 +270,7 @@ def control_center_page():
             with ui.element('div').classes('bottom-row'):
                 ui.button('Reset',  on_click=lambda: ui.notify('Resetting...',  type='warning')).classes('btn-reset').props('flat')
                 ui.button('Reboot', on_click=lambda: ui.notify('Rebooting...', type='warning')).classes('btn-reboot').props('flat')
-                ui.button('End',    on_click=lambda: ui.notify('Ending session...', type='negative')).classes('btn-end').props('flat')
+                ui.button('End',   on_click=lambda: ui.notify('Ending session...', type='negative')).classes('btn-end').props('flat')
 
 
 if __name__ == '__main__':
