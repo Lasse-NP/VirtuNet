@@ -1,17 +1,22 @@
 from nicegui import ui
 from nicegui.elements.list import List
 import asyncio
+
+from Models.Vendor.Apple import Apple
+from Models.Vendor.Samsung import Samsung
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
 
+from Models.Devices.Apple import AppleWatch, IPhone
+
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
-session_rows = [
-    {'count': 4, 'device': 'IPhone',   'os': 'iOS'},
-    {'count': 2, 'device': 'PC',       'os': 'Windows 11'},
-    {'count': 1, 'device': 'PC',       'os': 'MacOS'},
-    {'count': 1, 'device': 'Køleskab', 'os': 'Android'},
-]
+session_rows = []
+
+vendor_dictionary = {
+    "Apple": Apple,
+    "Samsung": Samsung
+    }
 
 device_list: List | None = None
 
@@ -38,6 +43,11 @@ def build_host_list():
             })
     return hosts
 
+@ui.refreshable
+def render():
+    def add_row() -> None:
+        session_rows.append({})
+
 
 def render_devices(devices_list):
     devices_list.clear()
@@ -48,32 +58,34 @@ def render_devices(devices_list):
             with ui.item():
                 with ui.item_section().style('align-items: center;'):
                     ui.item_label(row['count']).classes('count-badge')
+
+                def make_display_devices(d, selected_vendor):
+                    d.set_options([cls.__name__ for cls in selected_vendor.__subclasses__()])
+
                 with ui.item_section().style('align-items: center;'):
-                    ui.item_label(row['device']).classes('device-name')
+                    device = ui.select(with_input=True, options=[]).classes('w-40')
+
                 with ui.item_section().style('align-items: center;'):
-                    ui.item_label(row['os']).classes('os-name')
+                    vendor = ui.select(options=list(vendor_dictionary.keys()), with_input=True,
+                            on_change=lambda e, d=device: make_display_devices(d, vendor_dictionary[e.value])).classes('w-40')
 
                 idx = i
 
-                def make_inc(j):
-                    def _inc():
+                def make_increment(j):
+                    def _increment():
                         session_rows[j]['count'] += 1
-                        render_devices(devices_list)
-                    return _inc
+                    return _increment
 
-                def make_dec(j):
-                    def _dec():
+                def make_decrement(j):
+                    def _decrement():
                         if session_rows[j]['count'] > 1:
                             session_rows[j]['count'] -= 1
                             render_devices(devices_list)
-                    return _dec
+                    return _decrement
 
                 with ui.element('div').style('display:flex; flex-direction: column; gap: 1px; flex-shrink: 0;').classes('items-end'):
-                    ui.button('+', on_click=make_inc(idx)).classes('btn-small').props('flat dense')
-                    ui.button('−', on_click=make_dec(idx)).classes('btn-small').props('flat dense')
-
-
-
+                    ui.button('+', on_click=make_increment(idx)).classes('btn-small').props('flat dense')
+                    ui.button('−', on_click=make_decrement(idx)).classes('btn-small').props('flat dense')
 
 @ui.page('/Session')
 def session_settings_page():
@@ -172,6 +184,7 @@ def session_settings_page():
         with ui.element('div').style('flex: 1; position: relative; width: 100%; max-width: 60rem; border: 2px solid gray; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
             device_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
             render_devices(device_list)
+            #render()
 
             with ui.element('div').classes('global-btn-row'):
                 def remove_row():
