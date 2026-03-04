@@ -1,6 +1,8 @@
 from nicegui import ui
 from nicegui import app
 
+from Networking.cleanup import run_cleanup
+
 report_data = {
     'found_devices': 2,
     'missing_devices': 6,
@@ -8,41 +10,34 @@ report_data = {
     'avg_time_per_device': 9,
 }
 
+def reset_state():
+    run_cleanup()
+    ui.navigate.to('/')
+
 @ui.page('/AfterActionReport')
 def after_action_report_page():
     ui.dark_mode().enable()
     ui.add_head_html("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap')
-        
-        body {
+
+        html, body, .q-page, .nicegui-content {
+            height: 100% !important;
+            min-height: 100% !important;
             margin: 0;
             padding: 0;
-            height: 100vh;
-            font-family: 'Rajdhani', sans-serif;
-            overflow: hidden;
         }
-        
-        .q-btn, .q-btn:before {
-            box-shadow: none;
-        }
-        
-        .q-page, .q-page-container{
-            height: 100vh;
-            padding: 0;
-        }
-        
+
         .aar-wrapper {
-            width: 100vw;
-            height: 100vh;
+            height: calc(100vh - 50px);
+            width: 100%;
             display: flex;
             justify-content: center;
             align-items: flex-start;
         }
         
         .aar-card {
-            padding: 36px 24px 24px;
-            width: 95%;
+            width: clamp(30rem, 50vw + 1rem, 60rem);
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -62,7 +57,7 @@ def after_action_report_page():
         .report-card {
             background-color: white;
             border-radius: 14px;
-            width: 100%;
+            width: clamp(30rem, 50vw + 1rem, 60rem);
             padding: 20px 18px;
             box-sizing: border-box;
             display: flex;
@@ -86,28 +81,28 @@ def after_action_report_page():
             justify-content: flex-end;
         }
 
-        .btn-reinitialize {
-            background-color: white !important;
-            color: #1a1a1a !important;
-            border-radius: 14px !important;
-            font-family: 'Orbitron', sans-serif !important;
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            padding: 14px 24px !important;
-            text-transform: none !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+        .btn-restart {
+            background-color: white;
+            color: #1a1a1a;
+            border-radius: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 3vw + 1rem, 3rem);
+            font-weight: 700;
+            padding: 14px 24px;
+            text-transform: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .btn-exit {
-            background-color: white !important;
-            color: #1a1a1a !important;
-            border-radius: 14px !important;
-            font-family: 'Orbitron', sans-serif !important;
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            padding: 14px 24px !important;
-            text-transform: none !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+            background-color: white;
+            color: #1a1a1a;
+            border-radius: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 3vw + 1rem, 3rem);
+            font-weight: 700;
+            padding: 14px 48px;
+            text-transform: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
     </style>
     """)
@@ -123,8 +118,10 @@ def after_action_report_page():
                 ui.html(f'<span class="report-line">Session Duration: {report_data["session_duration"]} min</span>')
                 ui.html(f'<span class="report-line">Average time per device: {report_data["avg_time_per_device"]} min</span>')
             with ui.element('div').classes('bottom-row'):
-                ui.button('Reinitalize', on_click=lambda: ui.navigate.to('/')).classes('btn-reinitialize').props('flat')
+                ui.button('Restart', on_click=lambda: reset_state()).classes('btn-restart').props('flat')
                 ui.button('Exit', on_click=lambda: app.shutdown()).classes('btn-exit').props('flat')
+
+
 if __name__ == '__main__':
     @ui.page('/')
     def index():
