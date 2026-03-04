@@ -21,5 +21,4 @@ def run_cleanup():
 
     openvpn_server.stop()
     shutil.rmtree(BASE_DIR)
-    os.makedirs(BASE_DIR)
     print('*** Cleanup finished successfully')
