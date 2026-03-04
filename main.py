@@ -1,7 +1,5 @@
 from nicegui import ui, app
-
 from Networking.cleanup import run_cleanup
-from Networking.server import stop_openvpn
 
 import GUI.Frontpage
 import GUI.Lobby
@@ -54,7 +52,7 @@ async def on_shutdown():
 
 async def handle_signal(sig, frame):
     run_cleanup()
-    sys.exit
+    sys.exit(1)
 
 if __name__ == '__main__':
     check_dependencies()

@@ -1,7 +1,7 @@
 from nicegui import ui
 import asyncio
-from Networking.mininet import mininet_configuration
-from Networking.server import initialize
+from Networking.mininet import mininet_network
+from Networking.server import openvpn_server
 
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
@@ -14,9 +14,9 @@ session_rows = [
 
 async def initialize_configure_and_go():
     try:
-        await asyncio.to_thread(initialize)
+        await asyncio.to_thread(openvpn_server.initialize)
         ui.notify('Starting OpenVPN...')
-        await asyncio.to_thread(mininet_configuration, buiid_host_list())
+        await asyncio.to_thread(mininet_network.configuration, buiid_host_list())
         ui.notify('Configuring MiniNet...')
         ui.navigate.to('/Lobby')
     except RuntimeError as e:

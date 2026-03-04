@@ -1,6 +1,8 @@
-from .state import get_net, set_net
-from Networking.mininet import teardown_topo, stop_mininet
-from Networking.server import stop_openvpn
+from Networking.mininet import mininet_network, teardown_topo
+from Networking.server import openvpn_server
+from Networking.config import BASE_DIR
+import os
+import shutil
 
 _cleaned_up = False
 
@@ -12,11 +14,12 @@ def run_cleanup():
         return
     _cleaned_up = True
 
-    net = get_net()
+    net = mininet_network.get_net()
     if net is not None:
         teardown_topo()
-        stop_mininet(net)
-        set_net(None)
+        mininet_network.stop()
 
-    stop_openvpn()
+    openvpn_server.stop()
+    shutil.rmtree(BASE_DIR)
+    os.makedirs(BASE_DIR)
     print('*** Cleanup finished successfully')
