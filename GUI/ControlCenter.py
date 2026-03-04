@@ -44,26 +44,9 @@ def control_center_page():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap');
 
-        body {
-            margin: 0 !important;
-            padding: 0 !important;
-            height: 100vh !important;
-            font-family: 'Rajdhani', sans-serif !important;
-            overflow: hidden;
-        }
-
-        .q-btn, .q-btn:before {
-            box-shadow: none !important;
-        }
-
-        .q-page, .q-page-container {
-            height: 100vh !important;
-            padding: 0 !important;
-        }
-
         .cc-wrapper {
-            width: 100vw;
-            height: 100vh;
+            height: calc(100vh - 50px);
+            width: 100%;
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -163,7 +146,7 @@ def control_center_page():
         .pipeline-card {
             background-color: white;
             border-radius: 14px;
-            width: clamp(20rem, 40vw + 1rem, 50rem);
+            width: clamp(20rem, 20vw + 1rem, 30rem);
             padding: 14px 18px;
             box-sizing: border-box;
             display: flex;
@@ -201,42 +184,42 @@ def control_center_page():
         }
 
         .btn-reset {
-            background-color: white !important;
-            color: #1a1a1a !important;
-            border-radius: 14px !important;
-            font-family: 'Orbitron', sans-serif !important;
-            font-size: 18px !important;
-            font-weight: 700 !important;
-            flex: 1 !important;
-            padding: 14px !important;
-            text-transform: none !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+            background-color: white;
+            color: #1a1a1a;
+            border-radius: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            flex: 1;
+            padding: 14px;
+            text-transform: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .btn-reboot {
-            background-color: white !important;
-            color: #1a1a1a !important;
-            border-radius: 14px !important;
-            font-family: 'Orbitron', sans-serif !important;
-            font-size: 18px !important;
-            font-weight: 700 !important;
-            flex: 1 !important;
-            padding: 14px !important;
-            text-transform: none !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+            background-color: white;
+            color: #1a1a1a;
+            border-radius: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            flex: 1;
+            padding: 14px;
+            text-transform: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .btn-end {
-            background-color: white !important;
-            color: #1a1a1a !important;
-            border-radius: 14px !important;
-            font-family: 'Orbitron', sans-serif !important;
-            font-size: 22px !important;
-            font-weight: 900 !important;
-            flex: 2 !important;
-            padding: 14px !important;
-            text-transform: none !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+            background-color: white;
+            color: #1a1a1a;
+            border-radius: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            flex: 2;
+            padding: 14px;
+            text-transform: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
     </style>
     """)

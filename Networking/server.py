@@ -18,9 +18,8 @@ def kill_current():
 def verify_openvpn():
     if not openvpn_server.get_running:
         return False
-    tap = run(f'ip link show {TAP_IFACE}')
+    tap = run(f'ip link show {TAP_IFACE}', check=False)
     return tap.returncode == 0
-
 
 class OpenVPNServer:
 
