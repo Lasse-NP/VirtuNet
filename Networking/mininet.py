@@ -5,6 +5,27 @@ from mininet.net import Mininet
 from mininet.node import Controller, OVSBridge
 from mininet.link import TCLink
 
+def verify_mininet():
+    net = mininet_network.get_net()
+    if net is None:
+        return False
+    return len(net.hosts) > 0 and len(net.switches) > 0
+
+def verify_bridge():
+    net = mininet_network.get_net()
+    if net is None:
+        return False
+
+    if 's1' not in run('ovs-vsctl show', check=False).stdout:
+        return False
+
+    if TAP_IFACE not in run('ovs-vsctl list-ports s1', check=False).stdout:
+        return False
+
+    if LAB_SERVER_IP not in run('ip addr show s1', check=False).stdout:
+        return False
+
+    return True
 
 def build_topo():
     run(f'ovs-vsctl add-port s1 {TAP_IFACE}')
@@ -62,6 +83,20 @@ class MininetNetwork:
             ip = f'{base_ip}.{index + 2}'
             run(f'ping -c 1 -W 1 {ip}', check=False)
             print(f'*** ARP primed for {ip}')
+
+    def start_device(self, host_name: str):
+        if self._net is None:
+            return
+        host = self._net.get(host_name)
+        if host:
+            host.start()
+
+    def stop_device(self, host_name: str):
+        if self._net is None:
+            return
+        host = self._net.get(host_name)
+        if host:
+            host.stop()
 
     def stop(self):
         if self._net is not None:

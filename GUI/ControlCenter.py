@@ -1,4 +1,6 @@
-from nicegui import ui
+from nicegui import ui, app
+from Networking.mininet import verify_mininet, verify_bridge
+from Networking.server import verify_openvpn
 
 devices = [
     {'id': 1, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.10', 'mac': '3a:bb:23:ff:f4:d7', 'enabled': True},
@@ -13,6 +15,26 @@ pipeline = [
     {'label': 'Bridge',  'active': True},
     {'label': 'VPN',     'active': True},
 ]
+
+def get_pipline_status():
+    return {
+        'MiniNet': verify_mininet(),
+        'Bridge': verify_bridge(),
+        'VPN': verify_openvpn()
+    }
+
+@ui.refreshable
+def render_pipeline():
+    status = get_pipline_status()
+    with ui.element('div').classes('pipeline-card'):
+        for i, node in enumerate(pipeline):
+            active = status.get(node['label'], False)
+            color = '#22c55e' if active else '#ef4444'
+            with ui.element('div').classes('pipeline-node'):
+                ui.html(f'<span class="pipeline-label" style="color: {color}">{node["label"]}</span>')
+            if i < len(pipeline) - 1:
+                ui.html('<span class="pipeline-arrow">——▶</span>')
+
 
 
 @ui.page('/ControlCenter')
@@ -69,10 +91,11 @@ def control_center_page():
         .devices-card {
             background-color: white;
             border-radius: 14px;
-            width: 100%;
+            width: clamp(30rem, 50vw + 1rem, 60rem);
             padding: 10px;
             box-sizing: border-box;
             display: flex;
+            flex: 1;
             flex-direction: column;
             gap: 6px;
         }
@@ -80,6 +103,7 @@ def control_center_page():
         .device-row {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             background-color: #2a2a2a;
             border-radius: 10px;
             padding: 8px 10px;
@@ -139,12 +163,12 @@ def control_center_page():
         .pipeline-card {
             background-color: white;
             border-radius: 14px;
-            width: 100%;
+            width: clamp(20rem, 40vw + 1rem, 50rem);
             padding: 14px 18px;
             box-sizing: border-box;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             gap: 0;
         }
 
@@ -158,15 +182,6 @@ def control_center_page():
             font-family: 'Orbitron', sans-serif;
             font-size: 14px;
             font-weight: 700;
-            color: #1a1a1a;
-        }
-
-        .pipeline-dot {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background-color: #22c55e;
-            flex-shrink: 0;
         }
 
         .pipeline-arrow {
@@ -179,9 +194,10 @@ def control_center_page():
         /* Bottom buttons */
         .bottom-row {
             display: flex;
-            width: 100%;
+            width: clamp(20rem, 40vw + 1rem, 50rem);
             gap: 10px;
             margin-top: 4px;
+            margin-bottom: 10px;
         }
 
         .btn-reset {
@@ -225,6 +241,8 @@ def control_center_page():
     </style>
     """)
 
+    #selected_devices = app.storage.user['device_list']
+
     with ui.element('div').classes('cc-wrapper'):
         with ui.element('div').classes('cc-card'):
 
@@ -257,15 +275,8 @@ def control_center_page():
 
             render_devices()
 
-
-            with ui.element('div').classes('pipeline-card'):
-                for i, node in enumerate(pipeline):
-                    with ui.element('div').classes('pipeline-node'):
-                        ui.html(f'<span class="pipeline-label">{node["label"]}</span>')
-                        ui.html('<span class="pipeline-dot"></span>')
-                    if i < len(pipeline) - 1:
-                        ui.html('<span class="pipeline-arrow">——▶</span>')
-
+            render_pipeline()
+            ui.timer(5.0, render_pipeline.refresh)
 
             with ui.element('div').classes('bottom-row'):
                 ui.button('Reset',  on_click=lambda: ui.notify('Resetting...',  type='warning')).classes('btn-reset').props('flat')
