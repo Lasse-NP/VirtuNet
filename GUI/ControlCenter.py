@@ -1,20 +1,34 @@
 from nicegui import ui, app
-from Networking.mininet import verify_mininet, verify_bridge
+from Networking.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
 from Networking.server import verify_openvpn
 
-devices = [
-    {'id': 1, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.10', 'mac': '3a:bb:23:ff:f4:d7', 'enabled': True},
-    {'id': 2, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.11', 'mac': 'ee:d3:ce:82:15:1e', 'enabled': True},
-    {'id': 3, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.12', 'mac': '6a:77:8c:39:4d:40', 'enabled': True},
-    {'id': 4, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.13', 'mac': '4a:b9:6a:87:1e:45', 'enabled': False},
-    {'id': 5, 'device': 'PC',     'os': 'Windows 11', 'ip': '192.168.0.14', 'mac': 'e2:fc:b0:b5:ff:9c', 'enabled': True},
-]
+#devices = [
+    #{'id': 1, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.10', 'mac': '3a:bb:23:ff:f4:d7', 'enabled': True},
+    #{'id': 2, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.11', 'mac': 'ee:d3:ce:82:15:1e', 'enabled': True},
+   # {'id': 3, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.12', 'mac': '6a:77:8c:39:4d:40', 'enabled': True},
+  #  {'id': 4, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.13', 'mac': '4a:b9:6a:87:1e:45', 'enabled': False},
+ #   {'id': 5, 'device': 'PC',     'os': 'Windows 11', 'ip': '192.168.0.14', 'mac': 'e2:fc:b0:b5:ff:9c', 'enabled': True},
+#]
 
 pipeline = [
     {'label': 'MiniNet', 'active': True},
     {'label': 'Bridge',  'active': True},
     {'label': 'VPN',     'active': True},
 ]
+
+def get_devices():
+    hosts = mininet_network.get_hosts()
+    return [
+        {
+            'id': i + 1,
+            'device': f'h{i + 1}',
+            'os': 'Linux',
+            'ip': host.IP(),
+            'mac': host.MAC(),
+            'enabled': True,
+        }
+        for i, host in enumerate(hosts)
+    ]
 
 def get_pipline_status():
     return {
@@ -223,8 +237,37 @@ def control_center_page():
         }
     </style>
     """)
+    def make_toggle(j):
+        def _toggle(e):
+            host_name = f'h{j +1}'
+            if e.value:
+                mininet_network.start_device(host_name)
+            else:
+                mininet_network.stop_device(host_name)
+        return _toggle
+
+    def render_devices():
+        device_container.clear()
+        current_devices = get_devices()
+        with device_container:
+            for i, dev in enumerate(current_devices):
+                with ui.element('div').classes('device-row'):
+                    ui.html(f'<span class="id-badge">{dev["id"]}</span>')
+                    ui.html(f'<span class="dev-name">{dev["device"]}</span>')
+                    ui.html(f'<span class="dev-os">{dev["os"]}</span>')
+                    ui.html(f'<span class="dev-ip">{dev["ip"]}</span>')
+                    ui.html(f'<span class="dev-mac">{dev["mac"]}</span>')
+
+
+                    ui.switch('', value=dev['enabled'], on_change=make_toggle(i)).style(
+                        '--q-color: #22c55e;' if dev['enabled'] else '--q-color: #ef4444;'
+                    ).props('dense color=green')
 
     #selected_devices = app.storage.user['device_list']
+    def end_session():
+        teardown_topo()
+        mininet_network.stop()
+        ui.navigate.to('/AfterActionReport')
 
     with ui.element('div').classes('cc-wrapper'):
         with ui.element('div').classes('cc-card'):
@@ -234,27 +277,6 @@ def control_center_page():
 
             device_container = ui.element('div').classes('devices-card')
 
-            def render_devices():
-                device_container.clear()
-                with device_container:
-                    for dev in devices:
-                        with ui.element('div').classes('device-row'):
-                            ui.html(f'<span class="id-badge">{dev["id"]}</span>')
-                            ui.html(f'<span class="dev-name">{dev["device"]}</span>')
-                            ui.html(f'<span class="dev-os">{dev["os"]}</span>')
-                            ui.html(f'<span class="dev-ip">{dev["ip"]}</span>')
-                            ui.html(f'<span class="dev-mac">{dev["mac"]}</span>')
-
-                            idx = devices.index(dev)
-
-                            def make_toggle(j):
-                                def _toggle(val):
-                                    devices[j]['enabled'] = val
-                                return _toggle
-
-                            ui.switch('', value=dev['enabled'], on_change=make_toggle(idx)).style(
-                                '--q-color: #22c55e;' if dev['enabled'] else '--q-color: #ef4444;'
-                            ).props('dense color=green')
 
             render_devices()
 
@@ -264,7 +286,7 @@ def control_center_page():
             with ui.element('div').classes('bottom-row'):
                 ui.button('Reset',  on_click=lambda: ui.notify('Resetting...',  type='warning')).classes('btn-reset').props('flat')
                 ui.button('Reboot', on_click=lambda: ui.notify('Rebooting...', type='warning')).classes('btn-reboot').props('flat')
-                ui.button('End',   on_click=lambda: ui.notify('Ending session...', type='negative')).classes('btn-end').props('flat')
+                ui.button('End',   on_click=end_session).classes('btn-end').props('flat')
 
 
 if __name__ == '__main__':
