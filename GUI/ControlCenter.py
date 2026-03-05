@@ -19,7 +19,7 @@ def get_devices():
         {
             'id': i + 1,
             'device': host,
-            'os': 'Linux',
+            'os': hosts[host],
             'ip': host.IP(),
             'mac': host.MAC(),
             'enabled': device_states.get(i, True),

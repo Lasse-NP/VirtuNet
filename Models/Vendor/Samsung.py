@@ -13,5 +13,5 @@ class Samsung(Device):
         "00:21:19"
     ]
 
-    def __init__(self, name):
-        super().__init__(name, macAddressPrefix=random.choice(self.mac_prefix))
+    def __init__(self, device_name, device_os):
+        super().__init__(device_name, device_os, macAddressPrefix=random.choice(self.mac_prefix))
