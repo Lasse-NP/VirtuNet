@@ -1,3 +1,5 @@
+import time
+
 from .config import TAP_IFACE, LAB_SUBNET, LAB_SERVER_IP, LAB_PREFIX
 from .network import get_base_ip
 from .terminal import run
@@ -51,12 +53,18 @@ class MininetNetwork:
     def __init__(self):
         self._net = None
         self._hosts = {}
+        self._start_time = None
 
     def get_net(self):
         return self._net
 
     def get_hosts(self):
         return self._hosts
+
+    def get_uptime_minutes(self):
+        if self._start_time is None:
+            return 0
+        return int(time.time() - self._start_time) // 60
 
     def configuration(self, device_list):
         base_ip = get_base_ip(LAB_SUBNET)
@@ -89,7 +97,7 @@ class MininetNetwork:
             ip = f'{base_ip}.{index + 2}'
             run(f'ping -c 1 -W 1 {ip}', check=False)
             print(f'*** ARP primed for {ip}')
-
+        self._start_time = time.time()
     def start_device(self, host_name: str):
         if self._net is None:
             return

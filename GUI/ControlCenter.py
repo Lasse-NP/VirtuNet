@@ -322,6 +322,16 @@ def control_center_page():
         ui.notify('Network rebooted', type = 'positive')
 
     def end_session():
+        uptime = mininet_network.get_uptime_minutes()
+        total_devices = len(mininet_network.get_hosts())
+        disabled = sum(1 for v in device_states.values() if not v)
+
+        app.storage.user['report'] = {
+            'found_devices': disabled,
+            'missing_devices': total_devices - disabled,
+            'session_duration': uptime,
+            'avg_time_per_device': uptime // total_devices if total_devices else 0,
+        }
         run_cleanup()
         ui.navigate.to('/AfterActionReport')
 
