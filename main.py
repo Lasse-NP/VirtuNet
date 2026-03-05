@@ -61,5 +61,5 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, handle_signal)
     app.on_shutdown(on_shutdown)
     app.native.window_args['min_size'] = (550, 1000)
-    ui.run(native=True, reload=False, window_size=(600, 1000))
+    ui.run(native=True, reload=False, window_size=(600, 1000), storage_secret='my-super-secret-key-123')
     run_cleanup()
