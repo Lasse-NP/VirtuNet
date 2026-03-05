@@ -7,4 +7,4 @@ class MacBook(Apple):
     def __init__(self):
         fake = Faker()
         device_name = f"{fake.first_name()}-MacBook-{fake.uuid4()[:4]}"
-        super().__init__(device_name)
+        super().__init__(device_name[:15])
