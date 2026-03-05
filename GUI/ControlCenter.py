@@ -338,7 +338,7 @@ def control_center_page():
             'found_devices': disabled,
             'missing_devices': total_devices - disabled,
             'session_duration': uptime,
-            'avg_time_per_device': uptime // total_devices if total_devices else 0,
+            'avg_time_per_device': uptime // disabled if disabled else 0,
         }
         run_cleanup()
         ui.navigate.to('/AfterActionReport')
