@@ -1,4 +1,8 @@
+import asyncio
+
 from nicegui import ui, app
+
+from Networking.cleanup import run_cleanup
 from Networking.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
 from Networking.server import verify_openvpn
 
@@ -7,7 +11,7 @@ pipeline = [
     {'label': 'Bridge',  'active': True},
     {'label': 'VPN',     'active': True},
 ]
-
+device_states: dict[int, bool] = {}
 def get_devices():
     hosts = mininet_network.get_hosts()
     return [
@@ -17,7 +21,7 @@ def get_devices():
             'os': 'Linux',
             'ip': host.IP(),
             'mac': host.MAC(),
-            'enabled': True,
+            'enabled': device_states.get(i, True),
         }
         for i, host in enumerate(hosts)
     ]
@@ -234,6 +238,7 @@ def control_center_page():
     def make_toggle(j):
         def _toggle(e):
             host_name = f'h{j +1}'
+            device_states[j] = e.value
             if e.value:
                 mininet_network.start_device(host_name)
             else:
@@ -257,9 +262,28 @@ def control_center_page():
                         '--q-color: #22c55e;' if dev['enabled'] else '--q-color: #ef4444;'
                     ).props('dense color=green')
 
-    def end_session():
-        teardown_topo()
+    def reset_devices():
+        current_devices = get_devices()
+        for i, dev in enumerate(current_devices):
+            if not dev['enabled']:
+                mininet_network.start_device(f'h{i + 1}')
+                device_states[i] = True
+        render_devices()
+        ui.notify('Disabled devices restarted!', type = 'positive')
+
+    async def reboot_network():
+        host_list = app.storage.user.get('selected_hosts', [])
+        if not host_list:
+            ui.notify('No host list found!', type = 'negative')
+            return
         mininet_network.stop()
+        await asyncio.to_thread(mininet_network.configuration, host_list)
+        device_states.clear()
+        render_devices()
+        ui.notify('Network rebooted', type = 'positive')
+
+    def end_session():
+        run_cleanup()
         ui.navigate.to('/AfterActionReport')
 
     with ui.element('div').classes('cc-wrapper'):
@@ -272,8 +296,8 @@ def control_center_page():
             ui.timer(5.0, render_pipeline.refresh)
 
             with ui.element('div').classes('bottom-row'):
-                ui.button('Reset',  on_click=lambda: ui.notify('Resetting...',  type='warning')).classes('btn-reset').props('flat')
-                ui.button('Reboot', on_click=lambda: ui.notify('Rebooting...', type='warning')).classes('btn-reboot').props('flat')
+                ui.button('Reset',  on_click=reset_devices).classes('btn-reset').props('flat')
+                ui.button('Reboot', on_click=reboot_network).classes('btn-reboot').props('flat')
                 ui.button('End',   on_click=end_session).classes('btn-end').props('flat')
 
 
