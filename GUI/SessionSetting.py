@@ -1,13 +1,16 @@
 from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio
-
-from Models.Vendor.Apple import Apple
-from Models.Vendor.Samsung import Samsung
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
 
-from Models.Devices.Apple import AppleWatch, IPhone
+from Models.Vendor.Apple import Apple
+from Models.Vendor.Asus import Asus
+from Models.Vendor.Samsung import Samsung
+
+from Models.Devices.Apple import AppleWatch, IPhone, MacBook
+from Models.Devices.Asus import AsusMotherboard
+from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
 
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
@@ -15,7 +18,8 @@ session_rows = []
 
 vendor_dictionary = {
     "Apple": Apple,
-    "Samsung": Samsung
+    "Samsung": Samsung,
+    "Asus": Asus
     }
 
 device_list: List | None = None
