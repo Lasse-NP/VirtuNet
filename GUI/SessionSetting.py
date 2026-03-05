@@ -1,4 +1,4 @@
-from nicegui import ui
+from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio
 
@@ -21,10 +21,12 @@ vendor_dictionary = {
 device_list: List | None = None
 
 async def initialize_configure_and_go():
+    host_list = build_host_list()
+    app.storage.user['selected_hosts'] = host_list
     try:
         await asyncio.to_thread(openvpn_server.initialize)
         ui.notify('Starting OpenVPN...')
-        await asyncio.to_thread(mininet_network.configuration, build_host_list())
+        await asyncio.to_thread(mininet_network.configuration, host_list)
         ui.notify('Configuring MiniNet...')
         ui.navigate.to('/Lobby')
     except RuntimeError as e:
