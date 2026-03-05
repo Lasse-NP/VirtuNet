@@ -2,14 +2,6 @@ from nicegui import ui, app
 from Networking.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
 from Networking.server import verify_openvpn
 
-#devices = [
-    #{'id': 1, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.10', 'mac': '3a:bb:23:ff:f4:d7', 'enabled': True},
-    #{'id': 2, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.11', 'mac': 'ee:d3:ce:82:15:1e', 'enabled': True},
-   # {'id': 3, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.12', 'mac': '6a:77:8c:39:4d:40', 'enabled': True},
-  #  {'id': 4, 'device': 'IPhone', 'os': 'iOS',        'ip': '192.168.0.13', 'mac': '4a:b9:6a:87:1e:45', 'enabled': False},
- #   {'id': 5, 'device': 'PC',     'os': 'Windows 11', 'ip': '192.168.0.14', 'mac': 'e2:fc:b0:b5:ff:9c', 'enabled': True},
-#]
-
 pipeline = [
     {'label': 'MiniNet', 'active': True},
     {'label': 'Bridge',  'active': True},
@@ -54,6 +46,7 @@ def render_pipeline():
 @ui.page('/ControlCenter')
 def control_center_page():
     ui.dark_mode().enable()
+
     ui.add_head_html("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap');
@@ -237,6 +230,7 @@ def control_center_page():
         }
     </style>
     """)
+
     def make_toggle(j):
         def _toggle(e):
             host_name = f'h{j +1}'
@@ -263,7 +257,6 @@ def control_center_page():
                         '--q-color: #22c55e;' if dev['enabled'] else '--q-color: #ef4444;'
                     ).props('dense color=green')
 
-    #selected_devices = app.storage.user['device_list']
     def end_session():
         teardown_topo()
         mininet_network.stop()
@@ -271,15 +264,10 @@ def control_center_page():
 
     with ui.element('div').classes('cc-wrapper'):
         with ui.element('div').classes('cc-card'):
-
             ui.html('<h1 class="cc-title">Control Center</h1>')
-
-
             device_container = ui.element('div').classes('devices-card')
 
-
             render_devices()
-
             render_pipeline()
             ui.timer(5.0, render_pipeline.refresh)
 
