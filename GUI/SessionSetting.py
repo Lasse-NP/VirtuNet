@@ -31,23 +31,27 @@ async def initialize_configure_and_go():
         ui.notify(str(e), type='negative')
         return
 
-
 def build_host_list():
     hosts = []
     for row in session_rows:
-        for i in range(1, row['count'] + 1):
-            hosts.append({
-                'name': f'{row["device"]}{i}',
-                'device': row['device'],
-                'os': row['os'],
-            })
+        device_class = row['device_class']
+        if device_class is None:
+            continue
+        for _ in range(row['count']):
+            hosts.append(device_class())
     return hosts
 
-@ui.refreshable
-def render():
-    def add_row() -> None:
-        session_rows.append({})
-
+def get_available_device_options(current_row_idx, vendor_class):
+    already_chosen = {
+        row['device_class']
+        for j, row in enumerate(session_rows)
+        if j != current_row_idx and row['device_class'] is not None
+    }
+    return [
+        cls.__name__
+        for cls in vendor_class.__subclasses__()
+        if cls not in already_chosen
+    ]
 
 def render_devices(devices_list):
     devices_list.clear()
@@ -59,21 +63,62 @@ def render_devices(devices_list):
                 with ui.item_section().style('align-items: center;'):
                     ui.item_label(row['count']).classes('count-badge')
 
-                def make_display_devices(d, selected_vendor):
-                    d.set_options([cls.__name__ for cls in selected_vendor.__subclasses__()])
+                existing_vendor = row.get('vendor_name')
+                existing_device_options = []
+
+                if existing_vendor and existing_vendor in vendor_dictionary:
+                    vendor_cls = vendor_dictionary[existing_vendor]
+                    existing_device_options = get_available_device_options(i, vendor_cls)
+
+                device_select = ui.select(
+                    with_input=True,
+                    options=existing_device_options,
+                    label='Device',
+                ).classes('w-40')
+
+                if row['device_class'] is not None:
+                    device_select.set_value(row['device_class'].__name__)
+
+                def make_device_handler(idx):
+                    def on_device_change(e):
+                        if not e.value:
+                            return
+                        vendor_class = vendor_dictionary[session_rows[idx]['vendor_name']]
+                        for cls in vendor_class.__subclasses__():
+                            if cls.__name__ == e.value:
+                                session_rows[idx]['device_class'] = cls
+                                break
+                    return on_device_change
+
+                device_select.on_value_change(make_device_handler(i))
+
+                def make_vendor_handler(idx, d_select):
+                    def on_vendor_change(e):
+                        vendor_class = vendor_dictionary[e.value]
+
+                        subclasses_names = get_available_device_options(idx, vendor_class)
+                        d_select.set_options(subclasses_names, value=None)
+
+                        session_rows[idx]['device_class'] = None
+                        session_rows[idx]['vendor_name'] = e.value
+                    return on_vendor_change
 
                 with ui.item_section().style('align-items: center;'):
-                    device = ui.select(with_input=True, options=[]).classes('w-40')
+                    ui.select(
+                        options=list(vendor_dictionary.keys()),
+                        with_input=True,
+                        label='Vendor',
+                        value=row.get('vendor_name'),
+                        on_change=make_vendor_handler(i, device_select)
+                    ).classes('w-40')
 
                 with ui.item_section().style('align-items: center;'):
-                    vendor = ui.select(options=list(vendor_dictionary.keys()), with_input=True,
-                            on_change=lambda e, d=device: make_display_devices(d, vendor_dictionary[e.value])).classes('w-40')
-
-                idx = i
+                    device_select.move(ui.item_section().style('align-items: center;'))
 
                 def make_increment(j):
                     def _increment():
                         session_rows[j]['count'] += 1
+                        render_devices(devices_list)
                     return _increment
 
                 def make_decrement(j):
@@ -84,8 +129,9 @@ def render_devices(devices_list):
                     return _decrement
 
                 with ui.element('div').style('display:flex; flex-direction: column; gap: 1px; flex-shrink: 0;').classes('items-end'):
-                    ui.button('+', on_click=make_increment(idx)).classes('btn-small').props('flat dense')
-                    ui.button('−', on_click=make_decrement(idx)).classes('btn-small').props('flat dense')
+                    ui.button('+', on_click=make_increment(i)).classes('btn-small').props('flat dense')
+                    ui.button('−', on_click=make_decrement(i)).classes('btn-small').props('flat dense')
+
 
 @ui.page('/Session')
 def session_settings_page():
@@ -193,7 +239,11 @@ def session_settings_page():
                         render_devices(device_list)
 
                 def add_row():
-                    session_rows.append({'count': 1, 'device': 'PC', 'os': 'Windows 11'})
+                    session_rows.append({
+                        'count': 1,
+                        'vendor_name': None,
+                        'device_class': None
+                    })
                     render_devices(device_list)
 
                 ui.button('−', on_click=remove_row).classes('btn-global').props('flat')
@@ -206,3 +256,10 @@ def session_settings_page():
                 'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
             ).props('outlined rounded')
             ui.button('Start Server', on_click=initialize_configure_and_go).classes('btn-start')
+
+if __name__ == '__main__':
+    @ui.page('/')
+    def index():
+        ui.navigate.to('/Session')
+
+    ui.run(native=True, reload=False, window_size=(600, 1000))
