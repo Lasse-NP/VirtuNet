@@ -7,10 +7,12 @@ from Networking.server import openvpn_server
 from Models.Vendor.Apple import Apple
 from Models.Vendor.Asus import Asus
 from Models.Vendor.Samsung import Samsung
+from Models.Vendor.Sony import Sony
 
 from Models.Devices.Apple import AppleWatch, IPhone, MacBook
 from Models.Devices.Asus import AsusMotherboard
 from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
+from Models.Devices.Sony import Playstation5
 
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
@@ -19,14 +21,15 @@ session_rows = []
 vendor_dictionary = {
     "Apple": Apple,
     "Samsung": Samsung,
-    "Asus": Asus
+    "Asus": Asus,
+    "Sony": Sony
     }
 
 device_list: List | None = None
 
 async def initialize_configure_and_go():
     host_list = build_host_list()
-    app.storage.user['selected_hosts'] = host_list
+    app.storage.user['selected_hosts'] = [d.to_dict() for d in host_list]
     try:
         await asyncio.to_thread(openvpn_server.initialize)
         ui.notify('Starting OpenVPN...')
@@ -214,8 +217,8 @@ def session_settings_page():
         }
 
         .btn-start {
-            background-color: white;
-            color: #1a1a1a;
+            background-color: #2a2a2a;
+            color: white;
             border-radius: 16px;
             font-family: 'Orbitron', sans-serif;
             font-size: 22px;

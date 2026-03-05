@@ -12,3 +12,11 @@ class Device:
 
     def print_mac_address(self):
         print(self.macAddress)
+
+    def to_dict(self):
+        return {
+            'type': type(self).__name__,
+            'name': self.name,
+            'os': self.os,
+            'mac': self.macAddress,
+        }

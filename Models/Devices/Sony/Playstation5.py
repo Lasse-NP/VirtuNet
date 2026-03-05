@@ -1,11 +1,10 @@
-from faker import faker
+from faker import Faker
 
 from Models.Vendor.Sony import Sony
 
 class Playstation5(Sony):
-
     def __init__(self):
-        fake = faker
-        device_name = f"{fake.first.name()}-Playstation5-{fake.uuid4()[:4]}"
-        super().__init__(device_name)
-
+        fake = Faker()
+        device_name = f"{fake.first_name()[:4]}-PS5"
+        device_os = 'FreeBSD'
+        super().__init__(device_name[:10], device_os)

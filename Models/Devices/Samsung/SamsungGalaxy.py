@@ -2,7 +2,6 @@ from faker import Faker
 
 from Models.Vendor.Samsung import Samsung
 
-
 class SamsungGalaxy(Samsung):
     def __init__(self):
         fake = Faker()

@@ -6,11 +6,34 @@ from Networking.cleanup import run_cleanup
 from Networking.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
 from Networking.server import verify_openvpn
 
+from Models.Vendor.Apple import Apple
+from Models.Vendor.Asus import Asus
+from Models.Vendor.Samsung import Samsung
+from Models.Vendor.Sony import Sony
+
+from Models.Devices.Apple import AppleWatch, IPhone, MacBook
+from Models.Devices.Asus import AsusMotherboard
+from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
+from Models.Devices.Sony import Playstation5
+
 pipeline = [
     {'label': 'MiniNet', 'active': True},
     {'label': 'Bridge',  'active': True},
     {'label': 'VPN',     'active': True},
 ]
+
+DEVICE_REGISTRY = {
+    'IPhone': IPhone,
+    'AppleWatch': AppleWatch,
+    'MacBook': MacBook,
+    'AsusMotherboard': AsusMotherboard,
+    'GalaxyBook': GalaxyBook,
+    'SamsungFridge': SamsungFridge,
+    'SamsungGalaxy': SamsungGalaxy,
+    'SamsungSmartTV': SamsungSmartTV,
+    'Playstation5': Playstation5,
+}
+
 device_states: dict[int, bool] = {}
 
 def get_devices():
@@ -26,6 +49,19 @@ def get_devices():
         }
         for i, host in enumerate(hosts)
     ]
+
+def deserialize_hosts(raw_list):
+    hosts = []
+    for d in raw_list:
+        cls = DEVICE_REGISTRY.get(d['type'])
+        if cls is None:
+            continue
+        obj = cls.__new__(cls)
+        obj.name = d['name']
+        obj.os = d['os']
+        obj.macAddress = d['mac']
+        hosts.append(obj)
+    return hosts
 
 def get_pipline_status():
     return {
@@ -84,7 +120,7 @@ def control_center_page():
         }
 
         .devices-card {
-            background-color: white;
+            background-color: #383838;
             border-radius: 14px;
             width: clamp(30rem, 50vw + 1rem, 60rem);
             padding: 10px;
@@ -156,7 +192,7 @@ def control_center_page():
 
         /* Pipeline bar */
         .pipeline-card {
-            background-color: white;
+            background-color: #383838;
             border-radius: 14px;
             width: clamp(20rem, 20vw + 1rem, 30rem);
             padding: 14px 18px;
@@ -196,8 +232,8 @@ def control_center_page():
         }
 
         .btn-reset {
-            background-color: white;
-            color: #1a1a1a;
+            background-color: #2a2a2a;
+            color: white;
             border-radius: 14px;
             font-family: 'Orbitron', sans-serif;
             font-size: 18px;
@@ -209,8 +245,8 @@ def control_center_page():
         }
 
         .btn-reboot {
-            background-color: white;
-            color: #1a1a1a;
+            background-color: #2a2a2a;
+            color: white;
             border-radius: 14px;
             font-family: 'Orbitron', sans-serif;
             font-size: 18px;
@@ -222,8 +258,8 @@ def control_center_page():
         }
 
         .btn-end {
-            background-color: white;
-            color: #1a1a1a;
+            background-color: #2a2a2a;
+            color: white;
             border-radius: 14px;
             font-family: 'Orbitron', sans-serif;
             font-size: 22px;
@@ -273,7 +309,8 @@ def control_center_page():
         ui.notify('Disabled devices restarted!', type = 'positive')
 
     async def reboot_network():
-        host_list = app.storage.user.get('selected_hosts', [])
+        raw = app.storage.user.get('selected_hosts', [])
+        host_list = deserialize_hosts(raw)
         if not host_list:
             ui.notify('No host list found!', type = 'negative')
             return
