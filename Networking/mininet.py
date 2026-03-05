@@ -50,7 +50,7 @@ def teardown_topo():
 class MininetNetwork:
     def __init__(self):
         self._net = None
-        self._hosts = []
+        self._hosts = {}
 
     def get_net(self):
         return self._net
@@ -58,7 +58,7 @@ class MininetNetwork:
     def get_hosts(self):
         return self._hosts
 
-    def configuration(self, host_list):
+    def configuration(self, device_list):
         base_ip = get_base_ip(LAB_SUBNET)
 
         net = Mininet(controller=Controller, link=TCLink, switch=OVSBridge)
@@ -66,12 +66,11 @@ class MininetNetwork:
         c0 = self._net.addController('c0')
         s1 = self._net.addSwitch('s1', cls=OVSBridge, failMode='standalone')
 
-        hosted_hosts = []
-        for index, host in enumerate(host_list, start=1):
+        hosted_hosts = {}
+        for index, device in enumerate(device_list, start=1):
             ip = f'{base_ip}.{index + 2}/{LAB_PREFIX}'
-            mac = f'00:00:00:00:00:{index:02x}'
-            h = net.addHost(f'h{index}', ip=ip, mac=mac)
-            hosted_hosts.append(h)
+            h = net.addHost(device.name, ip=ip, mac=device.macAddress)
+            hosted_hosts[h] = device.os
             self._net.addLink(h, s1)
 
         self._net.build()

@@ -12,13 +12,14 @@ pipeline = [
     {'label': 'VPN',     'active': True},
 ]
 device_states: dict[int, bool] = {}
+
 def get_devices():
     hosts = mininet_network.get_hosts()
     return [
         {
             'id': i + 1,
-            'device': f'h{i + 1}',
-            'os': 'Linux',
+            'device': host,
+            'os': hosts[host],
             'ip': host.IP(),
             'mac': host.MAC(),
             'enabled': device_states.get(i, True),
@@ -276,6 +277,7 @@ def control_center_page():
         if not host_list:
             ui.notify('No host list found!', type = 'negative')
             return
+        teardown_topo()
         mininet_network.stop()
         await asyncio.to_thread(mininet_network.configuration, host_list)
         device_states.clear()

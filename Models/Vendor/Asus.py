@@ -14,5 +14,5 @@ class Asus(Device):
 
 
 
-    def __init__(self, device_name):
-        super().__init__(device_name, macAddressPrefix=random.choice(self.mac_prefix))
+    def __init__(self, device_name, device_os):
+        super().__init__(device_name, device_os, macAddressPrefix=random.choice(self.mac_prefix))
