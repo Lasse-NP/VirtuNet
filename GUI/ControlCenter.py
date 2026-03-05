@@ -18,7 +18,7 @@ def get_devices():
     return [
         {
             'id': i + 1,
-            'device': f'h{i + 1}',
+            'device': host,
             'os': 'Linux',
             'ip': host.IP(),
             'mac': host.MAC(),
