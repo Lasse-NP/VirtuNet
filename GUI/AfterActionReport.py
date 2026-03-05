@@ -1,18 +1,12 @@
 from nicegui import ui
 from nicegui import app
 
-from Networking.cleanup import run_cleanup
-
 report_data = {
     'found_devices': 2,
     'missing_devices': 6,
     'session_duration': 18,
     'avg_time_per_device': 9,
 }
-
-def reset_state():
-    run_cleanup()
-    ui.navigate.to('/')
 
 @ui.page('/AfterActionReport')
 def after_action_report_page():
@@ -118,7 +112,7 @@ def after_action_report_page():
                 ui.html(f'<span class="report-line">Session Duration: {report_data["session_duration"]} min</span>')
                 ui.html(f'<span class="report-line">Average time per device: {report_data["avg_time_per_device"]} min</span>')
             with ui.element('div').classes('bottom-row'):
-                ui.button('Restart', on_click=lambda: reset_state()).classes('btn-restart').props('flat')
+                ui.button('Restart', on_click=lambda: ui.navigate.to('/')).classes('btn-restart').props('flat')
                 ui.button('Exit', on_click=lambda: app.shutdown()).classes('btn-exit').props('flat')
 
 
