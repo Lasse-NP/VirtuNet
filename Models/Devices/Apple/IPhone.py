@@ -3,7 +3,7 @@ from faker import Faker
 from Models.Vendor.Apple import Apple
 
 
-class Iphone(Apple):
+class IPhone(Apple):
     def __init__(self):
         fake = Faker()
         device_name = f"{fake.first_name()}-Iphone-{fake.uuid4()[:4]}"
