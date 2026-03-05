@@ -11,10 +11,15 @@ from Models.Vendor.Asus import Asus
 from Models.Vendor.Samsung import Samsung
 from Models.Vendor.Sony import Sony
 
-from Models.Devices.Apple import AppleWatch, IPhone, MacBook
-from Models.Devices.Asus import AsusMotherboard
-from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
-from Models.Devices.Sony import Playstation5
+from Models.Devices.Apple.IPhone import IPhone
+from Models.Devices.Apple.AppleWatch import AppleWatch
+from Models.Devices.Apple.MacBook import MacBook
+from Models.Devices.Asus.AsusMotherboard import AsusMotherboard
+from Models.Devices.Samsung.GalaxyBook import GalaxyBook
+from Models.Devices.Samsung.SamsungFridge import SamsungFridge
+from Models.Devices.Samsung.SamsungGalaxy import SamsungGalaxy
+from Models.Devices.Samsung.SamsungSmartTV import SamsungSmartTV
+from Models.Devices.Sony.Playstation5 import Playstation5
 
 pipeline = [
     {'label': 'MiniNet', 'active': True},
@@ -54,6 +59,7 @@ def deserialize_hosts(raw_list):
     hosts = []
     for d in raw_list:
         cls = DEVICE_REGISTRY.get(d['type'])
+        print(f"type={d['type']} -> cls={cls} -> is_class={isinstance(cls, type)}")
         if cls is None:
             continue
         obj = cls.__new__(cls)
@@ -274,7 +280,9 @@ def control_center_page():
 
     def make_toggle(j):
         def _toggle(e):
-            host_name = f'h{j +1}'
+            devices = get_devices()
+            current_device = devices[j]
+            host_name = current_device['device'].name
             device_states[j] = e.value
             if e.value:
                 mininet_network.start_device(host_name)
@@ -303,7 +311,7 @@ def control_center_page():
         current_devices = get_devices()
         for i, dev in enumerate(current_devices):
             if not dev['enabled']:
-                mininet_network.start_device(f'h{i + 1}')
+                mininet_network.start_device(dev['device'].name)
                 device_states[i] = True
         render_devices()
         ui.notify('Disabled devices restarted!', type = 'positive')
