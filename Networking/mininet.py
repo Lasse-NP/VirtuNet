@@ -96,14 +96,14 @@ class MininetNetwork:
             return
         host = self._net.get(host_name)
         if host:
-            host.start()
+            host.cmd(f'ip link set {host.defaultIntf()} up')
 
     def stop_device(self, host_name: str):
         if self._net is None:
             return
         host = self._net.get(host_name)
         if host:
-            host.stop()
+            host.cmd(f'ip link set {host.defaultIntf()} down')
 
     def stop(self):
         if self._net is not None:
