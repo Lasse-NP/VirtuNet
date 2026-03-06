@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;600&display=swap');
+
+.btn-generate {
+    background-color: white;
+    color: #333;
+    border-radius: 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 24px;
+    width: clamp(15rem, 15vw + 1rem, 30rem);
+    text-transform: none;
+    box-shadow: none;
+    letter-spacing: 0.5px;
+}
+
+.btn-continue {
+    background-color: white;
+    color: #222;
+    border-radius: 16px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    width: clamp(20rem, 20vw + 1rem, 40rem);
+    padding: 16px;
+    text-transform: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    letter-spacing: 1px;
+}

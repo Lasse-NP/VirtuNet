@@ -1,4 +1,4 @@
-from nicegui import ui
+from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio
 from Networking import pki
@@ -88,36 +88,12 @@ def create_lobby():
             ui.button('Generate Join File', on_click=lambda: generate_join_file(name_input.value)).classes('btn-generate')
             ui.button('Continue', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue')
 
-    ui.add_head_html("""
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;600&display=swap');
+    app.add_static_files('/CSS', 'CSS')
+    ui.add_head_html('<link rel="stylesheet" href="/CSS/Lobby.css">')
 
-            .btn-generate {
-                background-color: white;
-                color: #333;
-                border-radius: 20px;
-                font-family: 'Orbitron', sans-serif;
-                font-size: 14px;
-                font-weight: 600;
-                padding: 8px 24px;
-                width: clamp(15rem, 15vw + 1rem, 30rem);
-                text-transform: none;
-                box-shadow: none;
-                letter-spacing: 0.5px;
-            }
+if __name__ == '__main__':
+    @ui.page('/')
+    def index():
+        ui.navigate.to('/Lobby')
 
-            .btn-continue {
-                background-color: white;
-                color: #222;
-                border-radius: 16px;
-                font-family: 'Orbitron', sans-serif;
-                font-size: 22px;
-                font-weight: 700;
-                width: clamp(20rem, 20vw + 1rem, 40rem);
-                padding: 16px;
-                text-transform: none;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                letter-spacing: 1px;
-            }
-        </style>
-        """)
+    ui.run(native=True, reload=False, window_size=(600, 1000))
