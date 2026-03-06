@@ -1,6 +1,5 @@
 import os
 import sys
-import subprocess
 import time
 from .config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID, CLIENT_DIR, LAB_SERVER_IP, LAB_PREFIX
 from .serverconfig import write_server_conf
@@ -38,7 +37,7 @@ class OpenVPNServer:
         run(f'openvpn --config {SERVER_CONF} --daemon')
 
         for _ in range(20):
-            result = subprocess.run(['ip', 'link', 'show', TAP_IFACE], capture_output=True, text=True)
+            result = run(f'ip link show {TAP_IFACE}')
             if result.returncode == 0:
                 info(f'*** TAP Interface {TAP_IFACE} is up\n')
                 run(f'ip link set {TAP_IFACE} up')

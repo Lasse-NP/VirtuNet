@@ -272,3 +272,10 @@ if __name__ == '__main__':
         ui.navigate.to('/Session')
 
     ui.run(native=True, reload=False, window_size=(600, 1000))
+
+if __name__ == '__main__':
+    @ui.page('/')
+    def index():
+        ui.navigate.to('/Session')
+
+    ui.run(native=True, reload=False, window_size=(600, 1000))
