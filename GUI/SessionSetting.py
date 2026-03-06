@@ -65,11 +65,11 @@ def get_available_device_options(current_row_idx, vendor_class):
 def render_devices(devices_list):
     devices_list.clear()
     with devices_list:
-        ui.item_label('Devices').props('header').classes('item-header text-bold justify-center')
+        ui.item_label('Devices').props('header')
         ui.separator()
         for i, row in enumerate(session_rows):
-            with ui.item():
-                with ui.item_section().style('align-items: center;'):
+            with ui.item().style('display: flex; flex-direction: row; align-items: center; gap: 20px; padding: 4px 8px;'):
+                with ui.item_section().style('align-items: center; flex: 0 0 auto; min-width: unset; width: 44px;'):
                     ui.item_label(row['count']).classes('count-badge')
 
                 existing_vendor = row.get('vendor_name')
@@ -79,11 +79,12 @@ def render_devices(devices_list):
                     vendor_cls = vendor_dictionary[existing_vendor]
                     existing_device_options = get_available_device_options(i, vendor_cls)
 
-                device_select = ui.select(
-                    with_input=True,
-                    options=existing_device_options,
-                    label='Device',
-                ).classes('w-40')
+                with ui.element('div').style('display: none;'):
+                    device_select = ui.select(
+                        with_input=True,
+                        options=existing_device_options,
+                        label='Device',
+                    ).style('align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);').classes('w-40')
 
                 if row['device_class'] is not None:
                     device_select.set_value(row['device_class'].__name__)
@@ -112,17 +113,17 @@ def render_devices(devices_list):
                         session_rows[idx]['vendor_name'] = e.value
                     return on_vendor_change
 
-                with ui.item_section().style('align-items: center;'):
+                with ui.element('div').style('display: flex; align-items: center;'):
                     ui.select(
                         options=list(vendor_dictionary.keys()),
                         with_input=True,
                         label='Vendor',
                         value=row.get('vendor_name'),
                         on_change=make_vendor_handler(i, device_select)
-                    ).classes('w-40')
+                    ).style('align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);').classes('w-40')
 
-                with ui.item_section().style('align-items: center;'):
-                    device_select.move(ui.item_section().style('align-items: center;'))
+                device_div = ui.element('div').style('display: flex; align-items: center;')
+                device_select.move(device_div)
 
                 def make_increment(j):
                     def _increment():
@@ -137,7 +138,7 @@ def render_devices(devices_list):
                             render_devices(devices_list)
                     return _decrement
 
-                with ui.element('div').style('display:flex; flex-direction: column; gap: 1px; flex-shrink: 0;').classes('items-end'):
+                with ui.element('div').style('display:flex; margin-left: auto; flex-direction: column; gap: 1px; flex-shrink: 0;').classes('items-end'):
                     ui.button('+', on_click=make_increment(i)).classes('btn-small').props('flat dense')
                     ui.button('−', on_click=make_decrement(i)).classes('btn-small').props('flat dense')
 
@@ -148,10 +149,10 @@ def session_settings_page():
 
     global device_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%;').classes('items-center'):
-        with ui.column().style('width: 100%; height: 100%;'):
+        with ui.column().style('width: 90%; height: 100%;').classes('items-center'):
             ui.label('Session Settings').style('font-family: "Orbitron", sans-serif; font-size: 32px; font-weight: 700; color: #4a7cdc;')
 
-            with ui.element('div').style('flex: 1; position: relative; width: 100%; max-width: 60rem; border: 2px solid gray; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
+            with ui.element('div').style('flex: 1; position: relative; width: 100%; max-width: 60rem; border: 4px solid #4a7cdc; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
                 device_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
                 render_devices(device_list)
                 #render()

@@ -64,6 +64,7 @@
     height: 52px;
     min-width: unset;
     border-radius: 10px;
+    border: 2px solid #4a7cdc;
     box-shadow: none;
 }
 

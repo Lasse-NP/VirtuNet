@@ -17,7 +17,7 @@ def start_gui():
     app.add_static_files('/assets', str(Path(__file__).parent / '../Assets'))
 
     with ui.element('div').style('height: calc(100vh - 50px); width: 100%; overflow: hidden; display: flex; justify-content: center;'):
-        with ui.column().style('height: 100%; width: max(500px, 50%); overflow: hidden; background-color: #333; border-radius: 30px; border: 4px solid #4a7cdc').classes('items-center'):
+        with ui.column().style('height: 100%; width: max(500px, 50%); overflow: hidden; background-color: #333; border-radius: 30px; border: 4px solid #4a7cdc;').classes('items-center'):
             ui.label('VirtuNet').style('font-size: clamp(6rem, 6vw + 1rem, 10rem); font-family: "Orbitron", sans-serif; color: #4a7cdc;')
             with ui.element('div').style('width: min(600px, 70%); height: auto;'):
                 ui.image('/assets/VirtuNetIcon.png').style('width: 100%; height: 100%;')
