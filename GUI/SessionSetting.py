@@ -145,92 +145,6 @@ def render_devices(devices_list):
 @ui.page('/Session')
 def session_settings_page():
     ui.dark_mode().enable()
-    ui.add_head_html("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap');
-
-        .count-badge {
-            background-color: #1a1a1a;
-            color: white;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            width: 44px;
-            height: 44px;
-            min-width: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            border: 2px solid #555;
-        }
-
-        .device-name {
-            color: white;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            flex: 1;
-        }
-
-        .os-name {
-            color: #aaa;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 13px;
-            flex: 1;
-        }
-
-        .btn-small {
-            background-color: #111;
-            color: white;
-            font-size: 13px;
-            font-weight: 900;
-            width: 28px;
-            height: 24px;
-            min-width: unset;
-            padding: 0;
-            border-radius: 5px;
-            box-shadow: none;
-        }
-
-        .global-btn-row {
-            display: flex;
-            position: absolute;
-            right: 10px;
-            bottom: 10px;
-            justify-content: flex-end;
-            width: 100%;
-            gap: 8px;
-            margin-top: 4px;
-        }
-
-        .btn-global {
-            background-color: #2a2a2a;
-            color: white;
-            font-size: 22px;
-            font-weight: 900;
-            width: 52px;
-            height: 52px;
-            min-width: unset;
-            border-radius: 10px;
-            box-shadow: none;
-        }
-
-        .btn-start {
-            background-color: #2a2a2a;
-            color: white;
-            border-radius: 16px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 22px;
-            font-weight: 700;
-            width: clamp(20rem, 20vw + 1rem, 40rem);
-            padding: 16px;
-            text-transform: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            letter-spacing: 1px;
-        }
-    </style>
-    """)
 
     global device_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%;').classes('items-center'):
@@ -266,12 +180,92 @@ def session_settings_page():
             ).props('outlined rounded')
             ui.button('Start Server', on_click=initialize_configure_and_go).classes('btn-start')
 
-if __name__ == '__main__':
-    @ui.page('/')
-    def index():
-        ui.navigate.to('/Session')
+    ui.add_head_html("""
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap');
 
-    ui.run(native=True, reload=False, window_size=(600, 1000))
+            .count-badge {
+                background-color: #1a1a1a;
+                color: white;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 20px;
+                font-weight: 700;
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                border: 2px solid #555;
+            }
+
+            .device-name {
+                color: white;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 13px;
+                font-weight: 700;
+                flex: 1;
+            }
+
+            .os-name {
+                color: #aaa;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 13px;
+                flex: 1;
+            }
+
+            .btn-small {
+                background-color: #111;
+                color: white;
+                font-size: 13px;
+                font-weight: 900;
+                width: 28px;
+                height: 24px;
+                min-width: unset;
+                padding: 0;
+                border-radius: 5px;
+                box-shadow: none;
+            }
+
+            .global-btn-row {
+                display: flex;
+                position: absolute;
+                right: 10px;
+                bottom: 10px;
+                justify-content: flex-end;
+                width: 100%;
+                gap: 8px;
+                margin-top: 4px;
+            }
+
+            .btn-global {
+                background-color: #2a2a2a;
+                color: white;
+                font-size: 22px;
+                font-weight: 900;
+                width: 52px;
+                height: 52px;
+                min-width: unset;
+                border-radius: 10px;
+                box-shadow: none;
+            }
+
+            .btn-start {
+                background-color: #2a2a2a;
+                color: white;
+                border-radius: 16px;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 22px;
+                font-weight: 700;
+                width: clamp(20rem, 20vw + 1rem, 40rem);
+                padding: 16px;
+                text-transform: none;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                letter-spacing: 1px;
+            }
+        </style>
+        """)
 
 if __name__ == '__main__':
     @ui.page('/')

@@ -72,39 +72,6 @@ def add_trainee(name):
 @ui.page('/Lobby')
 def create_lobby():
     ui.dark_mode().enable()
-    ui.add_head_html("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;600&display=swap');
-
-        .btn-generate {
-            background-color: white;
-            color: #333;
-            border-radius: 20px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            padding: 8px 24px;
-            width: clamp(15rem, 15vw + 1rem, 30rem);
-            text-transform: none;
-            box-shadow: none;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-continue {
-            background-color: white;
-            color: #222;
-            border-radius: 16px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 22px;
-            font-weight: 700;
-            width: clamp(20rem, 20vw + 1rem, 40rem);
-            padding: 16px;
-            text-transform: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            letter-spacing: 1px;
-        }
-    </style>
-    """)
 
     global trainee_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%').classes('items-center'):
@@ -120,3 +87,37 @@ def create_lobby():
             name_input = ui.input(placeholder='Trainee Name').props('outlined').style('background-color: #383838; border-radius: 5px 5px 0 0; width: max(20em, 10%)')
             ui.button('Generate Join File', on_click=lambda: generate_join_file(name_input.value)).classes('btn-generate')
             ui.button('Continue', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue')
+
+    ui.add_head_html("""
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;600&display=swap');
+
+            .btn-generate {
+                background-color: white;
+                color: #333;
+                border-radius: 20px;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 14px;
+                font-weight: 600;
+                padding: 8px 24px;
+                width: clamp(15rem, 15vw + 1rem, 30rem);
+                text-transform: none;
+                box-shadow: none;
+                letter-spacing: 0.5px;
+            }
+
+            .btn-continue {
+                background-color: white;
+                color: #222;
+                border-radius: 16px;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 22px;
+                font-weight: 700;
+                width: clamp(20rem, 20vw + 1rem, 40rem);
+                padding: 16px;
+                text-transform: none;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                letter-spacing: 1px;
+            }
+        </style>
+        """)
