@@ -1,6 +1,5 @@
 import time
 import pytest
-import unittest
 from unittest.mock import MagicMock
 
 @pytest.fixture
@@ -120,6 +119,3 @@ class TestMininetNetwork:
 
         # Assert
         mock_host.cmd.assert_called_once()
-
-if __name__ == '__main__':
-    unittest.main()
