@@ -1,6 +1,7 @@
 from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio
+import os
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
 
@@ -147,6 +148,9 @@ def render_devices(devices_list):
 def session_settings_page():
     ui.dark_mode().enable()
 
+    app.add_static_files('/CSS', os.path.join(os.path.dirname(__file__), 'CSS'))
+    ui.add_head_html('<link rel="stylesheet" href="/CSS/SessionSettings.css">')
+
     global device_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%;').classes('items-center'):
         with ui.column().style('width: 90%; height: 100%;').classes('items-center'):
@@ -181,9 +185,6 @@ def session_settings_page():
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
                 ).props('outlined rounded')
                 ui.button('Start Server', on_click=initialize_configure_and_go).classes('btn-start')
-
-    app.add_static_files('/CSS', 'CSS')
-    ui.add_head_html('<link rel="stylesheet" href="/CSS/SessionSettings.css">')
 
 if __name__ == '__main__':
     @ui.page('/')

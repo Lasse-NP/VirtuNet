@@ -1,6 +1,6 @@
 from nicegui import ui
 from nicegui import app
-
+import os
 
 
 @ui.page('/AfterActionReport')
@@ -12,6 +12,9 @@ def after_action_report_page():
         'avg_time_per_device': 0,
     })
     ui.dark_mode().enable()
+
+    app.add_static_files('/CSS', os.path.join(os.path.dirname(__file__), 'CSS'))
+    ui.add_head_html('<link rel="stylesheet" href="/CSS/AfterActionReport.css">')
 
     with ui.element('div').classes('aar-wrapper'):
         with ui.element('div').classes('aar-card'):
@@ -27,8 +30,7 @@ def after_action_report_page():
                 ui.button('Restart', on_click=lambda: ui.navigate.to('/')).classes('btn-restart').props('flat')
                 ui.button('Exit', on_click=lambda: app.shutdown()).classes('btn-exit').props('flat')
 
-    app.add_static_files('/CSS', 'CSS')
-    ui.add_head_html('<link rel="stylesheet" href="/CSS/AfterActionReport.css">')
+
 
 if __name__ == '__main__':
     @ui.page('/')

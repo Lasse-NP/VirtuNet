@@ -1,4 +1,5 @@
 import asyncio
+import os
 from nicegui import ui, app
 
 from Networking.cleanup import run_cleanup
@@ -93,7 +94,8 @@ def render_pipeline():
 def control_center_page():
     ui.dark_mode().enable()
 
-
+    app.add_static_files('/CSS', os.path.join(os.path.dirname(__file__), 'CSS'))
+    ui.add_head_html('<link rel="stylesheet" href="/CSS/ControlCenter.css">')
 
     def make_toggle(j):
         def _toggle(e):
@@ -173,9 +175,6 @@ def control_center_page():
                 ui.button('Reset',  on_click=reset_devices).classes('btn-reset').props('flat')
                 ui.button('Reboot', on_click=reboot_network).classes('btn-reboot').props('flat')
                 ui.button('End',   on_click=end_session).classes('btn-end').props('flat')
-
-    app.add_static_files('/CSS', 'CSS')
-    ui.add_head_html('<link rel="stylesheet" href="/CSS/ControlCenter.css">')
 
 if __name__ == '__main__':
     @ui.page('/')

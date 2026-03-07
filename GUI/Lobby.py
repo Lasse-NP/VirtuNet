@@ -1,6 +1,7 @@
 from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio
+import os
 from Networking import pki
 
 known_trainees = {}
@@ -69,9 +70,13 @@ def add_trainee(name):
             render_trainees(trainee_list)
 
 
+
 @ui.page('/Lobby')
 def create_lobby():
     ui.dark_mode().enable()
+
+    app.add_static_files('/CSS', os.path.join(os.path.dirname(__file__), 'CSS'))
+    ui.add_head_html('<link rel="stylesheet" href="/CSS/Lobby.css">')
 
     global trainee_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%').classes('items-center'):
@@ -87,9 +92,6 @@ def create_lobby():
             name_input = ui.input(placeholder='Trainee Name').props('outlined').style('background-color: #383838; border-radius: 5px 5px 0 0; width: max(20em, 10%)')
             ui.button('Generate Join File', on_click=lambda: generate_join_file(name_input.value)).classes('btn-generate')
             ui.button('Continue', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue')
-
-    app.add_static_files('/CSS', 'CSS')
-    ui.add_head_html('<link rel="stylesheet" href="/CSS/Lobby.css">')
 
 if __name__ == '__main__':
     @ui.page('/')
