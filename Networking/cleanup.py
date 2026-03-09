@@ -16,9 +16,15 @@ def run_cleanup():
 
     net = mininet_network.get_net()
     if net is not None:
+        print('*** Closing MiniNet')
         teardown_topo()
         mininet_network.stop()
+        print('*** MiniNet Down')
 
     openvpn_server.stop()
-    shutil.rmtree(BASE_DIR)
+
+    if os.path.exists(BASE_DIR):
+        shutil.rmtree(BASE_DIR)
+        print('*** Deleting Session Files')
+
     print('*** Cleanup finished successfully')
