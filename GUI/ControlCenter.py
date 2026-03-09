@@ -1,5 +1,6 @@
 import asyncio
-import os
+import sys
+from pathlib import Path
 from nicegui import ui, app
 
 from Networking.cleanup import run_cleanup
@@ -20,6 +21,11 @@ from Models.Devices.Samsung.SamsungFridge import SamsungFridge
 from Models.Devices.Samsung.SamsungGalaxy import SamsungGalaxy
 from Models.Devices.Samsung.SamsungSmartTV import SamsungSmartTV
 from Models.Devices.Sony.Playstation5 import Playstation5
+
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).parent
 
 pipeline = [
     {'label': 'MiniNet', 'active': True},
@@ -94,7 +100,7 @@ def render_pipeline():
 def control_center_page():
     ui.dark_mode().enable()
 
-    app.add_static_files('/CSS', os.path.join(os.path.dirname(__file__), 'CSS'))
+    app.add_static_files('/CSS', str(get_base_path() / 'GUI' / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/ControlCenter.css">')
 
     def make_toggle(j):

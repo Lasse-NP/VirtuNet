@@ -1,8 +1,13 @@
 from nicegui import ui, app
 from nicegui.elements.list import List
-import asyncio
-import os
+import asyncio, sys
+from pathlib import Path
 from Networking import pki
+
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).parent
 
 known_trainees = {}
 trainee_list: List | None = None
@@ -75,7 +80,7 @@ def add_trainee(name):
 def create_lobby():
     ui.dark_mode().enable()
 
-    app.add_static_files('/CSS', os.path.join(os.path.dirname(__file__), 'CSS'))
+    app.add_static_files('/CSS', str(get_base_path() / 'GUI' / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/Lobby.css">')
 
     global trainee_list

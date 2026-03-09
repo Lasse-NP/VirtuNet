@@ -1,7 +1,11 @@
+import sys
 from nicegui import ui, app
 from pathlib import Path
 
-
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).parent
 
 @ui.page('/')
 def start_gui():
@@ -12,9 +16,8 @@ def start_gui():
         </style>
     """)
 
-    print(str(Path(__file__).parent))
-
-    app.add_static_files('/assets', str(Path(__file__).parent / '../Assets'))
+    assets_path = get_base_path() / 'Assets'
+    app.add_static_files('/assets', str(assets_path))
 
     with ui.element('div').style('height: calc(100vh - 50px); width: 100%; overflow: hidden; display: flex; justify-content: center;'):
         with ui.column().style('height: 100%; width: max(500px, 50%); overflow: hidden; background-color: #333; border-radius: 30px; border: 4px solid #4a7cdc;').classes('items-center'):

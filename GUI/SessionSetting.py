@@ -1,7 +1,7 @@
 from nicegui import ui, app
 from nicegui.elements.list import List
-import asyncio
-import os
+import asyncio, os, sys
+from pathlib import Path
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
 
@@ -14,6 +14,11 @@ from Models.Devices.Apple import AppleWatch, IPhone, MacBook
 from Models.Devices.Asus import AsusMotherboard
 from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
 from Models.Devices.Sony import Playstation5
+
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).parent
 
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
@@ -148,7 +153,7 @@ def render_devices(devices_list):
 def session_settings_page():
     ui.dark_mode().enable()
 
-    app.add_static_files('/CSS', os.path.join(os.path.dirname(__file__), 'CSS'))
+    app.add_static_files('/CSS', str(get_base_path() / 'GUI' / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/SessionSettings.css">')
 
     global device_list

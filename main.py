@@ -1,6 +1,7 @@
 from nicegui import ui, app
 from Networking.cleanup import run_cleanup
 import setup
+import os
 
 import GUI.Frontpage
 import GUI.Lobby
@@ -20,6 +21,7 @@ async def handle_signal(sig, frame):
     sys.exit(1)
 
 if __name__ == '__main__':
+    os.environ['PYWEBVIEW_GUI'] = 'qt'
     setup.ensure_root()
     setup.check_dependencies()
     signal.signal(signal.SIGTERM, handle_signal)
