@@ -153,7 +153,7 @@ def render_devices(devices_list):
 def session_settings_page():
     ui.dark_mode().enable()
 
-    app.add_static_files('/CSS', str(get_base_path() / 'GUI' / 'CSS'))
+    app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/SessionSettings.css">')
 
     global device_list
@@ -195,5 +195,5 @@ if __name__ == '__main__':
     @ui.page('/')
     def index():
         ui.navigate.to('/Session')
-
+    app.native.window_args['min_size'] = (550, 1000)
     ui.run(native=True, reload=False, window_size=(600, 1000))

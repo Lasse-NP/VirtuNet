@@ -5,8 +5,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('Assets', 'Assets'),
-        ('GUI/CSS', 'GUI/CSS'),
+        ('GUI/Assets', 'Assets'),
+        ('GUI/CSS', 'CSS'),
     ],
     hiddenimports=[],
     hookspath=[],
