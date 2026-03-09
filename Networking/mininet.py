@@ -98,6 +98,7 @@ class MininetNetwork:
             run(f'ping -c 1 -W 1 {ip}', check=False)
             print(f'*** ARP primed for {ip}')
         self._start_time = time.time()
+
     def start_device(self, host_name: str):
         if self._net is None:
             return

@@ -52,6 +52,12 @@ DISTRO_FAMILIES = {
     "opensuse": "opensuse",
 }
 
+OVS_SERVICE_NAMES = [
+    'openvswitch',
+    'openvswitch-switch',
+    'ovs-vswitchd',
+]
+
 def get_distro_family():
     platform_info = platform.freedesktop_os_release()
 
@@ -61,6 +67,17 @@ def get_distro_family():
                 return DISTRO_FAMILIES[distro_id]
 
     raise RuntimeError(f"Unsupported distro: {platform_info.get('PRETTY_NAME', 'unknown')}")
+
+def start_openvswitch():
+    for service in OVS_SERVICE_NAMES:
+        result = subprocess.run(
+            ['systemctl', 'enable', '--now', service],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            return
+
+    raise RuntimeError('Could not start OpenVSwitch service, is it installed?')
 
 def check_dependencies():
     family = get_distro_family()
@@ -89,9 +106,12 @@ def check_dependencies():
 
     result = subprocess.run(['ovs-vsctl', 'show'], capture_output=True)
     if result.returncode != 0:
-        print('Error: ovs-vswitchd (Open vSwitch) service is not running.')
-        print('Run: sudo systemctl start ovs-vswitchd')
-        sys.exit(1)
+        try:
+            start_openvswitch()
+        except RuntimeError as e:
+            print (f"Error: {e}")
+            print("Openvswitch is disabled, please enable and start it.")
+            sys.exit(1)
 
     print('All dependencies satisfied.')
 
