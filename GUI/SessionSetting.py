@@ -4,6 +4,7 @@ import asyncio, os, sys
 from pathlib import Path
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
+from Service.ConnectionHandler import start_join_server
 
 from Models.Vendor.Apple import Apple
 from Models.Vendor.Asus import Asus
@@ -14,6 +15,8 @@ from Models.Devices.Apple import AppleWatch, IPhone, MacBook
 from Models.Devices.Asus import AsusMotherboard
 from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
 from Models.Devices.Sony import Playstation5
+
+
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -41,6 +44,8 @@ async def initialize_configure_and_go():
         ui.notify('Starting OpenVPN...')
         await asyncio.to_thread(mininet_network.configuration, host_list)
         ui.notify('Configuring MiniNet...')
+        await asyncio.to_thread(start_join_server)
+        ui.notify('Opening Join Server...')
         ui.navigate.to('/Lobby')
     except RuntimeError as e:
         ui.notify(str(e), type='negative')
