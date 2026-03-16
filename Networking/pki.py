@@ -138,6 +138,8 @@ verb 3
     with open(out_path, 'w') as f:
         f.write(traineeconfig)
 
+    return traineeconfig
+
 
 def remove_connected_client(name):
     easyrsa = EASYRSA_BIN
