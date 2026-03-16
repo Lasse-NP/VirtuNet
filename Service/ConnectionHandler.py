@@ -12,7 +12,7 @@ _thread: threading.Thread | None = None
 _active_code: str | None = None
 
 def _make_code(length=6) -> str:
-    return "".join(random.choices(string.ascii_letters + string.digits, k=length))
+    return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 class _Handler(BaseHTTPRequestHandler):
     def do_GET(self):
