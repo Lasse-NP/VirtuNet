@@ -3,17 +3,31 @@ from nicegui.elements.list import List
 import asyncio, sys
 from pathlib import Path
 from Networking import pki
+from Service.ConnectionHandler import start_join_server
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
         return Path(sys._MEIPASS)
     return Path(__file__).parent
 
+def open_join_server():
+    code = start_join_server()
+    ui.notify('Opening Join Server...')
+    return code
+
 known_trainees = {}
 trainee_list: List | None = None
 
 def refresh_trainees():
     connected = {c['name']: c for c in pki.get_connected_clients()}
+    for name, data in connected.items():
+        if name not in known_trainees:
+            known_trainees[name] = {
+                'name': name,
+                'connected': True,
+                'ip': data['ip'],
+                'connected_since': data['connected_since']
+            }
     for name in known_trainees:
         if name in connected:
             known_trainees[name]['connected'] = True
@@ -79,6 +93,7 @@ def add_trainee(name):
 @ui.page('/Lobby')
 def create_lobby():
     ui.dark_mode().enable()
+    code = open_join_server()
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/Lobby.css">')
@@ -86,7 +101,7 @@ def create_lobby():
     global trainee_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%').classes('items-center'):
         ui.label('Trainee Lobby').style('font-family: "Orbitron", sans-serif; font-size: 32px; font-weight: 700; color: #4a7cdc;')
-
+        ui.label(f'{code}').style('font-family: "Orbitron", sans-serif; font-size: 20px; font-weight: 700; color: #4a7cdc;')
         with ui.element('div').style('flex: 1; width: 100%; max-width: 60rem; border: 2px solid gray; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
             trainee_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
             render_trainees(trainee_list)

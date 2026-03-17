@@ -1,10 +1,9 @@
 from nicegui import ui, app
 from nicegui.elements.list import List
-import asyncio, os, sys
+import asyncio, sys
 from pathlib import Path
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
-from Service.ConnectionHandler import start_join_server
 
 from Models.Vendor.Apple import Apple
 from Models.Vendor.Asus import Asus
@@ -44,8 +43,6 @@ async def initialize_configure_and_go():
         ui.notify('Starting OpenVPN...')
         await asyncio.to_thread(mininet_network.configuration, host_list)
         ui.notify('Configuring MiniNet...')
-        await asyncio.to_thread(start_join_server)
-        ui.notify('Opening Join Server...')
         ui.navigate.to('/Lobby')
     except RuntimeError as e:
         ui.notify(str(e), type='negative')
