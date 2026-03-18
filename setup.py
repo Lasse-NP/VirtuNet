@@ -9,7 +9,7 @@ import tempfile
 REQUIRED_COMMANDS = [
     'openvpn',      #OpenVPN
     'ovs-vsctl',    #OVSwitch
-    'easyrsa',     #EasyRSA
+    'easyrsa',      #EasyRSA
     'mn'            #MiniNet
 ]
 

@@ -36,6 +36,7 @@ class OpenVPNServer:
         info('*** Starting OpenVPN server\n')
         run(f'openvpn --config {SERVER_CONF} --daemon')
 
+        # Check if OpenVPN server started and is up and ready for 10 seconds.
         for _ in range(20):
             result = run(f'ip link show {TAP_IFACE}')
             if result.returncode == 0:

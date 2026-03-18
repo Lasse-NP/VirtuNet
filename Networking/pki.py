@@ -36,8 +36,6 @@ def setup_pki():
     if not os.path.exists(tls_key):
         run(f'openvpn --genkey secret {tls_key}')
 
-    write_server_conf()
-
 
 def get_connected_clients():
     connected_clients = []
