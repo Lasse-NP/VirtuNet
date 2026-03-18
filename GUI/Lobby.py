@@ -101,7 +101,10 @@ def create_lobby():
     global trainee_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%').classes('items-center'):
         ui.label('Trainee Lobby').style('font-family: "Orbitron", sans-serif; font-size: 32px; font-weight: 700; color: #4a7cdc;')
-        ui.label(f'{code}').style('font-family: "Orbitron", sans-serif; font-size: 20px; font-weight: 700; color: #4a7cdc;')
+        ui.separator()
+        ui.label('Join Code').style(
+            'font-family: "Orbitron", sans-serif; font-size: 20px; font-weight: 700; color: #4a7cdc;')
+        ui.label(f'{code}').style('font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
         with ui.element('div').style('flex: 1; width: 100%; max-width: 60rem; border: 2px solid gray; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
             trainee_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
             render_trainees(trainee_list)
