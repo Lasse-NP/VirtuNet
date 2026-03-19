@@ -15,6 +15,8 @@ from Models.Devices.Asus import AsusMotherboard
 from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
 from Models.Devices.Sony import Playstation5
 
+import random
+
 
 
 def get_base_path():
@@ -22,7 +24,7 @@ def get_base_path():
         return Path(sys._MEIPASS)
     return Path(__file__).parent
 
-PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
+PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup', 'Random']
 
 PRESET_CONFIGS = {
     'Home Setup': [
@@ -216,7 +218,28 @@ def session_settings_page():
                 ui.label('Presets').style('font-family: "Orbitron", sans-serif; font-size: 14px; color: white;')
 
                 def apply_preset(e):
-                    if e.value == 'Preset' or e.value not in PRESET_CONFIGS:
+                    if e.value == 'Preset':
+                        return
+                    if e.value == 'Random':
+                        session_rows.clear()
+                        num_rows = random.randint(2, 6)
+                        for _ in range(num_rows):
+                            vendor_name = random.choice(list(vendor_dictionary.keys()))
+                            vendor_class = vendor_dictionary[vendor_name]
+                            subclasses = vendor_class.__subclasses__()
+                            if not subclasses:
+                                continue
+                            device_class = random.choice(subclasses)
+                            count = random.randint(1, 4)
+                            session_rows.append({
+                                'count': count,
+                                'vendor_name': vendor_name,
+                                'device_class': device_class,
+                            })
+                        render_devices(device_list)
+                        ui.notify('Random setup generated!', type='positive')
+                        return
+                    if e.value not in PRESET_CONFIGS:
                         return
                     session_rows.clear()
                     for row in PRESET_CONFIGS[e.value]:
