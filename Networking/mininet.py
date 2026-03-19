@@ -53,6 +53,7 @@ class MininetNetwork:
     def __init__(self):
         self._net = None
         self._hosts = {}
+        self._daemon_procs = {}
         self._start_time = None
 
     def get_net(self):
@@ -87,7 +88,9 @@ class MininetNetwork:
 
         for h, os_fingerprint in hosted_hosts.items():
             if os_fingerprint is not None:
-                os_fingerprint.apply(h)
+                proc = os_fingerprint.apply(h)
+                if proc:
+                    self._daemon_procs[h.name] = proc
 
         for h in hosted_hosts:
             print(f'{h.name}: {h.IP()}')
@@ -117,6 +120,13 @@ class MininetNetwork:
             host.cmd(f'ip link set {host.defaultIntf()} down')
 
     def stop(self):
+        for host_name, proc in self._daemon_procs.items():
+            proc.terminate()
+            host = self._net.get(host_name)
+            if host:
+                host.cmd('iptables -t mangle -D OUTPUT -p tcp -j NFQUEUE --queue-num 1 2>/dev/null || true')
+        self._daemon_procs.clear()
+
         if self._net is not None:
             self._net.stop()
             self._net = None

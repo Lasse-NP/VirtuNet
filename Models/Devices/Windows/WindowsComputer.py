@@ -1,10 +1,10 @@
 from faker import Faker
 
 from Models.Fingerprints.OS.Windows import Windows11
-from Models.Vendor.Asus import Asus
+from Models.Vendor.Windows import Windows
 
 
-class AsusMotherboard(Asus):
+class WindowsComputer(Windows):
     def __init__(self):
         fake = Faker()
         device_name = f"{fake.first_name()[:4]}-AsusM"

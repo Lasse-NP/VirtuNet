@@ -3,16 +3,15 @@ import random
 from Models.Devices.Device import Device
 
 
-class Asus(Device):
+class Windows(Device):
     mac_prefix = [
-        "FC:C2:33",
-        "FC:34:97",
-        "F8:32:E4",
-        "F4:6D:04",
-        "F0:79:59"
+        "00:E0:4C",
+        "00:0E:0C",
+        "00:0C:F1",
+        "00:13:72",
+        "00:23:AE",
+        "78:45:C4"
     ]
-
-
 
     def __init__(self, device_name, device_os):
         super().__init__(device_name, device_os, macAddressPrefix=random.choice(self.mac_prefix))

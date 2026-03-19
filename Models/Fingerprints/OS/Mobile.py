@@ -4,6 +4,7 @@ from Models.Fingerprints.OSFingerprint import OSFingerprint
 class Android(OSFingerprint):
     name = "android"
     aliases = ["android", "android 10", "android 11", "android 12", "android 13", "android 14"]
+    tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
 
     ttl = 64
     tcp_timestamps = 1
@@ -14,6 +15,10 @@ class Android(OSFingerprint):
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 75
     tcp_keepalive_probes = 9
+    df_bit = 1
+    tcp_window_size = 65535
+    tcp_mss = 1460
+    ip_id_random = 1
     tcp_rmem = "4096 87380 4194304"
     tcp_wmem = "4096 16384 4194304"
 
@@ -21,6 +26,7 @@ class Android(OSFingerprint):
 class iOS(OSFingerprint):
     name = "ios"
     aliases = ["ios", "iphone", "ipad", "ipados", "ios16", "ios17", "ios18"]
+    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK', 'EOL']
 
     ttl = 64
     tcp_timestamps = 1
@@ -31,5 +37,9 @@ class iOS(OSFingerprint):
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 75
     tcp_keepalive_probes = 8
+    df_bit = 1
+    tcp_window_size = 65535
+    tcp_mss = 1460
+    ip_id_random = 1
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"

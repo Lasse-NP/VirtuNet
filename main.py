@@ -23,6 +23,7 @@ async def handle_signal(sig, frame):
 
 if __name__ == '__main__':
     os.environ['PYWEBVIEW_GUI'] = 'qt'
+    print(f'*** PYTHON_PATH: {sys.executable}')
     setup.ensure_root()
     setup.check_dependencies()
     signal.signal(signal.SIGTERM, handle_signal)

@@ -3,6 +3,7 @@ from Models.Fingerprints.OSFingerprint import OSFingerprint
 class MacOS(OSFingerprint):
     name = "macos"
     aliases = ["mac", "osx", "macosx", "mac os", "mac os x", "darwin", "macos"]
+    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK', 'EOL']
 
     ttl = 64
     tcp_timestamps = 1
@@ -13,6 +14,10 @@ class MacOS(OSFingerprint):
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 75
     tcp_keepalive_probes = 8
+    df_bit = 1
+    tcp_window_size = 65535
+    tcp_mss = 1460
+    ip_id_random = 1
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"
 
@@ -20,6 +25,7 @@ class MacOS(OSFingerprint):
 class FreeBSD(OSFingerprint):
     name = "freebsd"
     aliases = ["bsd", "free bsd", "freebsd12", "freebsd13"]
+    tcp_options_order = ['MSS', 'NOP', 'WS', 'SACK', 'TS']
 
     ttl = 64
     tcp_timestamps = 1
@@ -30,6 +36,10 @@ class FreeBSD(OSFingerprint):
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 75
     tcp_keepalive_probes = 8
+    df_bit = 1
+    tcp_window_size = 65535
+    tcp_mss = 1460
+    ip_id_random = 0
     tcp_rmem = "4096 87380 8388608"
     tcp_wmem = "4096 16384 8388608"
 
@@ -37,6 +47,7 @@ class FreeBSD(OSFingerprint):
 class OpenBSD(OSFingerprint):
     name = "openbsd"
     aliases = ["openbsd7"]
+    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS']
 
     ttl = 64
     tcp_timestamps = 0
@@ -47,5 +58,9 @@ class OpenBSD(OSFingerprint):
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 10
     tcp_keepalive_probes = 6
+    df_bit = 1
+    tcp_window_size = 16384
+    tcp_mss = 1460
+    ip_id_random = 1
     tcp_rmem = "4096 16384 4194304"
     tcp_wmem = "4096 16384 4194304"
