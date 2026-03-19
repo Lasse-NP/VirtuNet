@@ -1,10 +1,7 @@
-from dataclasses import dataclass, field
 
-
-@dataclass
 class OSFingerprint:
     name: str = ""
-    aliases: list[str] = field(default_factory=list)
+    aliases: list = []
 
     ttl: int = 64
 

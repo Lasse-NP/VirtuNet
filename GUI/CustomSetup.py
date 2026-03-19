@@ -5,7 +5,12 @@ from nicegui import app
 from pathlib import Path
 import sys
 
-import SessionSetting
+from GUI import SessionSetting
+from Models.Fingerprints.OS.Linux import Linux2_6, Linux3x, Linux4x, Linux5x, Linux6x
+from Models.Fingerprints.OS.Windows import WindowsXP, Windows7, Windows10, Windows11, WindowsServer2019
+from Models.Fingerprints.OS.Mobile import iOS, Android
+from Models.Fingerprints.OS.MacOS import MacOS, FreeBSD, OpenBSD
+from Models.Fingerprints.OS.NetworkDevices import CiscoIOS, CiscoIOSXE, JuniperJunOS, Solaris11, AIX7, HPUX11
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
 
@@ -18,7 +23,6 @@ def get_base_path():
 LATENCY_MODES = ['Far', 'Near', 'Medium', 'None']
 
 def build_devices_from_host_list():
-    raw = app.storage.user.get('selected_hosts', [])
     return [
         {
             'name':     host.name,
@@ -52,8 +56,32 @@ def custom_setup_page():
             'min-width: unset; padding: 0; background: none;'
         ).props('flat dense')
 
+        OS_OPTIONS = {
+            'iOS': iOS,
+            'MacOS': MacOS,
+            'FreeBSD': FreeBSD,
+            'OpenBSD': OpenBSD,
+            'Android': Android,
+            'Linux6x': Linux6x,
+            'Linux5x': Linux5x,
+            'Linux4x': Linux4x,
+            'Linux3x': Linux3x,
+            'Linux2_6': Linux2_6,
+            'WindowsServer2019': WindowsServer2019,
+            'Windows11': Windows11,
+            'Windows10': Windows10,
+            'Windows7': Windows7,
+            'WindowsXP': WindowsXP,
+            'CiscoIOS': CiscoIOS,
+            'CiscoIOSXE': CiscoIOSXE,
+            'JuniperJunOS': JuniperJunOS,
+            'Solaris11': Solaris11,
+            'AIX7': AIX7,
+            'HPUX11': HPUX11,
+        }
+
         name_input     = ui.input(label='Name').style('width: 100%;')
-        os_input       = ui.input(label='OS').style('width: 100%;')
+        os_select = ui.select(list(OS_OPTIONS.keys()), label='OS').style('width: 100%;')
         latency_select = ui.select(LATENCY_MODES, label='Latency Mode').style('width: 100%;')
         services_input = ui.textarea(label='Services').style('width: 100%; flex: 1;')
 
@@ -63,13 +91,14 @@ def custom_setup_page():
                 return
 
             devices[idx]['name'] = name_input.value
-            devices[idx]['os'] = os_input.value
+            new_os = OS_OPTIONS[os_select.value]()
+            devices[idx]['os'] = new_os
             devices[idx]['latency'] = latency_select.value
             devices[idx]['services'] = services_input.value
 
             host = devices[idx]['_host']
             host.name = name_input.value
-            host.os   = os_input.value
+            host.os = new_os
 
             drawer.hide()
             render_devices()
@@ -81,7 +110,7 @@ def custom_setup_page():
         selected_device['index'] = idx
         dev = devices[idx]
         name_input.set_value(dev['name'])
-        os_input.set_value(dev['os'])
+        os_select.set_value(type(dev['os']).__name__)
         latency_select.set_value(dev['latency'])
         services_input.set_value(dev['services'])
         drawer.show()
@@ -109,7 +138,7 @@ def custom_setup_page():
                     for i, dev in enumerate(devices):
                         with ui.element('div').classes('device-row'):
                             ui.html(f'<span class="dev-name">{dev["name"]}</span>')
-                            ui.html(f'<span class="dev-os">{dev["os"]}</span>')
+                            ui.html(f'<span class="dev-os">{type(dev["os"]).__name__}</span>')
                             ui.html(f'<span class="dev-latency">{dev["latency"]}</span>')
 
                             def make_open(idx):
@@ -126,9 +155,5 @@ def custom_setup_page():
 
 
 if __name__ == '__main__':
-    @ui.page('/')
-    def index():
-        ui.navigate.to('/CustomSetup')
-
     app.native.window_args['min_size'] = (550, 1000)
     ui.run(native=True, reload=False, window_size=(600, 1000), storage_secret='my-super-secret-key-123')

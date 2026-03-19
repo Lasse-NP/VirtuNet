@@ -85,6 +85,9 @@ class MininetNetwork:
         c0.start()
         s1.start([c0])
 
+        for h, os_fingerprint in hosted_hosts.items():
+            if os_fingerprint is not None:
+                os_fingerprint.apply(h)
 
         for h in hosted_hosts:
             print(f'{h.name}: {h.IP()}')

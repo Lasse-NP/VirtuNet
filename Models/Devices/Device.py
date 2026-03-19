@@ -17,6 +17,6 @@ class Device:
         return {
             'type': type(self).__name__,
             'name': self.name,
-            'os': self.os,
+            'os': type(self.os).__name__,
             'mac': self.macAddress,
         }

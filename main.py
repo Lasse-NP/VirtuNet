@@ -6,6 +6,7 @@ import os
 import GUI.Frontpage
 import GUI.Lobby
 import GUI.SessionSetting
+import GUI.CustomSetup
 import GUI.ControlCenter
 import GUI.AfterActionReport
 
