@@ -1,8 +1,13 @@
+import asyncio
+
 from nicegui import ui
 from nicegui import app
 from pathlib import Path
 import sys
 
+import SessionSetting
+from Networking.mininet import mininet_network
+from Networking.server import openvpn_server
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -12,15 +17,19 @@ def get_base_path():
 
 LATENCY_MODES = ['Far', 'Near', 'Medium', 'None']
 
-devices = [
-    {'name': 'Per-IPh34',   'os': 'iOS',     'ip': '192.168.0.3', 'latency': 'Far',    'services': ''},
-    {'name': 'Ole-IPh23',   'os': 'iOS',     'ip': '192.168.0.4', 'latency': 'Near',   'services': ''},
-    {'name': 'And-IPh52',   'os': 'iOS',     'ip': '192.168.0.5', 'latency': 'Medium', 'services': ''},
-    {'name': 'Ben-Asus32',  'os': 'Win11',   'ip': '192.168.0.6', 'latency': 'Far',    'services': ''},
-    {'name': 'John-Asus86', 'os': 'Win11',   'ip': '192.168.0.7', 'latency': 'None',   'services': ''},
-    {'name': 'Rolf-McBk76', 'os': 'MacOS',   'ip': '192.168.0.8', 'latency': 'Near',   'services': ''},
-    {'name': 'Rand-SmFr71', 'os': 'Android', 'ip': '192.168.0.9', 'latency': 'Far',    'services': ''},
-]
+def build_devices_from_host_list():
+    raw = app.storage.user.get('selected_hosts', [])
+    return [
+        {
+            'name':     host.name,
+            'os':       host.os,
+            'mac':      host.macAddress,
+            'latency':  'None',
+            'services': '',
+            '_host':    host,
+        }
+        for host in SessionSetting.host_list
+    ]
 
 
 @ui.page('/CustomSetup')
@@ -30,6 +39,7 @@ def custom_setup_page():
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/CustomSetup.css">')
 
+    devices = build_devices_from_host_list()
     selected_device = {'index': None}
 
     with ui.right_drawer(fixed=True, bordered=False, elevated=True).style(
@@ -51,10 +61,16 @@ def custom_setup_page():
             idx = selected_device['index']
             if idx is None:
                 return
-            devices[idx]['name']     = name_input.value
-            devices[idx]['os']       = os_input.value
-            devices[idx]['latency']  = latency_select.value
+
+            devices[idx]['name'] = name_input.value
+            devices[idx]['os'] = os_input.value
+            devices[idx]['latency'] = latency_select.value
             devices[idx]['services'] = services_input.value
+
+            host = devices[idx]['_host']
+            host.name = name_input.value
+            host.os   = os_input.value
+
             drawer.hide()
             render_devices()
             ui.notify('Device updated!', type='positive')
@@ -70,6 +86,16 @@ def custom_setup_page():
         services_input.set_value(dev['services'])
         drawer.show()
 
+    async def start_from_custom():
+        try:
+            await asyncio.to_thread(openvpn_server.initialize)
+            ui.notify('Starting OpenVPN...')
+            await asyncio.to_thread(mininet_network.configuration, SessionSetting.host_list)
+            ui.notify('Configuring MiniNet...')
+            ui.navigate.to('/Lobby')
+        except RuntimeError as e:
+            ui.notify(str(e), type='negative')
+
     with ui.element('div').classes('cs-wrapper'):
         with ui.element('div').classes('cs-card'):
 
@@ -84,7 +110,7 @@ def custom_setup_page():
                         with ui.element('div').classes('device-row'):
                             ui.html(f'<span class="dev-name">{dev["name"]}</span>')
                             ui.html(f'<span class="dev-os">{dev["os"]}</span>')
-                            ui.html(f'<span class="dev-ip">{dev["ip"]}</span>')
+                            ui.html(f'<span class="dev-latency">{dev["latency"]}</span>')
 
                             def make_open(idx):
                                 return lambda: open_drawer(idx)
@@ -96,7 +122,7 @@ def custom_setup_page():
 
             with ui.element('div').classes('bottom-row'):
                 ui.button('Back',  on_click=lambda: ui.navigate.to('/Session')).classes('btn-back').props('flat')
-                ui.button('Start', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-start').props('flat')
+                ui.button('Start', on_click=start_from_custom).classes('btn-start').props('flat')
 
 
 if __name__ == '__main__':

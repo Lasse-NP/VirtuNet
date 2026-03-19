@@ -25,6 +25,7 @@ def get_base_path():
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
 session_rows = []
+host_list = []
 
 vendor_dictionary = {
     "Apple": Apple,
@@ -35,9 +36,15 @@ vendor_dictionary = {
 
 device_list: List | None = None
 
-async def initialize_configure_and_go():
+async def initialize_configure_and_go(custom: bool = False):
+    global host_list
     host_list = build_host_list()
     app.storage.user['selected_hosts'] = [d.to_dict() for d in host_list]
+
+    if custom:
+        ui.navigate.to('/CustomSetup')
+        return
+
     try:
         await asyncio.to_thread(openvpn_server.initialize)
         ui.notify('Starting OpenVPN...')
@@ -191,7 +198,8 @@ def session_settings_page():
                     'background: white; border-radius: 30px; color: #222; '
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
                 ).props('outlined rounded')
-                ui.button('Start Server', on_click=initialize_configure_and_go).classes('btn-start')
+                ui.button('Customize', on_click=lambda: initialize_configure_and_go(True)).classes('btn-custom')
+                ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start')
 
 if __name__ == '__main__':
     @ui.page('/')
