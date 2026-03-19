@@ -24,6 +24,26 @@ def get_base_path():
 
 PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup']
 
+PRESET_CONFIGS = {
+    'Home Setup': [
+        {'count': 2, 'vendor_name': 'Apple',   'device_class': IPhone},
+        {'count': 1, 'vendor_name': 'Apple',   'device_class': MacBook},
+        {'count': 1, 'vendor_name': 'Samsung', 'device_class': SamsungFridge},
+        {'count': 1, 'vendor_name': 'Samsung', 'device_class': SamsungSmartTV},
+    ],
+    'Office Setup': [
+        {'count': 3, 'vendor_name': 'Apple',   'device_class': MacBook},
+        {'count': 2, 'vendor_name': 'Apple',   'device_class': IPhone},
+        {'count': 1, 'vendor_name': 'Asus',    'device_class': AsusMotherboard},
+    ],
+    'Dev Setup': [
+        {'count': 1, 'vendor_name': 'Apple',   'device_class': MacBook},
+        {'count': 1, 'vendor_name': 'Apple',   'device_class': AppleWatch},
+        {'count': 1, 'vendor_name': 'Sony',    'device_class': Playstation5},
+        {'count': 1, 'vendor_name': 'Samsung', 'device_class': GalaxyBook},
+    ],
+}
+
 session_rows = []
 host_list = []
 
@@ -194,7 +214,17 @@ def session_settings_page():
 
             with ui.column().style('width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
                 ui.label('Presets').style('font-family: "Orbitron", sans-serif; font-size: 14px; color: white;')
-                ui.select(PRESETS, value='Preset').style(
+
+                def apply_preset(e):
+                    if e.value == 'Preset' or e.value not in PRESET_CONFIGS:
+                        return
+                    session_rows.clear()
+                    for row in PRESET_CONFIGS[e.value]:
+                        session_rows.append(dict(row))
+                    render_devices(device_list)
+                    ui.notify(f'{e.value} loaded!', type='positive')
+
+                ui.select(PRESETS, value='Preset', on_change=apply_preset).style(
                     'background: white; border-radius: 30px; color: #222; '
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
                 ).props('outlined rounded')
