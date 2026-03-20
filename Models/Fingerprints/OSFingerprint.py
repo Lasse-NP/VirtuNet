@@ -15,6 +15,7 @@ class OSFingerprint:
     ttl: int = 64
     df_bit: int = 1
     ip_id_random: int = 1
+    tcp_ip_id_zero: int = 0  # FreeBSD 12+: TCP IP ID forced to 0 (RFC 6864, DF=1 flows)
     tcp_ecn: int = 0
 
     tcp_timestamps: int = 1
@@ -93,6 +94,7 @@ class OSFingerprint:
             config = json.dumps({
                 'tcp_options_order': self.tcp_options_order,
                 'ip_id_random': self.ip_id_random,
+                'tcp_ip_id_zero': self.tcp_ip_id_zero,
                 'tcp_options_timestamps': self.tcp_options_timestamps,
                 'tcp_wscale': self.tcp_wscale,
                 'tcp_mss': self.tcp_mss,
