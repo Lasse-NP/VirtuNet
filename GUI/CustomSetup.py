@@ -100,6 +100,9 @@ def custom_setup_page():
             host.name = name_input.value
             host.os = new_os
 
+            mininet_network.apply_latency(host.name, latency_select.value)
+            mininet_network.apply_services(host.name, services_input.value)
+
             drawer.hide()
             render_devices()
             ui.notify('Device updated!', type='positive')

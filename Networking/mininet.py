@@ -48,6 +48,12 @@ def teardown_topo():
     run(f'ip link set {TAP_IFACE} promisc off', check=False)
     run(f'ip addr add {LAB_SERVER_IP}/{LAB_PREFIX} dev {TAP_IFACE}', check=False)
 
+LATENCY_MAP = {
+    'None': '0ms',
+    'Near': '10ms',
+    'Medium': '50ms',
+    'Far': '200ms',
+}
 
 class MininetNetwork:
     def __init__(self):
@@ -118,6 +124,18 @@ class MininetNetwork:
         host = self._net.get(host_name)
         if host:
             host.cmd(f'ip link set {host.defaultIntf()} down')
+
+    def apply_latency(self, host_name: str, latency_mode: str):
+        if self._net is None:
+            return
+        host = self._net.get(host_name)
+        if host is None:
+            return
+        delay = LATENCY_MAP.get(latency_mode, '0ms')
+        intf = host.defaultIntf()
+        host.cmd(f'tc qdisc del dev {intf} root 2>/dev/null || true')
+        host.cmd(f'tc qdisc add dev {intf} root netem delay {delay}')
+        print(f'*** Applied {delay} latency to {host_name}')
 
     def stop(self):
         for host_name, proc in self._daemon_procs.items():
