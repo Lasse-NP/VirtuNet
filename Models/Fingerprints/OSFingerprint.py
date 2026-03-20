@@ -64,6 +64,7 @@ class OSFingerprint:
 
         if self.df_bit == 1:
             host.cmd('iptables -t mangle -A OUTPUT -j MARK --set-mark 1')
+            host.cmd(f'ip link set {host.defaultIntf().name} mtu 1600')
             host.cmd(f'ip route del default 2>/dev/null || true')
             host.cmd(f'ip route add default dev {host.defaultIntf().name} advmss {self.tcp_mss} mtu lock 1500')
 
@@ -100,8 +101,6 @@ class OSFingerprint:
                 'df_bit': self.df_bit,
                 'queue_num': queue_num
             })
-
-
 
             host.cmd(f'iptables -t mangle -A OUTPUT -p tcp -j NFQUEUE --queue-num {queue_num}')
             host.cmd(f'iptables -t mangle -A OUTPUT -p udp -j NFQUEUE --queue-num {queue_num}')
