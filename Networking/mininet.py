@@ -121,10 +121,14 @@ class MininetNetwork:
 
     def stop(self):
         for host_name, proc in self._daemon_procs.items():
-            proc.terminate()
             host = self._net.get(host_name)
             if host:
-                host.cmd('iptables -t mangle -D OUTPUT -p tcp -j NFQUEUE --queue-num 1 2>/dev/null || true')
+                proc.terminate()
+                proc.wait()
+                queue_num = int(host.IP().split('.')[-1])
+                host.cmd(f'iptables -t mangle -D OUTPUT -p tcp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
+                host.cmd(f'iptables -t mangle -D OUTPUT -p udp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
+                host.cmd(f'iptables -t mangle -D OUTPUT -p icmp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
         self._daemon_procs.clear()
 
         if self._net is not None:

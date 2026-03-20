@@ -64,9 +64,8 @@ class OSFingerprint:
 
         if self.df_bit == 1:
             host.cmd('iptables -t mangle -A OUTPUT -j MARK --set-mark 1')
-            host.cmd(f'ip route add default dev {host.defaultIntf().name} advmss {self.tcp_mss}')
-        else:
-            pass
+            host.cmd(f'ip route del default 2>/dev/null || true')
+            host.cmd(f'ip route add default dev {host.defaultIntf().name} advmss {self.tcp_mss} mtu lock 1500')
 
         if self.ip_id_random == 0:
             host.cmd('sysctl -w net.ipv4.ip_local_port_range="1024 65535"')
@@ -87,11 +86,8 @@ class OSFingerprint:
         host.cmd('iptables -I INPUT -p tcp --dport 443 -j ACCEPT')
         host.cmd('iptables -I INPUT -p tcp --dport 80 -j ACCEPT')
 
-        print(host.cmd('iptables -L INPUT -n -v --line-numbers'))
-        print(host.cmd('iptables -L FORWARD -n -v'))
-        print(host.cmd('ss -tlnp'))
-
-        print(host.cmd('ss -tlnp | grep -E "80|443"'))
+        ip = host.IP()
+        queue_num = int(ip.split('.')[-1])
 
         if self.tcp_options_order is not None:
             config = json.dumps({
@@ -100,9 +96,16 @@ class OSFingerprint:
                 'ip_id_random': self.ip_id_random,
                 'tcp_options_timestamps': self.tcp_options_timestamps,
                 'tcp_wscale': self.tcp_wscale,
+                'tcp_mss': self.tcp_mss,
+                'df_bit': self.df_bit,
+                'queue_num': queue_num
             })
 
-            host.cmd('iptables -t mangle -A OUTPUT -p tcp -j NFQUEUE --queue-num 1')
+
+
+            host.cmd(f'iptables -t mangle -A OUTPUT -p tcp -j NFQUEUE --queue-num {queue_num}')
+            host.cmd(f'iptables -t mangle -A OUTPUT -p udp -j NFQUEUE --queue-num {queue_num}')
+            host.cmd(f'iptables -t mangle -A OUTPUT -p icmp -j NFQUEUE --queue-num {queue_num}')
 
             proc = host.popen(
                 [PYTHON_PATH, str(DAEMON_PATH), config],

@@ -50,7 +50,7 @@ class Windows10(OSFingerprint):
     tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'SACK']
 
     ttl = 128
-    tcp_timestamps = 0
+    tcp_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
     tcp_syn_retries = 2
@@ -68,10 +68,10 @@ class Windows10(OSFingerprint):
 class Windows11(OSFingerprint):
     name = "windows_11"
     aliases = ["win11", "windows 11"]
-    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'SACK']
+    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'SACK', 'TS']
 
     ttl = 128
-    tcp_timestamps = 0
+    tcp_timestamps = 1
     tcp_options_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
@@ -94,7 +94,7 @@ class WindowsServer2019(OSFingerprint):
     tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'SACK']
 
     ttl = 128
-    tcp_timestamps = 0
+    tcp_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
     tcp_syn_retries = 2

@@ -4,7 +4,7 @@ import json
 import logging
 import random
 import sys
-from scapy.layers.inet import TCP, IP
+from scapy.layers.inet import TCP, IP, ICMP, UDP
 from netfilterqueue import NetfilterQueue
 
 logging.basicConfig(
@@ -13,11 +13,13 @@ logging.basicConfig(
     format='%(asctime)s %(message)s'
 )
 
-def make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamps, tcp_wscale):
-    id_counter = itertools.count(start=random.randint(1, 1000), step=random.randint(1, 10))
+def make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamps, tcp_wscale, tcp_mss, df_bit):
+    tcp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
+    udp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
+    icmp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
 
     option_map = {
-        'MSS':  ('MSS',    1460),
+        'MSS':  ('MSS',    tcp_mss),
         'NOP':  ('NOP',    None),
         'WS':   ('WScale', tcp_wscale),
         'SACK': ('SAckOK', b''),
@@ -35,14 +37,16 @@ def make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamp
         rewritten = []
         for kind in desired_order:
             scapy_name, default_val = option_map[kind]  # use local option_map
-            if scapy_name == 'WScale':
+            if scapy_name == 'NOP':
+                rewritten.append(('NOP', None))
+            elif scapy_name == 'WScale':
                 rewritten.append(('WScale', tcp_wscale))
-            if scapy_name in existing:
+            elif scapy_name == 'MSS':
+                rewritten.append(('MSS', tcp_mss))
+            elif scapy_name in existing:
                 rewritten.append((scapy_name, existing[scapy_name]))
             elif default_val is not None:
                 rewritten.append((scapy_name, default_val))
-            elif scapy_name == 'NOP':
-                rewritten.append(('NOP', None))
         return rewritten
 
     def callback(pkt):
@@ -54,7 +58,7 @@ def make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamp
                 tcp = scapy_pkt[TCP]
 
                 if ip_id_random == 0:
-                    scapy_pkt[IP].id = next(id_counter) % 65535
+                    scapy_pkt[IP].id = next(tcp_id_counter) % 65535
                 else:
                     scapy_pkt[IP].id = random.randint(1, 65535)
 
@@ -75,6 +79,34 @@ def make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamp
                 pkt.accept()
                 return
 
+            elif scapy_pkt.haslayer(UDP):
+                if ip_id_random == 0:
+                    scapy_pkt[IP].id = next(udp_id_counter) % 65535
+                else:
+                    scapy_pkt[IP].id = random.randint(1, 65535)
+
+                if df_bit == 1:
+                    scapy_pkt[IP].flags = 'DF'
+                scapy_pkt[IP].chksum = None
+                rebuilt = IP(bytes(scapy_pkt))
+                pkt.set_payload(bytes(rebuilt))
+                pkt.accept()
+                return
+
+            elif scapy_pkt.haslayer(ICMP):
+                if ip_id_random == 0:
+                    scapy_pkt[IP].id = next(icmp_id_counter) % 65535
+                else:
+                    scapy_pkt[IP].id = random.randint(1, 65535)
+
+                if df_bit == 1:
+                    scapy_pkt[IP].flags = 'DF'
+                scapy_pkt[IP].chksum = None
+                rebuilt = IP(bytes(scapy_pkt))
+                pkt.set_payload(bytes(rebuilt))
+                pkt.accept()
+                return
+
             pkt.set_payload(bytes(scapy_pkt))
             pkt.accept()
 
@@ -90,13 +122,16 @@ if __name__ == '__main__':
     options_order = config.get('tcp_options_order')
     rst_window    = config.get('rst_window', 0)
     ip_id_random  = config.get('ip_id_random', 1)
+    tcp_mss = config.get('tcp_mss', 1460)
     tcp_options_timestamps = config.get('tcp_options_timestamps', 0)
     tcp_wscale = config.get('tcp_wscale', 8)
+    df_bit = config.get('df_bit', 1)
+    queue_num = config.get('queue_num', 1)
 
     logging.info(f'Config: options_order={options_order}, ip_id_random={ip_id_random}')
     nfq = NetfilterQueue()
-    nfq.bind(1, make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamps, tcp_wscale))
-    logging.info('Bound to NFQUEUE 1, running...')
+    nfq.bind(queue_num, make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamps, tcp_wscale, tcp_mss, df_bit))
+    logging.info(f'Bound to NFQUEUE {queue_num}, running...')
     try:
         nfq.run()
     except KeyboardInterrupt:

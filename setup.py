@@ -15,6 +15,7 @@ REQUIRED_COMMANDS = [
 
 PACKAGE_NAMES = {
     "debian": {
+        ""
         "openvpn":  "openvpn",
         "ovs-vsctl": "openvswitch-switch",
         "easyrsa":  "easy-rsa",
