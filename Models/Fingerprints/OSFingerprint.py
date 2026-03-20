@@ -11,7 +11,6 @@ class OSFingerprint:
     name: str = ""
     aliases: list = []
     tcp_options_order: list = None
-    rst_window: int = 0
 
     ttl: int = 64
     df_bit: int = 1
@@ -93,11 +92,11 @@ class OSFingerprint:
         if self.tcp_options_order is not None:
             config = json.dumps({
                 'tcp_options_order': self.tcp_options_order,
-                'rst_window': self.rst_window,
                 'ip_id_random': self.ip_id_random,
                 'tcp_options_timestamps': self.tcp_options_timestamps,
                 'tcp_wscale': self.tcp_wscale,
                 'tcp_mss': self.tcp_mss,
+                'tcp_window_size': self.tcp_window_size,
                 'df_bit': self.df_bit,
                 'queue_num': queue_num
             })

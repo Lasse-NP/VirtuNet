@@ -3,7 +3,8 @@ from Models.Fingerprints.OSFingerprint import OSFingerprint
 class Linux2_6(OSFingerprint):
     name = "linux_2_6"
     aliases = ["linux2.6", "linux 2.6", "linux2_6"]
-    tcp_options_order = None
+    tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
+    tcp_options_timestamps = 1
 
     ttl = 64
     tcp_timestamps = 1
@@ -26,7 +27,8 @@ class Linux2_6(OSFingerprint):
 class Linux3x(OSFingerprint):
     name = "linux_3_x"
     aliases = ["linux3", "linux 3", "linux_3"]
-    tcp_options_order = None
+    tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
+    tcp_options_timestamps = 1
 
     ttl = 64
     tcp_timestamps = 1
@@ -49,7 +51,8 @@ class Linux3x(OSFingerprint):
 class Linux4x(OSFingerprint):
     name = "linux_4_x"
     aliases = ["linux", "linux4", "linux 4", "linux_4", "ubuntu", "debian", "centos", "fedora"]
-    tcp_options_order = None
+    tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
+    tcp_options_timestamps = 1
 
     ttl = 64
     tcp_timestamps = 1
@@ -73,7 +76,8 @@ class Linux4x(OSFingerprint):
 class Linux5x(OSFingerprint):
     name = "linux_5_x"
     aliases = ["linux5", "linux 5", "linux_5", "ubuntu20", "ubuntu22", "debian11"]
-    tcp_options_order = None
+    tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
+    tcp_options_timestamps = 1
 
     ttl = 64
     tcp_timestamps = 1
@@ -97,7 +101,8 @@ class Linux5x(OSFingerprint):
 class Linux6x(OSFingerprint):
     name = "linux_6_x"
     aliases = ["linux6", "linux 6", "linux_6", "ubuntu23", "ubuntu24", "debian12", "fedora37"]
-    tcp_options_order = None
+    tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
+    tcp_options_timestamps = 1
 
     ttl = 64
     tcp_timestamps = 1

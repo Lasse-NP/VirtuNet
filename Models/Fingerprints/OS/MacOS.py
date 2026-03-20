@@ -7,6 +7,7 @@ class MacOS(OSFingerprint):
 
     ttl = 64
     tcp_timestamps = 1
+    tcp_options_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
     tcp_syn_retries = 3
@@ -29,6 +30,7 @@ class FreeBSD(OSFingerprint):
 
     ttl = 64
     tcp_timestamps = 1
+    tcp_options_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
     tcp_syn_retries = 3
@@ -51,6 +53,7 @@ class OpenBSD(OSFingerprint):
 
     ttl = 64
     tcp_timestamps = 0
+    tcp_options_timestamps = 0
     tcp_window_scaling = 1
     tcp_sack = 1
     tcp_syn_retries = 3

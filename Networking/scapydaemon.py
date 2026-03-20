@@ -13,7 +13,7 @@ logging.basicConfig(
     format='%(asctime)s %(message)s'
 )
 
-def make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamps, tcp_wscale, tcp_mss, df_bit):
+def make_callback(options_order, ip_id_random, tcp_options_timestamps, tcp_wscale, tcp_mss, tcp_window_size, df_bit):
     tcp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     udp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     icmp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
@@ -70,7 +70,8 @@ def make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamp
                         if o != 'TS' or tcp_options_timestamps
                     ]
                     tcp.options = rewrite_options(tcp.options, effective_order)
-                    logging.debug(f'options_after={tcp.options}')
+                    tcp.window = tcp_window_size
+                    logging.debug(f'options_after={tcp.options} window={tcp.window}')
 
                 scapy_pkt[IP].chksum = None
                 scapy_pkt[TCP].chksum = None
@@ -120,17 +121,17 @@ if __name__ == '__main__':
     logging.info('Scapy daemon starting')
     config = json.loads(sys.argv[1])
     options_order = config.get('tcp_options_order')
-    rst_window    = config.get('rst_window', 0)
     ip_id_random  = config.get('ip_id_random', 1)
     tcp_mss = config.get('tcp_mss', 1460)
+    tcp_window_size = config.get('tcp_window_size', 65535)
     tcp_options_timestamps = config.get('tcp_options_timestamps', 0)
     tcp_wscale = config.get('tcp_wscale', 8)
     df_bit = config.get('df_bit', 1)
     queue_num = config.get('queue_num', 1)
 
-    logging.info(f'Config: options_order={options_order}, ip_id_random={ip_id_random}')
+    logging.info(f'Config: options_order={options_order}, ip_id_random={ip_id_random}, tcp_window_size={tcp_window_size}')
     nfq = NetfilterQueue()
-    nfq.bind(queue_num, make_callback(options_order, rst_window, ip_id_random, tcp_options_timestamps, tcp_wscale, tcp_mss, df_bit))
+    nfq.bind(queue_num, make_callback(options_order, ip_id_random, tcp_options_timestamps, tcp_wscale, tcp_mss, tcp_window_size, df_bit))
     logging.info(f'Bound to NFQUEUE {queue_num}, running...')
     try:
         nfq.run()
