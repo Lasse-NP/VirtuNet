@@ -179,11 +179,13 @@
 }
 
 .drawer-inner {
-    padding: 8px 16px 24px 16px;
+    padding: 8px 12px 24px 12px;
     display: flex;
     flex-direction: column;
     gap: 12px;
     height: 100%;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .btn-close-drawer {
@@ -219,8 +221,10 @@
     padding: 10px 14px;
     width: 100%;
     box-sizing: border-box;
-    min-height: 80px;
+    min-height: 120px;
+    max-height: 200px;
     text-align: left;
+    flex: 0 0 auto;
 }
 
 .device-row-info {
