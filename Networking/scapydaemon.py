@@ -81,8 +81,13 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_times
                     ]
                     tcp.options = rewrite_options(tcp.options, effective_order)
                     tcp.window = tcp_window_size
-                    logging.debug(f'options_after={tcp.options} window={tcp.window}')
+                    opts_serialized_len = len(bytes(TCP(options=tcp.options))) - 20
+                    logging.debug(f'tcplen={len(bytes(TCP(options=tcp.options)))}')
+                    logging.debug(f'opts={opts_serialized_len}')
+                    tcp.dataofs = (20 + opts_serialized_len) // 4
+                    logging.debug(f'options_after={tcp.options} window={tcp.window} dataofs={tcp.dataofs}')
 
+                scapy_pkt[IP].len = None    # recalc — TCP options length may have changed
                 scapy_pkt[IP].chksum = None
                 scapy_pkt[TCP].chksum = None
                 rebuilt = IP(bytes(scapy_pkt))
