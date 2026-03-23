@@ -131,7 +131,8 @@ def custom_setup_page():
 
             ui.html('<h1 class="cs-title">Custom Setup</h1>')
 
-            device_container = ui.element('div').classes('devices-card')
+            with ui.element('div').classes('list-wrapper'):
+                device_container = ui.element('div').classes('devices-card')
 
             def render_devices():
                 device_container.clear()
@@ -147,6 +148,7 @@ def custom_setup_page():
 
                             ui.button('⚙', on_click=make_open(i)) \
                                 .classes('btn-settings').props('flat dense')
+
 
             render_devices()
 

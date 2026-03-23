@@ -81,3 +81,12 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     letter-spacing: 1px;
 }
+
+.preset-select .q-field__native {
+    justify-content: center !important;
+}
+
+.preset-select .q-field__native .ellipsis {
+    text-align: center !important;
+    flex: unset !important;
+}

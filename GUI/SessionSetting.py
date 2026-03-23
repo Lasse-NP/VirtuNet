@@ -24,7 +24,7 @@ def get_base_path():
         return Path(sys._MEIPASS)
     return Path(__file__).parent
 
-PRESETS = ['Preset', 'Home Setup', 'Office Setup', 'Dev Setup', 'Random']
+PRESETS = ['Home Setup', 'Office Setup', 'Dev Setup', 'Random']
 
 PRESET_CONFIGS = {
     'Home Setup': [
@@ -195,7 +195,6 @@ def session_settings_page():
             with ui.element('div').style('flex: 1; position: relative; width: 100%; max-width: 60rem; border: 4px solid #4a7cdc; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
                 device_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
                 render_devices(device_list)
-                #render()
 
                 with ui.element('div').classes('global-btn-row'):
                     def remove_row():
@@ -237,6 +236,7 @@ def session_settings_page():
                                 'device_class': device_class,
                             })
                         render_devices(device_list)
+
                         ui.notify('Random setup generated!', type='positive')
                         return
                     if e.value not in PRESET_CONFIGS:
@@ -247,10 +247,10 @@ def session_settings_page():
                     render_devices(device_list)
                     ui.notify(f'{e.value} loaded!', type='positive')
 
-                ui.select(PRESETS, value='Preset', on_change=apply_preset).style(
-                    'background: white; border-radius: 30px; color: #222; '
+                ui.select(PRESETS, value=None, on_change=apply_preset).style(
+                    'background: #383838; border-radius: 30px; color: #222; '
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
-                ).props('outlined rounded')
+                ).props('outlined rounded').classes('preset-select')
                 ui.button('Customize', on_click=lambda: initialize_configure_and_go(True)).classes('btn-custom')
                 ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start')
 
