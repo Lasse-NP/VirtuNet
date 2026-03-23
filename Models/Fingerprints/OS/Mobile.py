@@ -8,6 +8,7 @@ class Android(OSFingerprint):
 
     ttl = 64
     tcp_timestamps = 1
+    tcp_options_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
     tcp_syn_retries = 4
@@ -30,6 +31,7 @@ class iOS(OSFingerprint):
 
     ttl = 64
     tcp_timestamps = 1
+    tcp_options_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
     tcp_syn_retries = 3

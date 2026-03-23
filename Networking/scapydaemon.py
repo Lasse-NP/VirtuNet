@@ -42,6 +42,8 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_times
             scapy_name, default_val = option_map[kind]  # use local option_map
             if scapy_name == 'NOP':
                 rewritten.append(('NOP', None))
+            elif scapy_name == 'EOL':
+                rewritten.append(('EOL', None))
             elif scapy_name == 'WScale':
                 rewritten.append(('WScale', tcp_wscale))
             elif scapy_name == 'MSS':
@@ -67,7 +69,10 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_times
                 else:
                     scapy_pkt[IP].id = random.randint(1, 65535)
 
-                if tcp.flags & 0x02 and options_order:
+                is_syn = tcp.flags & 0x02 and not tcp.flags & 0x10
+                is_synack = tcp.flags & 0x12 == 0x12
+
+                if (is_syn or is_synack) and options_order:
                     logging.debug(
                         f'SYN flags={int(tcp.flags)} sport={tcp.sport} dport={tcp.dport} options_before={tcp.options}')
                     effective_order = [

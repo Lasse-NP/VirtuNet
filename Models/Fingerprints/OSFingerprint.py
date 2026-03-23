@@ -3,6 +3,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from Networking.mdns import start_mdns
 
 DAEMON_PATH = Path(__file__).parent.parent.parent / 'Networking' / 'scapydaemon.py'
 PYTHON_PATH = sys.executable
@@ -79,13 +80,13 @@ class OSFingerprint:
             f'-j TCPMSS --set-mss {self.tcp_mss}'
         )
 
-        host.cmd('ncat -l 80 --keep-open --sh-exec "echo ok" &')
-        host.cmd('ncat -l 443 --keep-open --sh-exec "echo ok" &')
-        host.cmd('sleep 0.25')
-
         host.cmd('iptables -I INPUT -p tcp --dport 81 -j REJECT --reject-with tcp-reset')
         host.cmd('iptables -I INPUT -p tcp --dport 443 -j ACCEPT')
         host.cmd('iptables -I INPUT -p tcp --dport 80 -j ACCEPT')
+
+        host.cmd(f'nohup {PYTHON_PATH} -m http.server 80 --directory / > /dev/null 2>&1 &')
+        host.cmd(f'nohup {PYTHON_PATH} -m http.server 443 --directory / > /dev/null 2>&1 &')
+        host.cmd('sleep 1')
 
         ip = host.IP()
         queue_num = int(ip.split('.')[-1])
@@ -103,7 +104,9 @@ class OSFingerprint:
                 'queue_num': queue_num
             })
 
-            host.cmd(f'iptables -t mangle -A OUTPUT -p tcp -j NFQUEUE --queue-num {queue_num}')
+            host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN -j NFQUEUE --queue-num {queue_num}')
+            host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN,ACK -j NFQUEUE --queue-num {queue_num}')
+            host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags RST RST -j NFQUEUE --queue-num {queue_num}')
             host.cmd(f'iptables -t mangle -A OUTPUT -p udp -j NFQUEUE --queue-num {queue_num}')
             host.cmd(f'iptables -t mangle -A OUTPUT -p icmp -j NFQUEUE --queue-num {queue_num}')
 
@@ -127,6 +130,8 @@ class OSFingerprint:
                     print(f'*** [{host.name}] stderr: {stderr.decode().strip()}')
 
             print(f'*** [{host.name}] Scapy daemon started (PID={proc.pid})')
+            start_mdns(host, self.ttl, self.tcp_timestamps)
             return proc
 
+        start_mdns(host, self.ttl, self.tcp_timestamps)
         return None
