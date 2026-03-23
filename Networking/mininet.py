@@ -85,21 +85,25 @@ class MininetNetwork:
         for index, device in enumerate(device_list, start=1):
             ip = f'{base_ip}.{index + 2}/{LAB_PREFIX}'
             h = net.addHost(device.name, ip=ip, mac=device.macAddress)
-            hosted_hosts[h] = device.os
+            hosted_hosts[h] = device
             self._net.addLink(h, s1)
 
         self._net.build()
         c0.start()
         s1.start([c0])
 
-        for h, os_fingerprint in hosted_hosts.items():
-            if os_fingerprint is not None:
-                proc = os_fingerprint.apply(h)
+        for h, device in hosted_hosts.items():
+            if device.os is not None:
+                proc = device.os.apply(h)
                 if proc:
                     self._daemon_procs[h.name] = proc
 
-        for h in hosted_hosts:
-            print(f'{h.name}: {h.IP()}')
+        for h, device in hosted_hosts.items():
+            self.apply_latency(h.name, device.latency)
+
+        for h, device in hosted_hosts.items():
+            print(f'{h.name} ({device.latency}) : {h.IP()}')
+
         self._hosts = hosted_hosts
         print (self._hosts)
 

@@ -5,6 +5,7 @@ class Device:
     def __init__(self, name, os, macAddressPrefix):
         self.name = name
         self.os = os
+        self.latency = 'None'
         self.macAddressPrefix = macAddressPrefix
         self.macAddress = f"{macAddressPrefix}:%02x:%02x:%02x" % (random.randint(0, 255),
                              random.randint(0, 255),
@@ -18,5 +19,6 @@ class Device:
             'type': type(self).__name__,
             'name': self.name,
             'os': type(self.os).__name__,
+            'latency': self.latency,
             'mac': self.macAddress,
         }
