@@ -216,7 +216,7 @@ def session_settings_page():
             with ui.column().style('width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
                 ui.label('Presets').style('font-family: "Orbitron", sans-serif; font-size: 14px; color: white;')
 
-                def apply_preset(e):
+                def apply_preset(e, select):
                     if e.value == 'Preset':
                         return
                     if e.value == 'Random':
@@ -236,7 +236,7 @@ def session_settings_page():
                                 'device_class': device_class,
                             })
                         render_devices(device_list)
-
+                        select.set_value(None)
                         ui.notify('Random setup generated!', type='positive')
                         return
                     if e.value not in PRESET_CONFIGS:
@@ -247,7 +247,7 @@ def session_settings_page():
                     render_devices(device_list)
                     ui.notify(f'{e.value} loaded!', type='positive')
 
-                ui.select(PRESETS, value=None, on_change=apply_preset).style(
+                preset_select = ui.select(PRESETS, value=None, on_change=lambda e: apply_preset(e, preset_select)).style(
                     'background: #383838; border-radius: 30px; color: #222; '
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
                 ).props('outlined rounded').classes('preset-select')
