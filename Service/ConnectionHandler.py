@@ -58,6 +58,9 @@ class _Handler(BaseHTTPRequestHandler):
 def start_join_server() -> str:
     global _server, _thread, _active_code
 
+    if _server:
+        stop_join_server()
+
     _active_code = _make_code()
     _server = HTTPServer(("0.0.0.0", PORT), _Handler)
     _thread = threading.Thread(target=_server.serve_forever, daemon=True)

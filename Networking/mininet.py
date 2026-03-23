@@ -1,6 +1,6 @@
 import time
 
-from .mdns import stop_mdns
+from .mdns import stop_all_mdns
 from .config import TAP_IFACE, LAB_SUBNET, LAB_SERVER_IP, LAB_PREFIX
 from .network import get_base_ip
 from .terminal import run
@@ -146,7 +146,6 @@ class MininetNetwork:
         for host_name, proc in self._daemon_procs.items():
             host = self._net.get(host_name)
             if host:
-                stop_mdns(host)
                 proc.terminate()
                 proc.wait()
                 queue_num = int(host.IP().split('.')[-1])
@@ -156,10 +155,10 @@ class MininetNetwork:
                 host.cmd('fuser -k 80/tcp 2>/dev/null || true')
                 host.cmd('fuser -k 443/tcp 2>/dev/null || true')
         self._daemon_procs.clear()
+        stop_all_mdns()
 
         if self._net is not None:
             for host in self._net.hosts:
-                stop_mdns(host)
                 host.cmd('fuser -k 80/tcp 2>/dev/null || true')
                 host.cmd('fuser -k 443/tcp 2>/dev/null || true')
             self._net.stop()

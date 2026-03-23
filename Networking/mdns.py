@@ -1,48 +1,61 @@
-import time
+import atexit
+import os
+import signal
+import subprocess
 
-AVAHI_CONFIG = """[server]
-host-name={hostname}
-use-ipv4=yes
-use-ipv6=no
-ratelimit-interval-usec=1000000
-ratelimit-burst=1000
+HOSTS_FILE = '/tmp/virtunet_hosts'
+_dnsmasq_proc: subprocess.Popen | None = None
+_original_resolv: str | None = None
 
-[wide-area]
-enable-wide-area=no
 
-[publish]
-publish-addresses=yes
-publish-hinfo=no
-publish-workstation=no
-publish-domain=no
-publish-dns-servers=no
-publish-resolv-conf-dns-servers=no
+def _ensure_dnsmasq() -> None:
+    global _dnsmasq_proc, _original_resolv
+    if _dnsmasq_proc is not None:
+        return
 
-[reflector]
-enable-reflector=no
+    open(HOSTS_FILE, 'w').close()
 
-[rlimits]
-"""
+    with open('/etc/resolv.conf', 'r') as f:
+        _original_resolv = f.read()
+
+    with open('/etc/resolv.conf', 'w') as f:
+        f.write('nameserver 127.0.0.1\n' + _original_resolv)
+
+    _dnsmasq_proc = subprocess.Popen(
+        [
+            'dnsmasq', '--no-daemon', '--no-resolv',
+            '--listen-address=127.0.0.1',
+            f'--addn-hosts={HOSTS_FILE}',
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    atexit.register(stop_all_mdns)
 
 def start_mdns(host, ttl: int, tcp_timestamps: int) -> None:
-    # Write per-host config to disable everything except mDNS address publishing
-    config = AVAHI_CONFIG.format(hostname=host.name)
-    host.cmd(f"mkdir -p /etc/avahi")
-    host.cmd(f"printf '%s' '{config}' > /etc/avahi/avahi-daemon.conf")
+    _ensure_dnsmasq()
 
-    # Allow mDNS UDP traffic to bypass NFQUEUE so avahi doesn't interfere
-    host.cmd('iptables -t mangle -I OUTPUT -p udp --dport 5353 -j ACCEPT')
-    host.cmd('iptables -I INPUT -p udp --dport 5353 -j ACCEPT')
+    with open(HOSTS_FILE, 'a') as f:
+        f.write(f'{host.IP()} {host.name}.local {host.name}\n')
 
-    # Start avahi
-    host.cmd('avahi-daemon --no-drop-root --daemonize 2>/dev/null || true')
-    time.sleep(0.1)
+    if _dnsmasq_proc:
+        _dnsmasq_proc.send_signal(signal.SIGHUP)
 
-    # Immediately re-apply the sysctls avahi may have touched on startup
-    host.cmd(f'sysctl -w net.ipv4.tcp_timestamps={tcp_timestamps}')
-    host.cmd(f'sysctl -w net.ipv4.ip_default_ttl={ttl}')
+def stop_all_mdns() -> None:
+    global _dnsmasq_proc, _original_resolv
 
-def stop_mdns(host) -> None:
-    host.cmd('pkill -f avahi-daemon 2>/dev/null || true')
-    host.cmd('iptables -t mangle -D OUTPUT -p udp --dport 5353 -j ACCEPT 2>/dev/null || true')
-    host.cmd('iptables -D INPUT -p udp --dport 5353 -j ACCEPT 2>/dev/null || true')
+    if _dnsmasq_proc:
+        _dnsmasq_proc.terminate()
+        _dnsmasq_proc.wait()
+        _dnsmasq_proc = None
+
+    if _original_resolv is not None:
+        with open('/etc/resolv.conf', 'w') as f:
+            f.write(_original_resolv)
+        _original_resolv = None
+
+    try:
+        os.unlink(HOSTS_FILE)
+    except FileNotFoundError:
+        pass
