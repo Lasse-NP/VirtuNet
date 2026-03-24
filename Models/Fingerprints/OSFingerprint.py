@@ -18,6 +18,7 @@ class OSFingerprint:
     df_bit: int = 1
     ip_id_random: int = 1
     tcp_ip_id_zero: int = 0
+    icmp_ip_id_ri: int = 0
     tcp_ecn: int = 0
     tcp_timestamps: int = 1
     tcp_options_timestamps: int = 0
@@ -96,7 +97,8 @@ class OSFingerprint:
                 'tcp_mss': self.tcp_mss,
                 'tcp_window_size': self.tcp_window_size,
                 'df_bit': self.df_bit,
-                'queue_num': queue_num
+                'queue_num': queue_num,
+                'icmp_ip_id_ri': self.icmp_ip_id_ri
             })
 
             host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN -j NFQUEUE --queue-num {queue_num}')
@@ -111,7 +113,7 @@ class OSFingerprint:
                 stderr=subprocess.PIPE
             )
 
-            time.sleep(0.5)
+            time.sleep(1.5)
             poll = proc.poll()
             if poll is None:
                 print(f'*** [{host.name}] Scapy daemon running (PID={proc.pid})')
@@ -125,6 +127,10 @@ class OSFingerprint:
 
             print(f'*** [{host.name}] Scapy daemon started (PID={proc.pid})')
             start_mdns(host)
+
+            result = host.cmd('iptables -t mangle -L OUTPUT -v -n')
+            print(f'*** [{host.name}] iptables rules:\n{result}')
+
             return proc
 
         start_mdns(host)

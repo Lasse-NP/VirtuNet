@@ -43,5 +43,9 @@ class iOS(OSFingerprint):
     tcp_window_size = 65535
     tcp_mss = 1460
     ip_id_random = 1
+    tcp_ip_id_zero = 0
+    icmp_ip_id_ri = 1
+    tcp_wscale = 5
+    tcp_ecn = 0
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"

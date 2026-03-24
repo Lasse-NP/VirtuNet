@@ -15,11 +15,24 @@ logging.basicConfig(
 
 ICMP_ERROR_TYPES = {3, 4, 5, 11, 12}
 
-def make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_timestamps, tcp_wscale, tcp_mss, tcp_window_size, df_bit):
+def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
+                  tcp_options_timestamps, tcp_wscale, tcp_mss,
+                  tcp_window_size, df_bit, icmp_ip_id_ri):
     tcp_id_counter  = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     udp_id_counter  = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     icmp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
-    icmp_id_state   = [random.randint(1000, 30000)]  # variable-step for RI behaviour (FreeBSD)
+    icmp_id_state   = [random.randint(1000, 30000)]
+
+    def _ri_step(current_id):
+        for _ in range(100):
+            step = random.randint(1001, 19999)
+            if step % 256 == 0:
+                step += 1
+            new_id = (current_id + step) % 65536
+            diff = (new_id - current_id) % 65536
+            if 1001 <= diff <= 19999 and diff % 256 != 0:
+                return new_id
+        return (current_id + 1001) % 65536
 
     option_map = {
         'MSS':  ('MSS',    tcp_mss),
@@ -61,13 +74,17 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_times
 
             if scapy_pkt.haslayer(TCP):
                 tcp = scapy_pkt[TCP]
+                is_rst = bool(tcp.flags & 0x04)
 
-                if tcp_ip_id_zero:
+                if tcp_ip_id_zero and not is_rst:
                     scapy_pkt[IP].id = 0
+                elif icmp_ip_id_ri and is_rst:
+                    icmp_id_state[0] = _ri_step(icmp_id_state[0])
+                    scapy_pkt[IP].id = icmp_id_state[0]
                 elif ip_id_random == 0:
-                    scapy_pkt[IP].id = next(tcp_id_counter) % 65535
+                    scapy_pkt[IP].id = next(tcp_id_counter) % 65536
                 else:
-                    scapy_pkt[IP].id = random.randint(1, 65535)
+                    scapy_pkt[IP].id = random.randint(1, 65536)
 
                 is_syn = tcp.flags & 0x02 and not tcp.flags & 0x10
                 is_synack = tcp.flags & 0x12 == 0x12
@@ -79,6 +96,12 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_times
                         o for o in options_order
                         if o != 'TS' or tcp_options_timestamps
                     ]
+
+                    if 'WScale' not in [opt[0] for opt in tcp.options]:
+                        ws_index = effective_order.index('WS')
+                        effective_order = [o for i, o in enumerate(effective_order)
+                                           if o != 'WS' and not (o == 'NOP' and i == ws_index - 1)]
+
                     tcp.options = rewrite_options(tcp.options, effective_order)
                     tcp.window = tcp_window_size
                     opts_serialized_len = len(bytes(TCP(options=tcp.options))) - 20
@@ -97,9 +120,9 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_times
 
             elif scapy_pkt.haslayer(UDP):
                 if ip_id_random == 0:
-                    scapy_pkt[IP].id = next(udp_id_counter) % 65535
+                    scapy_pkt[IP].id = next(udp_id_counter) % 65536
                 else:
-                    scapy_pkt[IP].id = random.randint(1, 65535)
+                    scapy_pkt[IP].id = random.randint(1, 65536)
 
                 if df_bit == 1:
                     scapy_pkt[IP].flags = 'DF'
@@ -110,13 +133,13 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_times
                 return
 
             elif scapy_pkt.haslayer(ICMP):
-                if tcp_ip_id_zero:
-                    icmp_id_state[0] = (icmp_id_state[0] + random.randint(200, 2000)) % 65535
+                if tcp_ip_id_zero or icmp_ip_id_ri:
+                    icmp_id_state[0] = _ri_step(icmp_id_state[0])
                     scapy_pkt[IP].id = icmp_id_state[0]
                 elif ip_id_random == 0:
-                    scapy_pkt[IP].id = next(icmp_id_counter) % 65535
+                    scapy_pkt[IP].id = next(icmp_id_counter) % 65536
                 else:
-                    scapy_pkt[IP].id = random.randint(1, 65535)
+                    scapy_pkt[IP].id = random.randint(1, 65536)
 
                 if df_bit == 1 and scapy_pkt[ICMP].type not in ICMP_ERROR_TYPES:
                     scapy_pkt[IP].flags = 'DF'
@@ -142,15 +165,16 @@ if __name__ == '__main__':
     ip_id_random       = config.get('ip_id_random', 1)
     tcp_ip_id_zero     = config.get('tcp_ip_id_zero', 0)
     tcp_mss            = config.get('tcp_mss', 1460)
-    tcp_window_size    = config.get('tcp_window_size', 65535)
+    tcp_window_size    = config.get('tcp_window_size', 65536)
     tcp_options_timestamps = config.get('tcp_options_timestamps', 0)
     tcp_wscale         = config.get('tcp_wscale', 8)
     df_bit             = config.get('df_bit', 1)
     queue_num          = config.get('queue_num', 1)
+    icmp_ip_id_ri      = config.get('icmp_ip_id_ri', 0)
 
     logging.info(f'Config: options_order={options_order}, ip_id_random={ip_id_random}, tcp_ip_id_zero={tcp_ip_id_zero}, tcp_window_size={tcp_window_size}')
     nfq = NetfilterQueue()
-    nfq.bind(queue_num, make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_timestamps, tcp_wscale, tcp_mss, tcp_window_size, df_bit))
+    nfq.bind(queue_num, make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_timestamps, tcp_wscale, tcp_mss, tcp_window_size, df_bit, icmp_ip_id_ri))
     logging.info(f'Bound to NFQUEUE {queue_num}, running...')
     try:
         nfq.run()
