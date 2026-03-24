@@ -1,5 +1,6 @@
 from Models.Fingerprints.OSFingerprint import OSFingerprint
 
+# WORKING
 class MacOS(OSFingerprint):
     name = "macos"
     aliases = ["mac", "osx", "macosx", "mac os", "mac os x", "darwin", "macos"]
@@ -22,7 +23,7 @@ class MacOS(OSFingerprint):
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"
 
-
+# NEEDS IMPROVEMENTS
 class FreeBSD(OSFingerprint):
     name = "freebsd"
     aliases = ["bsd", "free bsd", "freebsd12", "freebsd13"]
@@ -47,7 +48,7 @@ class FreeBSD(OSFingerprint):
     tcp_rmem = "4096 87380 8388608"
     tcp_wmem = "4096 16384 8388608"
 
-
+# NEEDS IMPROVEMENTS
 class OpenBSD(OSFingerprint):
     name = "openbsd"
     aliases = ["openbsd7"]

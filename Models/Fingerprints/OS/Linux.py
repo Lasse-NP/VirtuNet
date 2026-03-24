@@ -1,5 +1,6 @@
 from Models.Fingerprints.OSFingerprint import OSFingerprint
 
+# NEEDS IMPROVEMENTS
 class Linux(OSFingerprint):
     name = "linux_5_x"
     aliases = ["linux5", "linux 5", "linux_5", "ubuntu20", "ubuntu22", "debian11"]
