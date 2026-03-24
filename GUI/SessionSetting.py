@@ -6,12 +6,12 @@ from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
 
 from Models.Vendor.Apple import Apple
-from Models.Vendor.Windows import Windows
+from Models.Vendor.Desktops import Desktops
 from Models.Vendor.Samsung import Samsung
 from Models.Vendor.Sony import Sony
 
 from Models.Devices.Apple import AppleWatch, IPhone, MacBook
-from Models.Devices.Windows import WindowsComputer
+from Models.Devices.Desktops import WindowsComputer
 from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
 from Models.Devices.Sony import Playstation5
 
@@ -36,7 +36,7 @@ PRESET_CONFIGS = {
     'Office Setup': [
         {'count': 3, 'vendor_name': 'Apple',   'device_class': MacBook},
         {'count': 2, 'vendor_name': 'Apple',   'device_class': IPhone},
-        {'count': 1, 'vendor_name': 'Windows',    'device_class': WindowsComputer},
+        {'count': 1, 'vendor_name': 'Desktops',    'device_class': WindowsComputer},
     ],
     'Dev Setup': [
         {'count': 1, 'vendor_name': 'Apple',   'device_class': MacBook},
@@ -52,7 +52,7 @@ host_list = []
 vendor_dictionary = {
     "Apple": Apple,
     "Samsung": Samsung,
-    "Windows": Windows,
+    "Desktops": Desktops,
     "Sony": Sony
     }
 

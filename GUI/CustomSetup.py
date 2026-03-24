@@ -63,7 +63,7 @@ def custom_setup_page():
             'OpenBSD': OpenBSD,
             'Android': Android,
             'Linux': Linux,
-            'Windows': Windows,
+            'Desktops': Windows,
             'CiscoIOS': CiscoIOS,
             'CiscoIOSXE': CiscoIOSXE,
             'JuniperJunOS': JuniperJunOS,
