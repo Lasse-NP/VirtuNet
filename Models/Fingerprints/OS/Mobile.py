@@ -1,6 +1,6 @@
 from Models.Fingerprints.OSFingerprint import OSFingerprint
 
-
+# UNTESTED
 class Android(OSFingerprint):
     name = "android"
     aliases = ["android", "android 10", "android 11", "android 12", "android 13", "android 14"]
@@ -23,7 +23,7 @@ class Android(OSFingerprint):
     tcp_rmem = "4096 87380 4194304"
     tcp_wmem = "4096 16384 4194304"
 
-
+# WORKING
 class iOS(OSFingerprint):
     name = "ios"
     aliases = ["ios", "iphone", "ipad", "ipados", "ios16", "ios17", "ios18"]

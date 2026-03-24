@@ -6,8 +6,8 @@ from pathlib import Path
 import sys
 
 from GUI import SessionSetting
-from Models.Fingerprints.OS.Linux import Linux2_6, Linux3x, Linux4x, Linux5x, Linux6x
-from Models.Fingerprints.OS.Windows import WindowsXP, Windows7, Windows10, Windows11, WindowsServer2019
+from Models.Fingerprints.OS.Linux import Linux
+from Models.Fingerprints.OS.Windows import Windows
 from Models.Fingerprints.OS.Mobile import iOS, Android
 from Models.Fingerprints.OS.MacOS import MacOS, FreeBSD, OpenBSD
 from Models.Fingerprints.OS.NetworkDevices import CiscoIOS, CiscoIOSXE, JuniperJunOS, Solaris11, AIX7, HPUX11
@@ -62,16 +62,8 @@ def custom_setup_page():
             'FreeBSD': FreeBSD,
             'OpenBSD': OpenBSD,
             'Android': Android,
-            'Linux6x': Linux6x,
-            'Linux5x': Linux5x,
-            'Linux4x': Linux4x,
-            'Linux3x': Linux3x,
-            'Linux2_6': Linux2_6,
-            'WindowsServer2019': WindowsServer2019,
-            'Windows11': Windows11,
-            'Windows10': Windows10,
-            'Windows7': Windows7,
-            'WindowsXP': WindowsXP,
+            'Linux': Linux,
+            'Windows': Windows,
             'CiscoIOS': CiscoIOS,
             'CiscoIOSXE': CiscoIOSXE,
             'JuniperJunOS': JuniperJunOS,
