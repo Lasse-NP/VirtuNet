@@ -103,6 +103,29 @@ def control_center_page():
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/ControlCenter.css">')
 
+    with ui.right_drawer(fixed=True, bordered=False, elevated=True).style(
+            'background-color: #3a3a3a; width: 220px;'
+    ) as drawer:
+        drawer.hide()
+
+        with ui.element('div').classes('drawer-inner'):
+            ui.button('x', on_click=lambda: drawer.hide()).classes('btn-close-drawer').props('flat dense')
+            drawer_name     = ui.label('').classes('drawer-field')
+            drawer_os       = ui.label('').classes('drawer-field')
+            drawer_latency  = ui.label('').classes('drawer-field')
+            drawer_services = ui.label('').classes('drawer-field-services')
+
+    def open_drawer(host):
+        hosts = mininet_network.get_hosts()
+        device = hosts.get(host)
+        if device is None:
+            return
+        drawer_name.set_text(device.name)
+        drawer_os.set_text(type(device.os).__name__ if device.os else 'Unknown')
+        drawer_latency.set_text(device.latency if hasattr(device, 'latency') else 'None')
+        drawer_services.set_text(device.services if hasattr(device, 'services') else '')
+        drawer.show()
+
     def make_toggle(j):
         def _toggle(e):
             devices = get_devices()
@@ -121,12 +144,15 @@ def control_center_page():
         with device_container:
             for i, dev in enumerate(current_devices):
                 with ui.element('div').classes('device-row'):
-                    ui.html(f'<span class="id-badge">{dev["id"]}</span>')
-                    ui.html(f'<span class="dev-name">{dev["device"]}</span>')
-                    ui.html(f'<span class="dev-os">{dev["os"]}</span>')
-                    ui.html(f'<span class="dev-ip">{dev["ip"]}</span>')
-                    ui.html(f'<span class="dev-mac">{dev["mac"]}</span>')
+                    def make_open(h):
+                        return lambda: open_drawer(h)
 
+                    with ui.element('div').classes('device-row-info').on('click', make_open(dev['device'])):
+                        ui.html(f'<span class="id-badge">{dev["id"]}</span>')
+                        ui.html(f'<span class="dev-name">{dev["device"]}</span>')
+                        ui.html(f'<span class="dev-os">{dev["os"]}</span>')
+                        ui.html(f'<span class="dev-ip">{dev["ip"]}</span>')
+                        ui.html(f'<span class="dev-mac">{dev["mac"]}</span>')
 
                     ui.switch('', value=dev['enabled'], on_change=make_toggle(i)).style(
                         '--q-color: #22c55e;' if dev['enabled'] else '--q-color: #ef4444;'
