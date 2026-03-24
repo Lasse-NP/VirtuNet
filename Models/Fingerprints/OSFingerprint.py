@@ -130,8 +130,8 @@ class OSFingerprint:
                     print(f'*** [{host.name}] stderr: {stderr.decode().strip()}')
 
             print(f'*** [{host.name}] Scapy daemon started (PID={proc.pid})')
-            start_mdns(host, self.ttl, self.tcp_timestamps)
+            start_mdns(host)
             return proc
 
-        start_mdns(host, self.ttl, self.tcp_timestamps)
+        start_mdns(host)
         return None

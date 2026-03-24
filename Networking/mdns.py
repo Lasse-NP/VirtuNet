@@ -1,61 +1,99 @@
-import atexit
 import os
-import signal
+import re
 import subprocess
+import signal
+import atexit
 
-HOSTS_FILE = '/tmp/virtunet_hosts'
-_dnsmasq_proc: subprocess.Popen | None = None
-_original_resolv: str | None = None
+# One avahi-publish-address process per registered host
+_publish_procs: dict[str, subprocess.Popen] = {}
 
+HOSTS_FILE = '/etc/hosts'
+HOSTS_MARKER_START = '# virtunet-start'
+HOSTS_MARKER_END = '# virtunet-end'
 
-def _ensure_dnsmasq() -> None:
-    global _dnsmasq_proc, _original_resolv
-    if _dnsmasq_proc is not None:
-        return
+def _ensure_avahi_ready() -> None:
+    """
+    Avahi must be running and bound to the bridge interface (s1 or tap0).
+    Idempotent — safe to call multiple times.
+    """
+    # Confirm avahi-daemon is up
+    result = subprocess.run(
+        ['systemctl', 'is-active', 'avahi-daemon'],
+        capture_output=True, text=True
+    )
+    if result.stdout.strip() != 'active':
+        raise RuntimeError(
+            'avahi-daemon is not running. '
+            'Install avahi-daemon and ensure it is bound to the s1/tap0 interface.'
+        )
 
-    open(HOSTS_FILE, 'w').close()
+def start_mdns(host) -> None:
+    """
+    Publish <host.name>.local -> <host.IP()> via the host system's avahi-daemon.
+    Each call spawns an avahi-publish-address process that lives until stop_all_mdns().
+    """
+    _ensure_avahi_ready()
 
-    with open('/etc/resolv.conf', 'r') as f:
-        _original_resolv = f.read()
+    name = host.name
+    ip   = host.IP()
+    fqdn = f'{name}.local'
 
-    with open('/etc/resolv.conf', 'w') as f:
-        f.write('nameserver 127.0.0.1\n' + _original_resolv)
+    # Kill any existing publisher for this host (e.g. on re-apply)
+    _stop_one(name)
 
-    _dnsmasq_proc = subprocess.Popen(
-        [
-            'dnsmasq', '--no-daemon', '--no-resolv',
-            '--listen-address=127.0.0.1',
-            f'--addn-hosts={HOSTS_FILE}',
-        ],
+    proc = subprocess.Popen(
+        ['avahi-publish', '-a', '-R', fqdn, ip],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+    _publish_procs[name] = proc
+    print(f'*** [mdns] Publishing {fqdn} -> {ip}  (PID={proc.pid})')
+    _write_hosts_entry(name, ip)
 
     atexit.register(stop_all_mdns)
 
-def start_mdns(host, ttl: int, tcp_timestamps: int) -> None:
-    _ensure_dnsmasq()
+def _write_hosts_entry(name: str, ip: str) -> None:
+    # Ensure the managed block exists, then append inside it
+    with open(HOSTS_FILE, 'r') as f:
+        content = f.read()
 
-    with open(HOSTS_FILE, 'a') as f:
-        f.write(f'{host.IP()} {host.name}.local {host.name}\n')
+    entry = f'{ip} {name} {name}.local\n'
 
-    if _dnsmasq_proc:
-        _dnsmasq_proc.send_signal(signal.SIGHUP)
+    if HOSTS_MARKER_START not in content:
+        # First host — create the block
+        with open(HOSTS_FILE, 'a') as f:
+            f.write(f'\n{HOSTS_MARKER_START}\n{entry}{HOSTS_MARKER_END}\n')
+    else:
+        # Block exists — insert entry before the end marker
+        content = content.replace(
+            HOSTS_MARKER_END,
+            f'{entry}{HOSTS_MARKER_END}'
+        )
+        with open(HOSTS_FILE, 'w') as f:
+            f.write(content)
+
+def _clear_hosts() -> None:
+    if not os.path.exists(HOSTS_FILE):
+        return
+    with open(HOSTS_FILE, 'r') as f:
+        content = f.read()
+    content = re.sub(
+        rf'{HOSTS_MARKER_START}.*?{HOSTS_MARKER_END}\n?',
+        '',
+        content,
+        flags=re.DOTALL
+    )
+    with open(HOSTS_FILE, 'w') as f:
+        f.write(content)
+
+def _stop_one(name: str) -> None:
+    proc = _publish_procs.pop(name, None)
+    if proc and proc.poll() is None:
+        proc.terminate()
+        proc.wait()
 
 def stop_all_mdns() -> None:
-    global _dnsmasq_proc, _original_resolv
-
-    if _dnsmasq_proc:
-        _dnsmasq_proc.terminate()
-        _dnsmasq_proc.wait()
-        _dnsmasq_proc = None
-
-    if _original_resolv is not None:
-        with open('/etc/resolv.conf', 'w') as f:
-            f.write(_original_resolv)
-        _original_resolv = None
-
-    try:
-        os.unlink(HOSTS_FILE)
-    except FileNotFoundError:
-        pass
+    for name in list(_publish_procs.keys()):
+        _stop_one(name)
+    _clear_hosts()
+    print('*** [mdns] All mDNS publishers stopped')

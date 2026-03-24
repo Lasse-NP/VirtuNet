@@ -3,6 +3,7 @@ import string
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
+from Networking.mininet import mininet_network
 from Networking.network import get_local_ip
 from Networking.pki import gen_client
 
@@ -23,6 +24,13 @@ class _Handler(BaseHTTPRequestHandler):
             return
 
         code, name = parts[0].upper(), parts[1]
+
+        if name == 'hosts':
+            hosts = mininet_network.get_hosts()
+            return {
+                host.name: host.IP()
+                for host in hosts.keys()
+            }
 
         if code != _active_code:
             self._respond(403, "Invalid Join Code")

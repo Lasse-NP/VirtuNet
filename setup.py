@@ -1,3 +1,4 @@
+import re
 import subprocess
 import os
 import sys
@@ -10,7 +11,8 @@ REQUIRED_COMMANDS = [
     'openvpn',      #OpenVPN
     'ovs-vsctl',    #OVSwitch
     'easyrsa',      #EasyRSA
-    'mn'            #MiniNet
+    'mn',           #MiniNet
+    'avahi-publish',    #AvahiDNS
 ]
 
 PACKAGE_NAMES = {
@@ -20,24 +22,28 @@ PACKAGE_NAMES = {
         "ovs-vsctl": "openvswitch-switch",
         "easyrsa":  "easy-rsa",
         "mn":       "mininet",
+        "avahi-publish":  "avahi-utils",
     },
     "arch": {
         "openvpn":  "openvpn",
         "ovs-vsctl": "openvswitch",
         "easyrsa":  "easy-rsa",
         "mn":       "mininet",
+        "avahi-publish":  "avahi",
     },
     "fedora": {
         "openvpn":  "openvpn",
         "ovs-vsctl": "openvswitch",
         "easyrsa":  "easy-rsa",
         "mn":       "mininet",
+        "avahi-publish":  "avahi-tools",
     },
     "opensuse": {
         "openvpn": "openvpn",
         "ovs-vsctl": "openvswitch",
         "easyrsa": "easy-rsa",
         "mn": "mininet",
+        "avahi-publish":  "avahi",
     }
 }
 
@@ -80,6 +86,78 @@ def start_openvswitch():
 
     raise RuntimeError('Could not start OpenVSwitch service, is it installed?')
 
+AVAHI_CONF_PATH = '/etc/avahi/avahi-daemon.conf'
+AVAHI_INTERFACE  = 's1'
+
+def setup_avahi():
+    """
+    1. Disable systemd-resolved's mDNS responder (it conflicts with Avahi on port 5353).
+    2. Write an avahi-daemon.conf that binds only to the OVS bridge (s1).
+    3. Enable and start avahi-daemon.
+    """
+    # Step 1: suppress systemd-resolved mDNS without fully disabling resolved
+    resolved_conf = '/etc/systemd/resolved.conf'
+
+    if not os.path.exists(resolved_conf):
+        os.makedirs('/etc/systemd', exist_ok=True)
+        with open(resolved_conf, 'w') as f:
+            f.write('[Resolve]\nMulticastDNS=no\n')
+    else:
+        with open(resolved_conf, 'r') as f:
+            content = f.read()
+        if re.search(r'#?\s*MulticastDNS=', content):
+            content = re.sub(r'#?\s*MulticastDNS=\S+', 'MulticastDNS=no', content)
+        elif '[Resolve]' in content:
+            content = content.replace('[Resolve]', '[Resolve]\nMulticastDNS=no', 1)
+        else:
+            content += '\n[Resolve]\nMulticastDNS=no\n'
+        with open(resolved_conf, 'w') as f:
+            f.write(content)
+
+        subprocess.run(['systemctl', 'restart', 'systemd-resolved'],
+                       capture_output=True)
+        print('*** Disabled systemd-resolved mDNS to avoid port 5353 conflict')
+
+    # Step 2: write avahi config — bind only to the OVS bridge
+    os.makedirs('/etc/avahi', exist_ok=True)
+    avahi_conf = f"""[server]
+use-ipv4=yes
+use-ipv6=no
+allow-interfaces={AVAHI_INTERFACE}
+ratelimit-interval-usec=1000000
+ratelimit-burst=1000
+
+[wide-area]
+enable-wide-area=no
+
+[publish]
+publish-addresses=yes
+publish-hinfo=no
+publish-workstation=no
+publish-domain=yes
+
+[reflector]
+enable-reflector=no
+
+[rlimits]
+"""
+    with open(AVAHI_CONF_PATH, 'w') as f:
+        f.write(avahi_conf)
+    print(f'*** Wrote avahi config (interface: {AVAHI_INTERFACE})')
+
+    # Step 3: enable and start avahi-daemon
+    subprocess.run(['systemctl', 'enable', '--now', 'avahi-daemon'],
+                   capture_output=True)
+    result = subprocess.run(
+        ['systemctl', 'is-active', 'avahi-daemon'],
+        capture_output=True, text=True
+    )
+    if result.stdout.strip() != 'active':
+        print('WARNING: avahi-daemon did not start. mDNS hostnames may not resolve.')
+        print('Run: systemctl status avahi-daemon  for details.')
+    else:
+        print('*** avahi-daemon running')
+
 def check_dependencies():
     family = get_distro_family()
 
@@ -113,6 +191,8 @@ def check_dependencies():
             print (f"Error: {e}")
             print("Openvswitch is disabled, please enable and start it.")
             sys.exit(1)
+
+    setup_avahi()
 
     print('All dependencies satisfied.')
 
