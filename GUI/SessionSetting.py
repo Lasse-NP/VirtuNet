@@ -24,6 +24,7 @@ def get_base_path():
         return Path(sys._MEIPASS)
     return Path(__file__).parent
 
+delete_mode = False
 PRESETS = ['Home Setup', 'Office Setup', 'Dev Setup', 'Random']
 
 PRESET_CONFIGS = {
@@ -101,11 +102,24 @@ def get_available_device_options(current_row_idx, vendor_class):
 
 def render_devices(devices_list):
     devices_list.clear()
-    with devices_list:
+    with (devices_list):
         ui.item_label('Devices').props('header')
         ui.separator()
+
         for i, row in enumerate(session_rows):
-            with ui.item().style('display: flex; flex-direction: row; align-items: center; gap: 20px; padding: 4px 8px;'):
+            def make_delete_row(idx):
+                def _delete_row():
+                    global delete_mode
+                    if delete_mode:
+                        session_rows.pop(idx)
+                        render_devices(devices_list)
+                return _delete_row
+
+            item_style = 'display: flex; flex-direction: row; align-items: center; gap: 20px; padding: 4px 8px;'
+            if delete_mode:
+                item_style += ' cursor: pointer; background-color: #4a1a1a;'
+
+            with ui.element('div').style(item_style).on('click', make_delete_row(i)):
                 with ui.item_section().style('align-items: center; flex: 0 0 auto; min-width: unset; width: 44px;'):
                     ui.item_label(row['count']).classes('count-badge')
 
@@ -197,9 +211,10 @@ def session_settings_page():
                 render_devices(device_list)
 
                 with ui.element('div').classes('global-btn-row'):
-                    def remove_row():
+                    def toggle_delete_mode():
                         if session_rows:
-                            session_rows.pop()
+                            global delete_mode
+                            delete_mode = not delete_mode
                             render_devices(device_list)
 
                     def add_row():
@@ -210,15 +225,13 @@ def session_settings_page():
                         })
                         render_devices(device_list)
 
-                    ui.button('−', on_click=remove_row).classes('btn-global').props('flat')
+                    ui.button('−', on_click=toggle_delete_mode).classes('btn-global').props('flat')
                     ui.button('+', on_click=add_row).classes('btn-global').props('flat')
 
             with ui.column().style('width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
                 ui.label('Presets').style('font-family: "Orbitron", sans-serif; font-size: 14px; color: white;')
 
                 def apply_preset(e, select):
-                    if e.value == 'Preset':
-                        return
                     if e.value == 'Random':
                         session_rows.clear()
                         num_rows = random.randint(2, 6)
@@ -241,9 +254,17 @@ def session_settings_page():
                         return
                     if e.value not in PRESET_CONFIGS:
                         return
+
                     session_rows.clear()
                     for row in PRESET_CONFIGS[e.value]:
-                        session_rows.append(dict(row))
+                        session_rows.append({
+                            'count': row['count'],
+                            'vendor_name': row['vendor_name'],
+                            'device_class': next(
+                                cls for cls in vendor_dictionary[row['vendor_name']].__subclasses__()
+                                if cls.__name__ == row['device_class'].__name__.split('.')[-1]
+                            )
+                        })
                     render_devices(device_list)
                     ui.notify(f'{e.value} loaded!', type='positive')
 
