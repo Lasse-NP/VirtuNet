@@ -1,8 +1,10 @@
 import random
 import string
 import threading
+import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
+from Networking.mininet import mininet_network
 from Networking.network import get_local_ip
 from Networking.pki import gen_client
 
@@ -26,6 +28,20 @@ class _Handler(BaseHTTPRequestHandler):
 
         if code != _active_code:
             self._respond(403, "Invalid Join Code")
+            return
+
+        if name == 'hosts':
+            try:
+                hosts = mininet_network.get_hosts()
+                result = {host.name: host.IP() for host in hosts.keys()}
+                body = json.dumps(result).encode()
+                self.send_response(200)
+                self.send_header("Content-type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except Exception as e:
+                self._respond(500, f"Failed to get hosts: {e}")
             return
 
         if not name.isalnum():
@@ -57,6 +73,9 @@ class _Handler(BaseHTTPRequestHandler):
 
 def start_join_server() -> str:
     global _server, _thread, _active_code
+
+    if _server:
+        stop_join_server()
 
     _active_code = _make_code()
     _server = HTTPServer(("0.0.0.0", PORT), _Handler)

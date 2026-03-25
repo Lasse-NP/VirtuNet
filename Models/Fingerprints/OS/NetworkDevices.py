@@ -1,6 +1,6 @@
 from Models.Fingerprints.OSFingerprint import OSFingerprint
 
-
+# UNTESTED
 class CiscoIOS(OSFingerprint):
     name = "cisco_ios"
     aliases = ["cisco", "ios", "cisco ios", "cisco_ios"]
@@ -22,7 +22,7 @@ class CiscoIOS(OSFingerprint):
     tcp_rmem = "4096 4128 131072"
     tcp_wmem = "4096 4128 131072"
 
-
+# UNTESTED
 class CiscoIOSXE(OSFingerprint):
     name = "cisco_iosxe"
     aliases = ["iosxe", "ios xe", "cisco xe", "asr", "isr"]
@@ -44,7 +44,7 @@ class CiscoIOSXE(OSFingerprint):
     tcp_rmem = "4096 16384 1048576"
     tcp_wmem = "4096 16384 1048576"
 
-
+# UNTESTED
 class CiscoNXOS(OSFingerprint):
     name = "cisco_nxos"
     aliases = ["nxos", "nx-os", "nexus"]
@@ -66,7 +66,7 @@ class CiscoNXOS(OSFingerprint):
     tcp_rmem = "4096 87380 6291456"
     tcp_wmem = "4096 16384 4194304"
 
-
+# UNTESTED
 class JuniperJunOS(OSFingerprint):
     name = "juniper_junos"
     aliases = ["juniper", "junos", "jun os", "mx", "srx", "ex series"]
@@ -88,7 +88,7 @@ class JuniperJunOS(OSFingerprint):
     tcp_rmem = "4096 87380 8388608"
     tcp_wmem = "4096 16384 8388608"
 
-
+# UNTESTED
 class Solaris11(OSFingerprint):
     name = "solaris_11"
     aliases = ["solaris", "solaris10", "solaris11", "sunos"]
@@ -110,7 +110,7 @@ class Solaris11(OSFingerprint):
     tcp_rmem = "4096 49152 4194304"
     tcp_wmem = "4096 49152 4194304"
 
-
+# UNTESTED
 class AIX7(OSFingerprint):
     name = "aix_7"
     aliases = ["aix", "aix7", "ibm aix"]
@@ -132,7 +132,7 @@ class AIX7(OSFingerprint):
     tcp_rmem = "4096 16384 1048576"
     tcp_wmem = "4096 16384 1048576"
 
-
+# UNTESTED
 class HPUX11(OSFingerprint):
     name = "hpux_11"
     aliases = ["hpux", "hp-ux", "hp ux"]

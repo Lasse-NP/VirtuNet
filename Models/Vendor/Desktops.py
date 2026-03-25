@@ -3,7 +3,7 @@ import random
 from Models.Devices.Device import Device
 
 
-class Windows(Device):
+class Desktops(Device):
     mac_prefix = [
         "00:E0:4C",
         "00:0E:0C",

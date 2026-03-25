@@ -1,5 +1,6 @@
 import time
 
+from .mdns import stop_all_mdns
 from .config import TAP_IFACE, LAB_SUBNET, LAB_SERVER_IP, LAB_PREFIX
 from .network import get_base_ip
 from .terminal import run
@@ -151,9 +152,15 @@ class MininetNetwork:
                 host.cmd(f'iptables -t mangle -D OUTPUT -p tcp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
                 host.cmd(f'iptables -t mangle -D OUTPUT -p udp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
                 host.cmd(f'iptables -t mangle -D OUTPUT -p icmp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
+                host.cmd('fuser -k 80/tcp 2>/dev/null || true')
+                host.cmd('fuser -k 443/tcp 2>/dev/null || true')
         self._daemon_procs.clear()
+        stop_all_mdns()
 
         if self._net is not None:
+            for host in self._net.hosts:
+                host.cmd('fuser -k 80/tcp 2>/dev/null || true')
+                host.cmd('fuser -k 443/tcp 2>/dev/null || true')
             self._net.stop()
             self._net = None
 

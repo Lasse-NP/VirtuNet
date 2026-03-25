@@ -8,14 +8,15 @@ from Networking.mininet import verify_mininet, verify_bridge, mininet_network, t
 from Networking.server import verify_openvpn
 
 from Models.Vendor.Apple import Apple
-from Models.Vendor.Windows import Windows
+from Models.Vendor.Desktops import Desktops
 from Models.Vendor.Samsung import Samsung
 from Models.Vendor.Sony import Sony
 
 from Models.Devices.Apple.IPhone import IPhone
 from Models.Devices.Apple.AppleWatch import AppleWatch
 from Models.Devices.Apple.MacBook import MacBook
-from Models.Devices.Windows.WindowsComputer import WindowsComputer
+from Models.Devices.Desktops.LinuxComputer import LinuxComputer
+from Models.Devices.Desktops.WindowsComputer import WindowsComputer
 from Models.Devices.Samsung.GalaxyBook import GalaxyBook
 from Models.Devices.Samsung.SamsungFridge import SamsungFridge
 from Models.Devices.Samsung.SamsungGalaxy import SamsungGalaxy
@@ -37,6 +38,7 @@ DEVICE_REGISTRY = {
     'IPhone': IPhone,
     'AppleWatch': AppleWatch,
     'MacBook': MacBook,
+    'LinuxComputer': LinuxComputer,
     'WindowsComputer': WindowsComputer,
     'GalaxyBook': GalaxyBook,
     'SamsungFridge': SamsungFridge,
