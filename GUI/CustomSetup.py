@@ -63,7 +63,7 @@ def custom_setup_page():
             'OpenBSD': OpenBSD,
             'Android': Android,
             'Linux': Linux,
-            'Desktops': Windows,
+            'Windows': Windows,
             'CiscoIOS': CiscoIOS,
             'CiscoIOSXE': CiscoIOSXE,
             'JuniperJunOS': JuniperJunOS,
@@ -72,7 +72,8 @@ def custom_setup_page():
             'HPUX11': HPUX11,
         }
 
-        name_input     = ui.input(label='Name').style('width: 100%;')
+        name_input = ui.input(label='Name').style('width: 100%;')
+        mac_input = ui.input(label='Mac Addess').style('width: 100%;')
         os_select = ui.select(list(OS_OPTIONS.keys()), label='OS').style('width: 100%;')
         latency_select = ui.select(LATENCY_MODES, label='Latency Mode').style('width: 100%;')
         services_input = ui.textarea(label='Services').style('width: 100%; flex: 1;')
@@ -83,14 +84,15 @@ def custom_setup_page():
                 return
 
             devices[idx]['name'] = name_input.value
-            new_os = OS_OPTIONS[os_select.value]()
-            devices[idx]['os'] = new_os
+            devices[idx]['mac'] = mac_input.value
+            devices[idx]['os'] = OS_OPTIONS[os_select.value]()
             devices[idx]['latency'] = latency_select.value
             devices[idx]['services'] = services_input.value
 
             host = devices[idx]['_host']
             host.name = name_input.value
-            host.os = new_os
+            host.macAddress = mac_input.value
+            host.os = OS_OPTIONS[os_select.value]()
             host.latency = latency_select.value
 
             drawer.hide()
@@ -103,6 +105,7 @@ def custom_setup_page():
         selected_device['index'] = idx
         dev = devices[idx]
         name_input.set_value(dev['name'])
+        mac_input.set_value(dev['mac'])
         os_select.set_value(type(dev['os']).__name__)
         latency_select.set_value(dev['latency'])
         services_input.set_value(dev['services'])

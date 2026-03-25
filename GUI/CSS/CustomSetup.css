@@ -61,48 +61,27 @@ body {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
     gap: 6px;
 }
 
 .device-row {
+    display: contents;
+}
+
+.device-row > * {
+    background-color: #2a2a2a;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    background-color: #2a2a2a;
-    border-radius: 10px;
-    padding: 10px 12px;
-    gap: 10px;
 }
 
-.dev-name {
-    color: white;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    flex: 2;
-}
-
-.dev-os {
-    color: #aaa;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    flex: 1;
-    text-align: center;
-}
-
-.dev-ip {
-    color: #ccc;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    flex: 2;
-    text-align: right;
-}
+.device-row > *:first-child { border-radius: 10px 0 0 10px; }
+.device-row > *:last-child  { border-radius: 0 10px 10px 0; }
 
 .btn-settings {
-    background: none;
+    background: #2a2a2a;
     border: none;
     color: #aaa;
     font-size: 20px;
