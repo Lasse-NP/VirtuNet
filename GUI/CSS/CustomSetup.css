@@ -12,6 +12,11 @@ body {
     box-shadow: none;
 }
 
+.q-btn {
+    background-color: inherit;
+    color: inherit;
+}
+
 .q-page, .q-page-container {
     height: 100vh;
     padding: 0;
@@ -107,8 +112,9 @@ body {
 }
 
 .btn-back {
-    background-color: #2a2a2a;
-    color: white;
+    background-color: #2a2a2a !important;
+    color: #4a7cdc !important;
+    border: 1px solid #4a7cdc;
     border-radius: 16px;
     font-family: 'Orbitron', sans-serif;
     font-size: 20px;
@@ -121,8 +127,9 @@ body {
 }
 
 .btn-start {
-    background-color: #2a2a2a;
-    color: white;
+    background-color: #2a2a2a !important;
+    color: #4a7cdc !important;
+    border: 1px solid #4a7cdc;
     border-radius: 16px;
     font-family: 'Orbitron', sans-serif;
     font-size: 20px;
@@ -153,8 +160,9 @@ body {
 }
 
 .btn-update {
-    background-color: #2a2a2a;
-    color: white;
+    background-color: #2a2a2a !important;
+    color: #4a7cdc !important;
+    border: 2px solid #4a7cdc;
     border-radius: 12px;
     font-family: 'Orbitron', sans-serif;
     font-size: 16px;

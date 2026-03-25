@@ -42,6 +42,14 @@ def custom_setup_page():
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/CustomSetup.css">')
+    ui.add_head_html('''
+        <script>
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+            });
+        </script>
+        ''')
 
     devices = build_devices_from_host_list()
     selected_device = {'index': None}

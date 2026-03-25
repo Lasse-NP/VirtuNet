@@ -28,6 +28,8 @@ def get_base_path():
         return Path(sys._MEIPASS)
     return Path(__file__).parent
 
+start_initiated = False
+
 pipeline = [
     {'label': 'MiniNet', 'active': True},
     {'label': 'Bridge',  'active': True},
@@ -72,7 +74,8 @@ def deserialize_hosts(raw_list):
             continue
         obj = cls.__new__(cls)
         obj.name = d['name']
-        obj.os = d['os']
+        obj.os = cls().os
+        obj.latency = d.get('latency', 'None')
         obj.macAddress = d['mac']
         hosts.append(obj)
     return hosts
@@ -104,26 +107,39 @@ def control_center_page():
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/ControlCenter.css">')
+    ui.add_head_html('''
+        <script>
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+            });
+        </script>
+        ''')
 
-    with ui.right_drawer(fixed=True, bordered=False, elevated=True).style(
-            'background-color: #3a3a3a; width: 220px;'
-    ) as drawer:
-        drawer.hide()
+    def init_started():
+        global start_initiated
+        start_initiated = True
+        reset_btn.disable()
+        reboot_btn.disable()
+        end_btn.disable()
+        loading_indicator.style('display: block;')
+        render_devices()
 
-        with ui.element('div').classes('drawer-inner'):
-            ui.button('x', on_click=lambda: drawer.hide()).classes('btn-close-drawer').props('flat dense')
-            ui.label('Host Name').classes('drawer-label')
-            drawer_name     = ui.label('').classes('drawer-field')
-            ui.label('IP-Address').classes('drawer-label')
-            drawer_ip       = ui.label('').classes('drawer-field')
-            ui.label('Mac-Address').classes('drawer-label')
-            drawer_mac      = ui.label('').classes('drawer-field')
-            ui.label('Operating System').classes('drawer-label')
-            drawer_os       = ui.label('').classes('drawer-field')
-            ui.label('Latency').classes('drawer-label')
-            drawer_latency  = ui.label('').classes('drawer-field')
-            ui.label('Services').classes('drawer-label')
-            drawer_services = ui.label('').classes('drawer-field-services')
+    def init_stopped():
+        global start_initiated
+        start_initiated = False
+        reset_btn.enable()
+        reboot_btn.enable()
+        end_btn.enable()
+        loading_indicator.style('display: none;')
+        render_devices()
+
+    LATENCY_MAP = {
+        "None": "0ms",
+        "Near": "10ms",
+        "Medium": "50ms",
+        "Far": "200ms",
+    }
 
     def open_drawer(host, info):
         hosts = mininet_network.get_hosts()
@@ -134,7 +150,9 @@ def control_center_page():
         drawer_ip.set_text(info["ip"])
         drawer_mac.set_text(info["mac"])
         drawer_os.set_text(type(device.os).__name__ if device.os else 'Unknown')
-        drawer_latency.set_text(device.latency if hasattr(device, 'latency') else 'None')
+        latency = device.latency if hasattr(device, 'latency') else 'None'
+        ms = LATENCY_MAP.get(latency)
+        drawer_latency.set_text(f"{latency} ({ms})" if ms else latency)
         drawer_services.set_text(device.services if hasattr(device, 'services') else '')
         drawer.show()
 
@@ -159,7 +177,7 @@ def control_center_page():
                     def make_open(h, info):
                         return lambda: open_drawer(h, info)
 
-                    with ui.element('div').classes('device-row-info').on('click', make_open(dev['device'], dev)):
+                    with ui.element('div').classes('device-row-info').on('click', make_open(dev['device'], dev)).props('disabled' if start_initiated else ''):
                         ui.html(f'<span class="id-badge">{dev["id"]}</span>')
                         ui.html(f'<span class="dev-name">{dev["device"]}</span>')
                         ui.html(f'<span class="dev-os">{dev["os"]}</span>')
@@ -168,7 +186,7 @@ def control_center_page():
 
                     ui.switch('', value=dev['enabled'], on_change=make_toggle(i)).style(
                         '--q-color: #22c55e;' if dev['enabled'] else '--q-color: #ef4444;'
-                    ).props('dense color=green')
+                    ).props('dense color=green').props('disabled' if start_initiated else '')
 
     def reset_devices():
         current_devices = get_devices()
@@ -180,6 +198,7 @@ def control_center_page():
         ui.notify('Disabled devices restarted!', type = 'positive')
 
     async def reboot_network():
+        init_started()
         raw = app.storage.user.get('selected_hosts', [])
         host_list = deserialize_hosts(raw)
         if not host_list:
@@ -191,20 +210,50 @@ def control_center_page():
         device_states.clear()
         render_devices()
         ui.notify('Network rebooted', type = 'positive')
+        init_stopped()
 
-    def end_session():
-        uptime = mininet_network.get_uptime_minutes()
-        total_devices = len(mininet_network.get_hosts())
-        disabled = sum(1 for v in device_states.values() if not v)
+    async def end_session():
+        try:
+            init_started()
+            await asyncio.sleep(0.1)
 
-        app.storage.user['report'] = {
+            uptime = mininet_network.get_uptime_minutes()
+            total_devices = len(mininet_network.get_hosts())
+            disabled = sum(1 for v in device_states.values() if not v)
+
+            app.storage.user['report'] = {
             'found_devices': disabled,
             'missing_devices': total_devices - disabled,
             'session_duration': uptime,
             'avg_time_per_device': uptime // disabled if disabled else 0,
-        }
-        run_cleanup()
-        ui.navigate.to('/AfterActionReport')
+            }
+            await asyncio.to_thread(run_cleanup)
+            ui.navigate.to('/AfterActionReport')
+        except RuntimeError as e:
+            init_stopped()
+            ui.notify(str(e), type='negative')
+
+
+
+    with ui.right_drawer(fixed=True, bordered=False, elevated=True).style(
+            'background-color: #3a3a3a; width: 220px;'
+    ) as drawer:
+        drawer.hide()
+
+        with ui.element('div').classes('drawer-inner'):
+            ui.button('x', on_click=lambda: drawer.hide()).classes('btn-close-drawer').props('flat dense')
+            ui.label('Host Name').classes('drawer-label')
+            drawer_name     = ui.label('').classes('drawer-field')
+            ui.label('IP-Address').classes('drawer-label')
+            drawer_ip       = ui.label('').classes('drawer-field')
+            ui.label('Mac-Address').classes('drawer-label')
+            drawer_mac      = ui.label('').classes('drawer-field')
+            ui.label('Operating System').classes('drawer-label')
+            drawer_os       = ui.label('').classes('drawer-field')
+            ui.label('Latency').classes('drawer-label')
+            drawer_latency  = ui.label('').classes('drawer-field')
+            ui.label('Services').classes('drawer-label')
+            drawer_services = ui.label('').classes('drawer-field-services')
 
     with ui.element('div').classes('cc-wrapper'):
         with ui.element('div').classes('cc-card'):
@@ -216,9 +265,12 @@ def control_center_page():
             ui.timer(5.0, render_pipeline.refresh)
 
             with ui.element('div').classes('bottom-row'):
-                ui.button('Reset',  on_click=reset_devices).classes('btn-reset').props('flat')
-                ui.button('Reboot', on_click=reboot_network).classes('btn-reboot').props('flat')
-                ui.button('End',   on_click=end_session).classes('btn-end').props('flat')
+                reset_btn = ui.button('Reset',  on_click=reset_devices).classes('btn-reset').props('flat')
+                reboot_btn = ui.button('Reboot', on_click=reboot_network).classes('btn-reboot').props('flat')
+                end_btn = ui.button('End',   on_click=end_session).classes('btn-end').props('flat')
+
+        loading_indicator = ui.element('div').style(
+            'position: fixed; bottom: 0; left: 0; width: 100%; display: none;').classes('loading-bar')
 
 if __name__ == '__main__':
     @ui.page('/')

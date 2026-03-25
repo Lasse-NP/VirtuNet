@@ -56,22 +56,36 @@
 }
 
 .btn-global {
-    background-color: #2a2a2a;
-    color: white;
+    background-color: #2a2a2a !important;
+    color: #4a7cdc !important;
     font-size: 22px;
     font-weight: 900;
     width: 52px;
     height: 52px;
     min-width: unset;
     border-radius: 10px;
-    border: 2px solid #4a7cdc;
+    border: 1px solid #4a7cdc;
     box-shadow: none;
 }
 
-.btn-start {
-    background-color: #2a2a2a;
-    color: white;
+.btn-custom {
+    background-color: #2a2a2a !important;
     border-radius: 16px;
+    border: 1px solid #4a7cdc;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    width: clamp(12rem, 14vw + 1rem, 20rem);
+    padding: 16px;
+    text-transform: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    letter-spacing: 1px;
+}
+
+.btn-start {
+    background-color: #2a2a2a !important;
+    border-radius: 16px;
+    border: 1px solid #4a7cdc;
     font-family: 'Orbitron', sans-serif;
     font-size: 22px;
     font-weight: 700;

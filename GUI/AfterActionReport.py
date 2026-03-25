@@ -3,6 +3,8 @@ from nicegui import app
 from pathlib import Path
 import sys
 
+from Networking.cleanup import reset_clean_state
+
 def get_base_path():
     if getattr(sys, 'frozen', False):
         return Path(sys._MEIPASS)
@@ -20,6 +22,18 @@ def after_action_report_page():
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/AfterActionReport.css">')
+    ui.add_head_html('''
+        <script>
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+            });
+        </script>
+        ''')
+
+    def reset_session():
+        reset_clean_state()
+        ui.navigate.to('/')
 
     with ui.element('div').classes('aar-wrapper'):
         with ui.element('div').classes('aar-card'):
@@ -32,7 +46,7 @@ def after_action_report_page():
                 ui.html(f'<span class="report-line">Session Duration: {report["session_duration"]} min</span>')
                 ui.html(f'<span class="report-line">Average time per device: {report["avg_time_per_device"]} min</span>')
             with ui.element('div').classes('bottom-row'):
-                ui.button('Restart', on_click=lambda: ui.navigate.to('/')).classes('btn-restart').props('flat')
+                ui.button('Restart', on_click=lambda: reset_session).classes('btn-restart').props('flat')
                 ui.button('Exit', on_click=lambda: app.shutdown()).classes('btn-exit').props('flat')
 
 

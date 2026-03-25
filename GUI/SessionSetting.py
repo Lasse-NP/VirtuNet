@@ -186,6 +186,14 @@ def session_settings_page():
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/SessionSettings.css">')
+    ui.add_head_html('''
+        <script>
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+            });
+        </script>
+        ''')
     global device_list
 
     async def initialize_configure_and_go(custom: bool = False):
@@ -302,8 +310,8 @@ def session_settings_page():
                     'background: #383838; border-radius: 30px; color: #222; '
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
                 ).props('outlined rounded').classes('preset-select')
-                custom_btn = ui.button('Customize', on_click=lambda: initialize_configure_and_go(True)).classes('btn-custom')
-                start_btn = ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start')
+                custom_btn = ui.button('Customize', on_click=lambda: initialize_configure_and_go(True)).classes('btn-custom').props('flat')
+                start_btn = ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start').props('flat')
 
                 loading_indicator = ui.element('div').style('position: fixed; bottom: 0; left: 0; width: 100%; display: none;').classes('loading-bar')
 

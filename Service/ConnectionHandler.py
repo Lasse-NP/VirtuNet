@@ -8,8 +8,11 @@ from Networking.mininet import mininet_network
 from Networking.network import get_local_ip
 from Networking.pki import gen_client
 
+class ReusableHTTPServer(HTTPServer):
+    allow_reuse_address = True
+
 PORT = 8080
-_server: HTTPServer | None = None
+_server: ReusableHTTPServer | None = None
 _thread: threading.Thread | None = None
 _active_code: str | None = None
 
@@ -78,7 +81,7 @@ def start_join_server() -> str:
         stop_join_server()
 
     _active_code = _make_code()
-    _server = HTTPServer(("0.0.0.0", PORT), _Handler)
+    _server = ReusableHTTPServer(("0.0.0.0", PORT), _Handler)
     _thread = threading.Thread(target=_server.serve_forever, daemon=True)
     _thread.start()
 
@@ -91,5 +94,6 @@ def stop_join_server():
     global _server, _thread, _active_code
     if _server:
         _server.shutdown()
+        _server.server_close()
         _server = None
     _active_code = None

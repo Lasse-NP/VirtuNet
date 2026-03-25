@@ -97,6 +97,14 @@ def create_lobby():
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/Lobby.css">')
+    ui.add_head_html('''
+        <script>
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+            });
+        </script>
+        ''')
 
     global trainee_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%').classes('items-center'):
@@ -105,16 +113,13 @@ def create_lobby():
         ui.label('Join Code').style(
             'font-family: "Orbitron", sans-serif; font-size: 20px; font-weight: 700; color: #4a7cdc;')
         ui.label(f'{code}').style('font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
-        with ui.element('div').style('flex: 1; width: 100%; max-width: 60rem; border: 2px solid gray; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
+        with ui.element('div').style('flex: 1; width: 100%; max-width: 60rem; border: 4px solid #4a7cdc; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
             trainee_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
             render_trainees(trainee_list)
             ui.timer(10.0, lambda: [refresh_trainees(), render_trainees(trainee_list)])
 
         with ui.column().style('width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
-
-            name_input = ui.input(placeholder='Trainee Name').props('outlined').style('background-color: #383838; border-radius: 5px 5px 0 0; width: max(20em, 10%)')
-            ui.button('Generate Join File', on_click=lambda: generate_join_file(name_input.value)).classes('btn-generate')
-            ui.button('Continue', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue')
+            ui.button('Continue', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue').props('flat')
 
 if __name__ == '__main__':
     @ui.page('/')

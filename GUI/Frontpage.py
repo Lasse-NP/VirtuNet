@@ -15,6 +15,14 @@ def start_gui():
             @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;600&display=swap');
         </style>
     """)
+    ui.add_head_html('''
+        <script>
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+            });
+        </script>
+        ''')
 
     assets_path = get_base_path() / 'Assets'
     app.add_static_files('/assets', str(assets_path))

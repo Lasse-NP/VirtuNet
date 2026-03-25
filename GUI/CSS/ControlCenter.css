@@ -29,6 +29,7 @@
 
 .devices-card {
     background-color: #383838;
+    border: 3px solid #4a7cdc;
     border-radius: 14px;
     width: clamp(30rem, 50vw + 1rem, 60rem);
     padding: 10px;
@@ -44,6 +45,7 @@
     align-items: center;
     justify-content: space-between;
     background-color: #2a2a2a;
+    border: 1px solid #4a7cdc;
     border-radius: 10px;
     padding: 8px 10px;
     gap: 10px;
@@ -141,7 +143,7 @@
 
 .btn-reset {
     background-color: #2a2a2a;
-    color: white;
+    border: 1px solid #4a7cdc;
     border-radius: 14px;
     font-family: 'Orbitron', sans-serif;
     font-size: 18px;
@@ -154,7 +156,7 @@
 
 .btn-reboot {
     background-color: #2a2a2a;
-    color: white;
+    border: 1px solid #4a7cdc;
     border-radius: 14px;
     font-family: 'Orbitron', sans-serif;
     font-size: 18px;
@@ -167,7 +169,7 @@
 
 .btn-end {
     background-color: #2a2a2a;
-    color: white;
+    border: 1px solid #4a7cdc;
     border-radius: 14px;
     font-family: 'Orbitron', sans-serif;
     font-size: 22px;
@@ -252,4 +254,19 @@
 
 .device-row-info:hover {
     opacity: 0.8;
+}
+
+.loading-bar {
+    height: 16px;
+    background: repeating-linear-gradient(to right, #4a7cdc 0%, #A6C6FF 50%, #4a7cdc 100%);
+    background-size: 200% auto;
+    background-position: 0 100%;
+    animation: gradient 1s infinite;
+    animation-fill-mode: forwards;
+    animation-timing-function: linear;
+}
+
+@keyframes gradient {
+  0%   { background-position: 0 0; }
+  100% { background-position: -200% 0; }
 }
