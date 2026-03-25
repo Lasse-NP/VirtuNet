@@ -233,18 +233,18 @@ def session_settings_page():
 
                 def apply_preset(e, select):
                     if e.value == 'Random':
+                        all_devices = [
+                            (vendor_name, cls)
+                            for vendor_name, vendor_class in vendor_dictionary.items()
+                            for cls in vendor_class.__subclasses__()
+                        ]
+                        num_rows = min(random.randint(2, 6), len(all_devices))
+                        chosen = random.sample(all_devices, num_rows)
+
                         session_rows.clear()
-                        num_rows = random.randint(2, 6)
-                        for _ in range(num_rows):
-                            vendor_name = random.choice(list(vendor_dictionary.keys()))
-                            vendor_class = vendor_dictionary[vendor_name]
-                            subclasses = vendor_class.__subclasses__()
-                            if not subclasses:
-                                continue
-                            device_class = random.choice(subclasses)
-                            count = random.randint(1, 4)
+                        for vendor_name, device_class in chosen:
                             session_rows.append({
-                                'count': count,
+                                'count': random.randint(1, 4),
                                 'vendor_name': vendor_name,
                                 'device_class': device_class,
                             })
