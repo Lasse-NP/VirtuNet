@@ -75,7 +75,7 @@ def _pem_block(text: str, kind: str) -> str:
 def gen_client(name, port=1194):
     easyrsa = EASYRSA_BIN
     server_ip = get_local_ip()
-    print(server_ip)
+    print(f"[VirtuNet] User {name} is joining the Network.")
 
     if not os.path.isdir(PKI_DIR):
         error('PKI is not initialized.')

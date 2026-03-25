@@ -198,6 +198,7 @@ def session_settings_page():
 
     async def initialize_configure_and_go(custom: bool = False):
         global host_list
+
         host_list = build_host_list()
         app.storage.user['selected_hosts'] = [d.to_dict() for d in host_list]
 
@@ -219,6 +220,8 @@ def session_settings_page():
 
     def init_started():
         global start_initiated
+        global delete_mode
+        delete_mode = False
         start_initiated = True
         remove_btn.disable()
         add_btn.disable()

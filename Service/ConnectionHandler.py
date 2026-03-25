@@ -1,4 +1,5 @@
 import random
+import socket
 import string
 import threading
 import json
@@ -9,7 +10,9 @@ from Networking.network import get_local_ip
 from Networking.pki import gen_client
 
 class ReusableHTTPServer(HTTPServer):
-    allow_reuse_address = True
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        super().server_bind()
 
 PORT = 8080
 _server: ReusableHTTPServer | None = None

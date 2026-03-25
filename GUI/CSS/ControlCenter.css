@@ -29,7 +29,7 @@
 
 .devices-card {
     background-color: #383838;
-    border: 3px solid #4a7cdc;
+    border: 2px solid #4a7cdc;
     border-radius: 14px;
     width: clamp(30rem, 50vw + 1rem, 60rem);
     padding: 10px;
@@ -44,8 +44,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #2a2a2a;
-    border: 1px solid #4a7cdc;
+    background-color: #4a7cdc;
+    border: 1px solid #ccc;
     border-radius: 10px;
     padding: 8px 10px;
     gap: 10px;
@@ -103,6 +103,7 @@
 /* Pipeline bar */
 .pipeline-card {
     background-color: #383838;
+    border: 2px solid #4a7cdc;
     border-radius: 14px;
     width: clamp(20rem, 20vw + 1rem, 30rem);
     padding: 14px 18px;
