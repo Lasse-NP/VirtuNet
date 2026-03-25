@@ -1,6 +1,6 @@
 from nicegui import ui, app
 from nicegui.elements.list import List
-import asyncio, sys
+import asyncio, sys, random
 from pathlib import Path
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
@@ -10,13 +10,15 @@ from Models.Vendor.Windows import Windows
 from Models.Vendor.Samsung import Samsung
 from Models.Vendor.Sony import Sony
 
-from Models.Devices.Apple import AppleWatch, IPhone, MacBook
-from Models.Devices.Windows import WindowsComputer
-from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
-from Models.Devices.Sony import Playstation5
-
-import random
-
+from Models.Devices.Apple.IPhone import IPhone
+from Models.Devices.Apple.MacBook import MacBook
+from Models.Devices.Apple.AppleWatch import AppleWatch
+from Models.Devices.Windows.WindowsComputer import WindowsComputer
+from Models.Devices.Samsung.GalaxyBook import GalaxyBook
+from Models.Devices.Samsung.SamsungFridge import SamsungFridge
+from Models.Devices.Samsung.SamsungGalaxy import SamsungGalaxy
+from Models.Devices.Samsung.SamsungSmartTV import SamsungSmartTV
+from Models.Devices.Sony.Playstation5 import Playstation5
 
 
 def get_base_path():
@@ -36,7 +38,7 @@ PRESET_CONFIGS = {
     'Office Setup': [
         {'count': 3, 'vendor_name': 'Apple',   'device_class': MacBook},
         {'count': 2, 'vendor_name': 'Apple',   'device_class': IPhone},
-        {'count': 1, 'vendor_name': 'Windows',    'device_class': WindowsComputer},
+        {'count': 1, 'vendor_name': 'Windows', 'device_class': WindowsComputer},
     ],
     'Dev Setup': [
         {'count': 1, 'vendor_name': 'Apple',   'device_class': MacBook},
@@ -50,13 +52,14 @@ session_rows = []
 host_list = []
 
 vendor_dictionary = {
-    "Apple": Apple,
+    "Apple":   Apple,
     "Samsung": Samsung,
     "Windows": Windows,
-    "Sony": Sony
-    }
+    "Sony":    Sony,
+}
 
 device_list: List | None = None
+
 
 async def initialize_configure_and_go(custom: bool = False):
     global host_list
@@ -77,6 +80,7 @@ async def initialize_configure_and_go(custom: bool = False):
         ui.notify(str(e), type='negative')
         return
 
+
 def build_host_list():
     hosts = []
     for row in session_rows:
@@ -87,7 +91,11 @@ def build_host_list():
             hosts.append(device_class())
     return hosts
 
-def get_available_device_options(current_row_idx, vendor_class):
+
+def get_available_device_options(current_row_idx, vendor_class, skip_filter=False):
+    if skip_filter:
+        return [cls.__name__ for cls in vendor_class.__subclasses__()]
+
     already_chosen = {
         row['device_class']
         for j, row in enumerate(session_rows)
@@ -98,6 +106,7 @@ def get_available_device_options(current_row_idx, vendor_class):
         for cls in vendor_class.__subclasses__()
         if cls not in already_chosen
     ]
+
 
 def render_devices(devices_list):
     devices_list.clear()
@@ -114,17 +123,24 @@ def render_devices(devices_list):
 
                 if existing_vendor and existing_vendor in vendor_dictionary:
                     vendor_cls = vendor_dictionary[existing_vendor]
-                    existing_device_options = get_available_device_options(i, vendor_cls)
+                    # skip_filter=True when device is already set by a preset
+                    skip = row.get('device_class') is not None
+                    existing_device_options = get_available_device_options(i, vendor_cls, skip_filter=skip)
 
-                with ui.element('div').style('display: none;'):
+                vendor_div = ui.element('div').style('display: flex; align-items: center;')
+                device_div = ui.element('div').style('display: flex; align-items: center;')
+
+                with device_div:
                     device_select = ui.select(
                         with_input=True,
                         options=existing_device_options,
                         label='Device',
-                    ).style('align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);').classes('w-40')
+                    ).style(
+                        'align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);').classes(
+                        'w-40')
 
-                if row['device_class'] is not None:
-                    device_select.set_value(row['device_class'].__name__)
+                    if row['device_class'] is not None and existing_device_options:
+                        device_select.set_value(row['device_class'].__name__)  # <-- inside the with block
 
                 def make_device_handler(idx):
                     def on_device_change(e):
@@ -142,15 +158,13 @@ def render_devices(devices_list):
                 def make_vendor_handler(idx, d_select):
                     def on_vendor_change(e):
                         vendor_class = vendor_dictionary[e.value]
-
                         subclasses_names = get_available_device_options(idx, vendor_class)
                         d_select.set_options(subclasses_names, value=None)
-
                         session_rows[idx]['device_class'] = None
                         session_rows[idx]['vendor_name'] = e.value
                     return on_vendor_change
 
-                with ui.element('div').style('display: flex; align-items: center;'):
+                with vendor_div:
                     ui.select(
                         options=list(vendor_dictionary.keys()),
                         with_input=True,
@@ -158,9 +172,6 @@ def render_devices(devices_list):
                         value=row.get('vendor_name'),
                         on_change=make_vendor_handler(i, device_select)
                     ).style('align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);').classes('w-40')
-
-                device_div = ui.element('div').style('display: flex; align-items: center;')
-                device_select.move(device_div)
 
                 def make_increment(j):
                     def _increment():
@@ -217,21 +228,22 @@ def session_settings_page():
                 ui.label('Presets').style('font-family: "Orbitron", sans-serif; font-size: 14px; color: white;')
 
                 def apply_preset(e, select):
-                    if e.value == 'Preset':
+                    if not e.value:
                         return
+
                     if e.value == 'Random':
+                        all_devices = [
+                            (vendor_name, cls)
+                            for vendor_name, vendor_class in vendor_dictionary.items()
+                            for cls in vendor_class.__subclasses__()
+                        ]
+                        num_rows = min(random.randint(2, 6), len(all_devices))
+                        chosen = random.sample(all_devices, num_rows)
+
                         session_rows.clear()
-                        num_rows = random.randint(2, 6)
-                        for _ in range(num_rows):
-                            vendor_name = random.choice(list(vendor_dictionary.keys()))
-                            vendor_class = vendor_dictionary[vendor_name]
-                            subclasses = vendor_class.__subclasses__()
-                            if not subclasses:
-                                continue
-                            device_class = random.choice(subclasses)
-                            count = random.randint(1, 4)
+                        for vendor_name, device_class in chosen:
                             session_rows.append({
-                                'count': count,
+                                'count': random.randint(1, 4),
                                 'vendor_name': vendor_name,
                                 'device_class': device_class,
                             })
@@ -239,20 +251,29 @@ def session_settings_page():
                         select.set_value(None)
                         ui.notify('Random setup generated!', type='positive')
                         return
+
                     if e.value not in PRESET_CONFIGS:
                         return
+
                     session_rows.clear()
                     for row in PRESET_CONFIGS[e.value]:
                         session_rows.append(dict(row))
                     render_devices(device_list)
+                    select.set_value(None)
                     ui.notify(f'{e.value} loaded!', type='positive')
 
-                preset_select = ui.select(PRESETS, value=None, on_change=lambda e: apply_preset(e, preset_select)).style(
+                preset_select = ui.select(
+                    PRESETS,
+                    value=None,
+                    on_change=lambda e: apply_preset(e, preset_select)
+                ).style(
                     'background: #383838; border-radius: 30px; color: #222; '
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
                 ).props('outlined rounded').classes('preset-select')
+
                 ui.button('Customize', on_click=lambda: initialize_configure_and_go(True)).classes('btn-custom')
                 ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start')
+
 
 if __name__ == '__main__':
     @ui.page('/')
