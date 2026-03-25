@@ -11,12 +11,7 @@ HOSTS_FILE = '/etc/hosts'
 HOSTS_MARKER_START = '# virtunet-start'
 HOSTS_MARKER_END = '# virtunet-end'
 
-def _ensure_avahi_ready() -> None:
-    """
-    Avahi must be running and bound to the bridge interface (s1 or tap0).
-    Idempotent — safe to call multiple times.
-    """
-    # Confirm avahi-daemon is up
+def _ensure_avahi_ready():
     result = subprocess.run(
         ['systemctl', 'is-active', 'avahi-daemon'],
         capture_output=True, text=True
@@ -27,18 +22,13 @@ def _ensure_avahi_ready() -> None:
             'Install avahi-daemon and ensure it is bound to the s1/tap0 interface.'
         )
 
-def start_mdns(host) -> None:
-    """
-    Publish <host.name>.local -> <host.IP()> via the host system's avahi-daemon.
-    Each call spawns an avahi-publish-address process that lives until stop_all_mdns().
-    """
+def start_mdns(host):
     _ensure_avahi_ready()
 
     name = host.name
     ip   = host.IP()
     fqdn = f'{name}.local'
 
-    # Kill any existing publisher for this host (e.g. on re-apply)
     _stop_one(name)
 
     proc = subprocess.Popen(
@@ -52,8 +42,19 @@ def start_mdns(host) -> None:
 
     atexit.register(stop_all_mdns)
 
-def _write_hosts_entry(name: str, ip: str) -> None:
-    # Ensure the managed block exists, then append inside it
+def _stop_one(name: str):
+    proc = _publish_procs.pop(name, None)
+    if proc and proc.poll() is None:
+        proc.terminate()
+        proc.wait()
+
+def stop_all_mdns():
+    for name in list(_publish_procs.keys()):
+        _stop_one(name)
+    _clear_hosts()
+    print('*** [mdns] All mDNS publishers stopped')
+
+def _write_hosts_entry(name: str, ip: str):
     with open(HOSTS_FILE, 'r') as f:
         content = f.read()
 
@@ -72,7 +73,7 @@ def _write_hosts_entry(name: str, ip: str) -> None:
         with open(HOSTS_FILE, 'w') as f:
             f.write(content)
 
-def _clear_hosts() -> None:
+def _clear_hosts():
     if not os.path.exists(HOSTS_FILE):
         return
     with open(HOSTS_FILE, 'r') as f:
@@ -85,15 +86,3 @@ def _clear_hosts() -> None:
     )
     with open(HOSTS_FILE, 'w') as f:
         f.write(content)
-
-def _stop_one(name: str) -> None:
-    proc = _publish_procs.pop(name, None)
-    if proc and proc.poll() is None:
-        proc.terminate()
-        proc.wait()
-
-def stop_all_mdns() -> None:
-    for name in list(_publish_procs.keys()):
-        _stop_one(name)
-    _clear_hosts()
-    print('*** [mdns] All mDNS publishers stopped')
