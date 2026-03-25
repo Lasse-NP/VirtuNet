@@ -24,6 +24,7 @@ def get_base_path():
         return Path(sys._MEIPASS)
     return Path(__file__).parent
 
+start_initiated = False
 delete_mode = False
 PRESETS = ['Home Setup', 'Office Setup', 'Dev Setup', 'Random']
 
@@ -59,24 +60,7 @@ vendor_dictionary = {
 
 device_list: List | None = None
 
-async def initialize_configure_and_go(custom: bool = False):
-    global host_list
-    host_list = build_host_list()
-    app.storage.user['selected_hosts'] = [d.to_dict() for d in host_list]
 
-    if custom:
-        ui.navigate.to('/CustomSetup')
-        return
-
-    try:
-        await asyncio.to_thread(openvpn_server.initialize)
-        ui.notify('Starting OpenVPN...')
-        await asyncio.to_thread(mininet_network.configuration, host_list)
-        ui.notify('Configuring MiniNet...')
-        ui.navigate.to('/Lobby')
-    except RuntimeError as e:
-        ui.notify(str(e), type='negative')
-        return
 
 def build_host_list():
     hosts = []
@@ -102,7 +86,7 @@ def get_available_device_options(current_row_idx, vendor_class):
 
 def render_devices(devices_list):
     devices_list.clear()
-    with (devices_list):
+    with (((devices_list))):
         ui.item_label('Devices').props('header')
         ui.separator()
 
@@ -135,7 +119,8 @@ def render_devices(devices_list):
                         with_input=True,
                         options=existing_device_options,
                         label='Device',
-                    ).style('align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);').classes('w-40')
+                    ).style('align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);'
+                            ).classes('w-40').props('disable' if start_initiated else '')
 
                 if row['device_class'] is not None:
                     device_select.set_value(row['device_class'].__name__)
@@ -171,7 +156,8 @@ def render_devices(devices_list):
                         label='Vendor',
                         value=row.get('vendor_name'),
                         on_change=make_vendor_handler(i, device_select)
-                    ).style('align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);').classes('w-40')
+                    ).style('align-items: center; justify-content: flex-start; flex: 0 0 auto; width: clamp(6rem, 20vw + 1rem, 16rem);'
+                            ).classes('w-40').props('disable' if start_initiated else '')
 
                 device_div = ui.element('div').style('display: flex; align-items: center;')
                 device_select.move(device_div)
@@ -190,8 +176,8 @@ def render_devices(devices_list):
                     return _decrement
 
                 with ui.element('div').style('display:flex; margin-left: auto; flex-direction: column; gap: 1px; flex-shrink: 0;').classes('items-end'):
-                    ui.button('+', on_click=make_increment(i)).classes('btn-small').props('flat dense')
-                    ui.button('−', on_click=make_decrement(i)).classes('btn-small').props('flat dense')
+                    ui.button('+', on_click=make_increment(i)).classes('btn-small').props('flat dense').props('disabled' if start_initiated else '')
+                    ui.button('−', on_click=make_decrement(i)).classes('btn-small').props('flat dense').props('disabled' if start_initiated else '')
 
 
 @ui.page('/Session')
@@ -200,8 +186,52 @@ def session_settings_page():
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/SessionSettings.css">')
-
     global device_list
+
+    async def initialize_configure_and_go(custom: bool = False):
+        global host_list
+        host_list = build_host_list()
+        app.storage.user['selected_hosts'] = [d.to_dict() for d in host_list]
+
+        if custom:
+            ui.navigate.to('/CustomSetup')
+            return
+
+        try:
+            init_started()
+            await asyncio.to_thread(openvpn_server.initialize)
+            ui.notify('Starting OpenVPN...')
+            await asyncio.to_thread(mininet_network.configuration, host_list)
+            ui.notify('Configuring MiniNet...')
+            ui.navigate.to('/Lobby')
+        except RuntimeError as e:
+            init_stopped()
+            ui.notify(str(e), type='negative')
+            return
+
+    def init_started():
+        global start_initiated
+        start_initiated = True
+        remove_btn.disable()
+        add_btn.disable()
+        custom_btn.disable()
+        start_btn.disable()
+        preset_select.disable()
+        loading_indicator.style('display: block;')
+        render_devices(device_list)
+
+    def init_stopped():
+        global start_initiated
+        start_initiated = False
+        remove_btn.enable()
+        add_btn.enable()
+        custom_btn.enable()
+        start_btn.enable()
+        preset_select.enable()
+        loading_indicator.style('display: none;')
+        render_devices(device_list)
+
+
     with ui.column().style('height: calc(100vh - 50px); width: 100%;').classes('items-center'):
         with ui.column().style('width: 90%; height: 100%;').classes('items-center'):
             ui.label('Session Settings').style('font-family: "Orbitron", sans-serif; font-size: 32px; font-weight: 700; color: #4a7cdc;')
@@ -225,8 +255,8 @@ def session_settings_page():
                         })
                         render_devices(device_list)
 
-                    ui.button('−', on_click=toggle_delete_mode).classes('btn-global').props('flat')
-                    ui.button('+', on_click=add_row).classes('btn-global').props('flat')
+                    remove_btn = ui.button('−', on_click=toggle_delete_mode).classes('btn-global').props('flat')
+                    add_btn = ui.button('+', on_click=add_row).classes('btn-global').props('flat')
 
             with ui.column().style('width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
                 ui.label('Presets').style('font-family: "Orbitron", sans-serif; font-size: 14px; color: white;')
@@ -244,7 +274,7 @@ def session_settings_page():
                         session_rows.clear()
                         for vendor_name, device_class in chosen:
                             session_rows.append({
-                                'count': random.randint(1, 4),
+                                'count': random.randint(1, 3),
                                 'vendor_name': vendor_name,
                                 'device_class': device_class,
                             })
@@ -272,8 +302,12 @@ def session_settings_page():
                     'background: #383838; border-radius: 30px; color: #222; '
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
                 ).props('outlined rounded').classes('preset-select')
-                ui.button('Customize', on_click=lambda: initialize_configure_and_go(True)).classes('btn-custom')
-                ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start')
+                custom_btn = ui.button('Customize', on_click=lambda: initialize_configure_and_go(True)).classes('btn-custom')
+                start_btn = ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start')
+
+                loading_indicator = ui.element('div').style('position: fixed; bottom: 0; left: 0; width: 100%; display: none;').classes('loading-bar')
+
+
 
 if __name__ == '__main__':
     @ui.page('/')

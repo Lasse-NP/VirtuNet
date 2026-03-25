@@ -112,17 +112,27 @@ def control_center_page():
 
         with ui.element('div').classes('drawer-inner'):
             ui.button('x', on_click=lambda: drawer.hide()).classes('btn-close-drawer').props('flat dense')
+            ui.label('Host Name').classes('drawer-label')
             drawer_name     = ui.label('').classes('drawer-field')
+            ui.label('IP-Address').classes('drawer-label')
+            drawer_ip       = ui.label('').classes('drawer-field')
+            ui.label('Mac-Address').classes('drawer-label')
+            drawer_mac      = ui.label('').classes('drawer-field')
+            ui.label('Operating System').classes('drawer-label')
             drawer_os       = ui.label('').classes('drawer-field')
+            ui.label('Latency').classes('drawer-label')
             drawer_latency  = ui.label('').classes('drawer-field')
+            ui.label('Services').classes('drawer-label')
             drawer_services = ui.label('').classes('drawer-field-services')
 
-    def open_drawer(host):
+    def open_drawer(host, info):
         hosts = mininet_network.get_hosts()
         device = hosts.get(host)
         if device is None:
             return
         drawer_name.set_text(device.name)
+        drawer_ip.set_text(info["ip"])
+        drawer_mac.set_text(info["mac"])
         drawer_os.set_text(type(device.os).__name__ if device.os else 'Unknown')
         drawer_latency.set_text(device.latency if hasattr(device, 'latency') else 'None')
         drawer_services.set_text(device.services if hasattr(device, 'services') else '')
@@ -146,10 +156,10 @@ def control_center_page():
         with device_container:
             for i, dev in enumerate(current_devices):
                 with ui.element('div').classes('device-row'):
-                    def make_open(h):
-                        return lambda: open_drawer(h)
+                    def make_open(h, info):
+                        return lambda: open_drawer(h, info)
 
-                    with ui.element('div').classes('device-row-info').on('click', make_open(dev['device'])):
+                    with ui.element('div').classes('device-row-info').on('click', make_open(dev['device'], dev)):
                         ui.html(f'<span class="id-badge">{dev["id"]}</span>')
                         ui.html(f'<span class="dev-name">{dev["device"]}</span>')
                         ui.html(f'<span class="dev-os">{dev["os"]}</span>')

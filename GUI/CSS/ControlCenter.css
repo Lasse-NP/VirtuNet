@@ -182,7 +182,7 @@
     padding: 8px 12px 24px 12px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 5px;
     height: 100%;
     box-sizing: border-box;
     width: 100%;
@@ -199,12 +199,26 @@
     align-self: flex-start;
 }
 
+.drawer-label {
+    color: #4a7cdc;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 10px 14px 0px;
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+}
+
 .drawer-field {
-    background-color: #d0d0d0;
-    color: #1a1a1a;
+    background-color: #2a2a2a;
+    color: #fff;
+    border: 2px solid #4a7cdc;
     font-family: 'Orbitron', sans-serif;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 500;
     border-radius: 8px;
     padding: 10px 14px;
     width: 100%;
@@ -213,8 +227,9 @@
 }
 
 .drawer-field-services {
-    background-color: #d0d0d0;
-    color: #1a1a1a;
+    background-color: #2a2a2a;
+    color: #fff;
+    border: 2px solid #4a7cdc;
     font-family: 'Rajdhani', sans-serif;
     font-size: 13px;
     border-radius: 8px;

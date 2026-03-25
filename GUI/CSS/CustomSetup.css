@@ -18,7 +18,7 @@ body {
 }
 
 .cs-wrapper {
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -26,7 +26,7 @@ body {
 }
 
 .cs-card {
-    padding: 36px 24px 24px;
+    padding: 0px 24px 24px;
     width: 95%;
     height: 100%;
     display: flex;
@@ -80,6 +80,10 @@ body {
 .device-row > *:first-child { border-radius: 10px 0 0 10px; }
 .device-row > *:last-child  { border-radius: 0 10px 10px 0; }
 
+.initiated {
+    opacity: 0.4;
+}
+
 .btn-settings {
     background: #2a2a2a;
     border: none;
@@ -98,8 +102,8 @@ body {
     width: clamp(20rem, 20vw + 1rem, 40rem);
     gap: 10px;
     margin-top: 4px;
-    padding-top: 8px;
-    padding-bottom: 30px;
+    padding-top: 24px;
+    padding-bottom: 42px;
 }
 
 .btn-back {
@@ -160,4 +164,19 @@ body {
     text-transform: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     margin-top: auto;
+}
+
+.loading-bar {
+    height: 16px;
+    background: repeating-linear-gradient(to right, #4a7cdc 0%, #A6C6FF 50%, #4a7cdc 100%);
+    background-size: 200% auto;
+    background-position: 0 100%;
+    animation: gradient 1s infinite;
+    animation-fill-mode: forwards;
+    animation-timing-function: linear;
+}
+
+@keyframes gradient {
+  0%   { background-position: 0 0; }
+  100% { background-position: -200% 0; }
 }

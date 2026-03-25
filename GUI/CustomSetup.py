@@ -19,7 +19,7 @@ def get_base_path():
         return Path(sys._MEIPASS)
     return Path(__file__).parent
 
-
+start_initiated = False
 LATENCY_MODES = ['Far', 'Near', 'Medium', 'None']
 
 def build_devices_from_host_list():
@@ -113,13 +113,31 @@ def custom_setup_page():
 
     async def start_from_custom():
         try:
+            init_started()
             await asyncio.to_thread(openvpn_server.initialize)
             ui.notify('Starting OpenVPN...')
             await asyncio.to_thread(mininet_network.configuration, SessionSetting.host_list)
             ui.notify('Configuring MiniNet...')
             ui.navigate.to('/Lobby')
         except RuntimeError as e:
+            init_stopped()
             ui.notify(str(e), type='negative')
+
+    def init_started():
+        global start_initiated
+        start_initiated = True
+        back_btn.disable()
+        start_btn.disable()
+        loading_indicator.style('display: block;')
+        render_devices()
+
+    def init_stopped():
+        global start_initiated
+        start_initiated = False
+        back_btn.enable()
+        start_btn.enable()
+        loading_indicator.style('display: none;')
+        render_devices()
 
     with ui.element('div').classes('cs-wrapper'):
         with ui.element('div').classes('cs-card'):
@@ -133,7 +151,7 @@ def custom_setup_page():
                 device_container.clear()
                 with device_container:
                     for i, dev in enumerate(devices):
-                        with ui.element('div').classes('device-row'):
+                        with ui.element('div').classes('device-row initiated' if start_initiated else 'device-row'):
                             ui.html(f'<span class="dev-name">{dev["name"]}</span>')
                             ui.html(f'<span class="dev-os">{type(dev["os"]).__name__}</span>')
                             ui.html(f'<span class="dev-latency">{dev["latency"]}</span>')
@@ -142,14 +160,17 @@ def custom_setup_page():
                                 return lambda: open_drawer(idx)
 
                             ui.button('⚙', on_click=make_open(i)) \
-                                .classes('btn-settings').props('flat dense')
+                                .classes('btn-settings').props('flat dense').props('disabled' if start_initiated else '')
 
 
             render_devices()
 
             with ui.element('div').classes('bottom-row'):
-                ui.button('Back',  on_click=lambda: ui.navigate.to('/Session')).classes('btn-back').props('flat')
-                ui.button('Start', on_click=start_from_custom).classes('btn-start').props('flat')
+                back_btn = ui.button('Back',  on_click=lambda: ui.navigate.to('/Session')).classes('btn-back').props('flat')
+                start_btn = ui.button('Start', on_click=start_from_custom).classes('btn-start').props('flat')
+
+            loading_indicator = ui.element('div').style(
+                'position: fixed; bottom: 0; left: 0; width: 100%; display: none;').classes('loading-bar')
 
 
 if __name__ == '__main__':
