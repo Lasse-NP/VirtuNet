@@ -4,7 +4,6 @@ import subprocess
 import signal
 import atexit
 
-# One avahi-publish-address process per registered host
 _publish_procs: dict[str, subprocess.Popen] = {}
 
 HOSTS_FILE = '/etc/hosts'
@@ -61,11 +60,9 @@ def _write_hosts_entry(name: str, ip: str):
     entry = f'{ip} {name} {name}.local\n'
 
     if HOSTS_MARKER_START not in content:
-        # First host — create the block
         with open(HOSTS_FILE, 'a') as f:
             f.write(f'\n{HOSTS_MARKER_START}\n{entry}{HOSTS_MARKER_END}\n')
     else:
-        # Block exists — insert entry before the end marker
         content = content.replace(
             HOSTS_MARKER_END,
             f'{entry}{HOSTS_MARKER_END}'
