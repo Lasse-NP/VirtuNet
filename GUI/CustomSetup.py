@@ -91,17 +91,27 @@ def custom_setup_page():
             if idx is None:
                 return
 
-            devices[idx]['name'] = name_input.value
-            devices[idx]['mac'] = mac_input.value
-            devices[idx]['os'] = OS_OPTIONS[os_select.value]()
-            devices[idx]['latency'] = latency_select.value
-            devices[idx]['services'] = services_input.value
+            name = name_input.value
+            mac = mac_input.value
+            os = OS_OPTIONS[os_select.value]()
+            latency = latency_select.value
+            services = services_input.value
+
+            if len(name) > 10:
+                ui.notify("Name cannot be above 10 characters.", type='negative')
+                return
+
+            devices[idx]['name'] = name
+            devices[idx]['mac'] = mac
+            devices[idx]['os'] = os
+            devices[idx]['latency'] = latency
+            devices[idx]['services'] = services
 
             host = devices[idx]['_host']
-            host.name = name_input.value
-            host.macAddress = mac_input.value
-            host.os = OS_OPTIONS[os_select.value]()
-            host.latency = latency_select.value
+            host.name = name
+            host.macAddress = mac
+            host.os = os
+            host.latency = latency
 
             drawer.hide()
             render_devices()
