@@ -3,6 +3,7 @@ from nicegui.elements.list import List
 import asyncio, sys
 from pathlib import Path
 from Networking import pki
+from Networking.network import get_local_ip
 from Service.ConnectionHandler import start_join_server
 
 def get_base_path():
@@ -94,6 +95,7 @@ def add_trainee(name):
 def create_lobby():
     ui.dark_mode().enable()
     code = open_join_server()
+    ip = get_local_ip()
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/Lobby.css">')
@@ -113,6 +115,7 @@ def create_lobby():
         ui.label('Join Code').style(
             'font-family: "Orbitron", sans-serif; font-size: 20px; font-weight: 700; color: #4a7cdc;')
         ui.label(f'{code}').style('font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
+        ui.label(f'{ip}').style('font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
         with ui.element('div').style('flex: 1; width: 100%; max-width: 60rem; border: 4px solid #4a7cdc; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
             trainee_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
             render_trainees(trainee_list)
