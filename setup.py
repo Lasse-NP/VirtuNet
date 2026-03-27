@@ -6,6 +6,7 @@ import pwd
 import platform
 import shutil
 import tempfile
+from pathlib import Path
 
 REQUIRED_COMMANDS = [
     'openvpn',      #OpenVPN
@@ -15,9 +16,15 @@ REQUIRED_COMMANDS = [
     'avahi-publish',    #AvahiDNS
 ]
 
+ALWAYS_INSTALL_PACKAGES = {
+    "debian": ["libnetfilter-queue-dev"],
+    "arch":   ["libnetfilter_queue"],
+    "fedora": ["libnetfilter_queue-devel"],
+    "opensuse": ["libnetfilter_queue-devel"],
+}
+
 PACKAGE_NAMES = {
     "debian": {
-        ""
         "openvpn":  "openvpn",
         "ovs-vsctl": "openvswitch-switch",
         "easyrsa":  "easy-rsa",
@@ -65,6 +72,10 @@ OVS_SERVICE_NAMES = [
     'ovs-vswitchd',
 ]
 
+REQUIREMENTS_FILE = Path(__file__).parent / 'requirements.txt'
+AVAHI_CONF_PATH = '/etc/avahi/avahi-daemon.conf'
+AVAHI_INTERFACE  = 's1'
+
 def get_distro_family():
     platform_info = platform.freedesktop_os_release()
 
@@ -74,6 +85,7 @@ def get_distro_family():
                 return DISTRO_FAMILIES[distro_id]
 
     raise RuntimeError(f"Unsupported distro: {platform_info.get('PRETTY_NAME', 'unknown')}")
+
 
 def start_openvswitch():
     for service in OVS_SERVICE_NAMES:
@@ -86,16 +98,8 @@ def start_openvswitch():
 
     raise RuntimeError('Could not start OpenVSwitch service, is it installed?')
 
-AVAHI_CONF_PATH = '/etc/avahi/avahi-daemon.conf'
-AVAHI_INTERFACE  = 's1'
 
 def setup_avahi():
-    """
-    1. Disable systemd-resolved's mDNS responder (it conflicts with Avahi on port 5353).
-    2. Write an avahi-daemon.conf that binds only to the OVS bridge (s1).
-    3. Enable and start avahi-daemon.
-    """
-    # Step 1: suppress systemd-resolved mDNS without fully disabling resolved
     resolved_conf = '/etc/systemd/resolved.conf'
 
     if not os.path.exists(resolved_conf):
@@ -118,7 +122,6 @@ def setup_avahi():
                        capture_output=True)
         print('*** Disabled systemd-resolved mDNS to avoid port 5353 conflict')
 
-    # Step 2: write avahi config — bind only to the OVS bridge
     os.makedirs('/etc/avahi', exist_ok=True)
     avahi_conf = f"""[server]
 use-ipv4=yes
@@ -145,7 +148,6 @@ enable-reflector=no
         f.write(avahi_conf)
     print(f'*** Wrote avahi config (interface: {AVAHI_INTERFACE})')
 
-    # Step 3: enable and start avahi-daemon
     subprocess.run(['systemctl', 'enable', '--now', 'avahi-daemon'],
                    capture_output=True)
     result = subprocess.run(
@@ -158,6 +160,21 @@ enable-reflector=no
     else:
         print('*** avahi-daemon running')
 
+
+def install_python_deps():
+    if not REQUIREMENTS_FILE.exists():
+        print('*** No requirements.txt found, skipping pip install')
+        return
+    result = subprocess.run(
+        [sys.executable, '-m', 'pip', 'install', '-r', str(REQUIREMENTS_FILE)],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        print(f'Failed to install Python dependencies:\n{result.stderr}')
+        sys.exit(1)
+    print('*** Python dependencies installed')
+
+
 def check_dependencies():
     family = get_distro_family()
 
@@ -167,6 +184,7 @@ def check_dependencies():
             missing.append(cmd)
 
     packages = [PACKAGE_NAMES[family][cmd] for cmd in missing]
+    packages += ALWAYS_INSTALL_PACKAGES.get(family, [])
 
     if packages:
         try:
@@ -183,6 +201,8 @@ def check_dependencies():
             print(f"Try and fetch these yourself and rerun.")
             sys.exit(1)
 
+    install_python_deps()
+
     result = subprocess.run(['ovs-vsctl', 'show'], capture_output=True)
     if result.returncode != 0:
         try:
@@ -196,10 +216,12 @@ def check_dependencies():
 
     print('All dependencies satisfied.')
 
+
 def ensure_root():
     if os.geteuid() != 0:
         print('You need root privileges to run this application.')
         sys.exit(1)
+
 
 def build_from_source(package: str):
     original_user = os.environ.get("SUDO_USER")
@@ -211,21 +233,25 @@ def build_from_source(package: str):
         subprocess.run(["sudo", "-u", original_user, "git", "clone", f"https://aur.archlinux.org/{package}.git"], cwd=tmpdir, check=True, text=True)
         subprocess.run(["sudo", "-u", original_user, "makepkg", "-si", "--noconfirm"], cwd=f"{tmpdir}/{package}", check=True, text=True)
 
+
 def install_debian_deps(packages):
     for pack in packages:
         subprocess.run(["apt-get", "install", "-y", pack], check=True, text=True)
 
+
 def install_arch_deps(packages):
-    subprocess.run(["pacman", "-S", "--noconfirm", "base-devel", "git"], check=True, text=True)
+    subprocess.run(["pacman", "-S", "--noconfirm", "--needed", "base-devel", "git"], check=True, text=True)
     for pack in packages:
         if pack == "mininet":
             build_from_source("mininet")
         else:
             subprocess.run(["pacman", "-S", "--noconfirm", pack], check=True, text=True)
 
+
 def install_fedora_deps(packages):
     for pack in packages:
         subprocess.run(["dnf", "install", "-y", pack], check=True, text=True)
+
 
 def install_opensuse_deps(packages):
     for pack in packages:
