@@ -1,5 +1,7 @@
+import sys
 from Models.Fingerprints.ServiceFingerPrint import ServiceFingerPrint
 
+PYTHON_PATH = sys.executable
 
 class HTTP(ServiceFingerPrint):
     name = "HTTP"
@@ -7,17 +9,26 @@ class HTTP(ServiceFingerPrint):
     protocol = "tcp"
     description = "Hypertext Transfer Protocol"
 
+    def start_daemon(self, host) -> None:
+        host.cmd(f'nohup {PYTHON_PATH} -m http.server 80 --directory / > /dev/null 2>&1 &')
+
 class HTTPS(ServiceFingerPrint):
     name = "HTTPS"
     port = 443
     protocol = "tcp"
     description = "Hypertext Transfer Protocol Secure"
 
-class SSH(ServiceFingerPrint):
-    name = "SSH"
-    port = 22
+    def start_daemon(self, host) -> None:
+        host.cmd(f'nohup {PYTHON_PATH} -m http.server 443 --directory / > /dev/null 2>&1 &')
+
+class SMTP(ServiceFingerPrint):
+    name = "SMTP"
+    port = 25
     protocol = "tcp"
-    description = "Secure Shell"
+    description = "Simple Mail Transfer Protocol"
+
+    def start_daemon(self, host) -> None:
+        host.cmd(f'nohup {PYTHON_PATH} -m aiosmtpd -n -l 0.0.0.0:25 > /dev/null 2>&1 &')
 
 class FTP(ServiceFingerPrint):
     name = "FTP"
@@ -25,14 +36,14 @@ class FTP(ServiceFingerPrint):
     protocol = "tcp"
     description = "File Transfer Protocol"
 
-class DNS(ServiceFingerPrint):
-    name = "DNS"
-    port = 53
-    protocol = "udp"
-    description = "Domain Name System"
+    def start_daemon(self, host) -> None:
+        host.cmd(f'nohup {PYTHON_PATH} -m pyftpdlib -p 21 > /dev/null 2>&1 &')
 
-class MySQL(ServiceFingerPrint):
-    name = "MySQL"
-    port = 3306
-    protocol = "tcp"
-    description = "MySQL Database"
+class TFTP(ServiceFingerPrint):
+    name = "TFTP"
+    port = 69
+    protocol = "udp"
+    description = "Trivial File Transfer Protocol"
+
+    def start_daemon(self, host) -> None:
+        host.cmd(f'nohup {PYTHON_PATH} -c "import tftpy; tftpy.TftpServer(\'/tmp\').listen(\'0.0.0.0\', 69)" > /dev/null 2>&1 &')

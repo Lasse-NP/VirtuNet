@@ -31,7 +31,18 @@ def verify_bridge():
 
     return True
 
+def wait_for_tap(iface, timeout=30):
+    print(f'*** Waiting for {iface} to become available...')
+    for _ in range(timeout):
+        result = run(f'ip link show {iface}', check=False)
+        if result.returncode == 0:
+            print(f'{iface} is up!')
+            return True
+        time.sleep(1)
+    raise RuntimeError(f'Timed out waiting for {iface} — is OpenVPN running?')
+
 def build_topo():
+    wait_for_tap(TAP_IFACE)
     run(f'ovs-vsctl add-port s1 {TAP_IFACE}')
     run(f'ip link set {TAP_IFACE} promisc on')
     run(f'ip link set {TAP_IFACE} up')
@@ -99,6 +110,10 @@ class MininetNetwork:
                 proc = device.os.apply(h)
                 if proc:
                     self._daemon_procs[h.name] = proc
+
+        for h, device in hosted_hosts.items():
+            for service in device.services:
+                service.apply(h)
 
         for h, device in hosted_hosts.items():
             self.apply_latency(h.name, device.latency)

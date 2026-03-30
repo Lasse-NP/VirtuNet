@@ -75,13 +75,6 @@ class OSFingerprint:
 
         # ── Firewall / INPUT rules ────────────────────────────────────────────
         host.cmd('iptables -I INPUT -p tcp --dport 81 -j REJECT --reject-with tcp-reset')
-        host.cmd('iptables -I INPUT -p tcp --dport 443 -j ACCEPT')
-        host.cmd('iptables -I INPUT -p tcp --dport 80 -j ACCEPT')
-
-        # ── HTTP servers ──────────────────────────────────────────────────────
-        host.cmd(f'nohup {PYTHON_PATH} -m http.server 80 --directory / > /dev/null 2>&1 &')
-        host.cmd(f'nohup {PYTHON_PATH} -m http.server 443 --directory / > /dev/null 2>&1 &')
-        host.cmd('sleep 0.5')
 
         # ── Scapy daemon ──────────────────────────────────────────────────────
         ip = host.IP()

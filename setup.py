@@ -174,6 +174,23 @@ def install_python_deps():
         sys.exit(1)
     print('*** Python dependencies installed')
 
+def check_installed(family, package):
+    try:
+        if family == "debian":
+            result = subprocess.run(["dpkg-query", "-W", "-f=${Status}", package], capture_output=True, text=True)
+            return "install ok installed" in result.stdout
+        elif family == "arch":
+            result = subprocess.run(["pacman", "-Q", package], capture_output=True, text=True)
+            return result.returncode == 0
+        elif family == "fedora":
+            result = subprocess.run(["rpm", "-q", package], capture_output=True, text=True)
+            return result.returncode == 0
+        elif family == "opensuse":
+            result = subprocess.run(["rpm", "-q", package], capture_output=True, text=True)
+            return result.returncode == 0
+    except FileNotFoundError:
+        pass
+    return False
 
 def check_dependencies():
     family = get_distro_family()
@@ -184,7 +201,10 @@ def check_dependencies():
             missing.append(cmd)
 
     packages = [PACKAGE_NAMES[family][cmd] for cmd in missing]
-    packages += ALWAYS_INSTALL_PACKAGES.get(family, [])
+    packages += [
+        pkg for pkg in ALWAYS_INSTALL_PACKAGES.get(family, [])
+        if not check_installed(family, pkg)
+    ]
 
     if packages:
         try:

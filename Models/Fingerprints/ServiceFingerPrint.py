@@ -6,8 +6,9 @@ class ServiceFingerPrint:
 
     def apply(self, host) -> None:
         print(f'*** [{host.name}] applying service: {self.name} on port {self.port}/{self.protocol}')
-
         host.cmd(f'iptables -A INPUT -p {self.protocol} --dport {self.port} -j ACCEPT')
         host.cmd(f'iptables -A OUTPUT -p {self.protocol} --sport {self.port} -j ACCEPT')
+        self.start_daemon(host)
 
-        print(f'*** [{host.name}] port {self.port}/{self.protocol} opened for {self.name}')
+    def start_daemon(self, host) -> None:
+        pass

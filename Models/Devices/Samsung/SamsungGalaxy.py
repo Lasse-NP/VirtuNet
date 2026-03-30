@@ -1,11 +1,14 @@
 from faker import Faker
 
 from Models.Fingerprints.OS.Mobile import Android
+from Models.Fingerprints.Services import HTTP, HTTPS
 from Models.Vendor.Samsung import Samsung
 
 class SamsungGalaxy(Samsung):
     def __init__(self):
         fake = Faker()
-        device_name = f"{fake.first_name()[:4]}-SamGx"
-        device_os = Android()
-        super().__init__(device_name[:10], device_os)
+        super().__init__(
+            f"{fake.first_name()[:4]}-SamGx"[:10],
+            Android(),
+            services=[HTTP(), HTTPS()]
+        )
