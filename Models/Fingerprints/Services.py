@@ -28,7 +28,7 @@ class SMTP(ServiceFingerPrint):
     description = "Simple Mail Transfer Protocol"
 
     def start_daemon(self, host) -> None:
-        host.cmd(f'nohup {PYTHON_PATH} -m aiosmtpd -n -l 0.0.0.0:25 > /dev/null 2>&1 &')
+        host.cmd(f'nohup {PYTHON_PATH} -m aiosmtpd -n -l 0.0.0.0:25 --hostname {host.name} > /dev/null 2>&1 &')
 
 class FTP(ServiceFingerPrint):
     name = "FTP"
@@ -37,7 +37,7 @@ class FTP(ServiceFingerPrint):
     description = "File Transfer Protocol"
 
     def start_daemon(self, host) -> None:
-        host.cmd(f'nohup {PYTHON_PATH} -m pyftpdlib -p 21 > /dev/null 2>&1 &')
+        host.cmd(f'mkdir -p /tmp/ftp && nohup {PYTHON_PATH} -m pyftpdlib -p 21 -d /tmp/ftp > /dev/null 2>&1 &')
 
 class TFTP(ServiceFingerPrint):
     name = "TFTP"
