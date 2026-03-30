@@ -11,6 +11,7 @@ from Models.Fingerprints.OS.Windows import Windows
 from Models.Fingerprints.OS.Mobile import iOS, Android
 from Models.Fingerprints.OS.MacOS import MacOS, FreeBSD, OpenBSD
 from Models.Fingerprints.OS.NetworkDevices import CiscoIOS, CiscoIOSXE, JuniperJunOS, Solaris11, AIX7, HPUX11
+from Models.Fingerprints.Services import HTTP, HTTPS, FTP, SMTP, TFTP, SSH
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
 
@@ -29,7 +30,7 @@ def build_devices_from_host_list():
             'os':       host.os,
             'mac':      host.macAddress,
             'latency':  'None',
-            'services': '',
+            'services': list(host.services),
             '_host':    host,
         }
         for host in SessionSetting.host_list
@@ -80,11 +81,20 @@ def custom_setup_page():
             'HPUX11': HPUX11,
         }
 
+        SERVICE_OPTIONS = {
+            'HTTP': HTTP,
+            'HTTPS': HTTPS,
+            'FTP': FTP,
+            'SMTP': SMTP,
+            'TFTP': TFTP,
+            'SSH': SSH,
+        }
+
         name_input = ui.input(label='Name').style('width: 100%;')
         mac_input = ui.input(label='Mac Addess').style('width: 100%;')
         os_select = ui.select(list(OS_OPTIONS.keys()), label='OS').style('width: 100%;')
         latency_select = ui.select(LATENCY_MODES, label='Latency Mode').style('width: 100%;')
-        services_input = ui.textarea(label='Services').style('width: 100%; flex: 1;')
+        services_select = ui.select(list(SERVICE_OPTIONS.keys()), multiple=True, label='Services').style('width: 100%; flex: 1;').props('use-chips')
 
         def update_device():
             idx = selected_device['index']
@@ -95,7 +105,7 @@ def custom_setup_page():
             mac = mac_input.value
             os = OS_OPTIONS[os_select.value]()
             latency = latency_select.value
-            services = services_input.value
+            services = [SERVICE_OPTIONS[s]() for s in (services_select.value or [])]
 
             if len(name) > 10:
                 ui.notify("Name cannot be above 10 characters.", type='negative')
@@ -112,6 +122,7 @@ def custom_setup_page():
             host.macAddress = mac
             host.os = os
             host.latency = latency
+            host.services = services
 
             drawer.hide()
             render_devices()
@@ -126,7 +137,7 @@ def custom_setup_page():
         mac_input.set_value(dev['mac'])
         os_select.set_value(type(dev['os']).__name__)
         latency_select.set_value(dev['latency'])
-        services_input.set_value(dev['services'])
+        services_select.set_value([type(s).__name__ for s in dev['services']])
         drawer.show()
 
     async def start_from_custom():

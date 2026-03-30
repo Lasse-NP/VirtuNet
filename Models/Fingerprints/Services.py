@@ -1,3 +1,4 @@
+import shutil
 import sys
 from Models.Fingerprints.ServiceFingerPrint import ServiceFingerPrint
 
@@ -28,7 +29,7 @@ class SMTP(ServiceFingerPrint):
     description = "Simple Mail Transfer Protocol"
 
     def start_daemon(self, host) -> None:
-        host.cmd(f'nohup {PYTHON_PATH} -m aiosmtpd -n -l 0.0.0.0:25 --hostname {host.name} > /dev/null 2>&1 &')
+        host.cmd(f'nohup {PYTHON_PATH} -m aiosmtpd -n -l 0.0.0.0:25 > /dev/null 2>&1 &')
 
 class FTP(ServiceFingerPrint):
     name = "FTP"
@@ -47,3 +48,23 @@ class TFTP(ServiceFingerPrint):
 
     def start_daemon(self, host) -> None:
         host.cmd(f'nohup {PYTHON_PATH} -c "import tftpy; tftpy.TftpServer(\'/tmp\').listen(\'0.0.0.0\', 69)" > /dev/null 2>&1 &')
+
+class SSH(ServiceFingerPrint):
+    name = "SSH"
+    port = 22
+    protocol = "tcp"
+    description = "Secure Shell"
+
+    def start_daemon(self, host) -> None:
+        sshd_path = shutil.which('sshd')
+        if sshd_path is None:
+            print(f'*** [{host.name}] sshd not found, skipping SSH service')
+            return
+        key_path = f'/tmp/sshd-{host.name}-key'
+        host.cmd(f'ssh-keygen -t rsa -b 2048 -f {key_path} -N "" -q')
+        host.cmd(f'nohup {sshd_path} -p 22 '
+                 f'-o PidFile=/tmp/sshd-{host.name}.pid '
+                 f'-o UsePAM=no '
+                 f'-o StrictModes=no '
+                 f'-o HostKey={key_path} '
+                 f'> /dev/null 2>&1 &')
