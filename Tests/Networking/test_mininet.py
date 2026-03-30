@@ -1,6 +1,7 @@
 import time
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
 
 @pytest.fixture
 def network():
@@ -12,6 +13,11 @@ def network_with_net(network):
     mock_net = MagicMock()
     network._net = mock_net
     return network, mock_net
+
+@pytest.fixture(autouse=True)
+def mock_mdns():
+    with patch('Networking.mininet.stop_all_mdns') as mock:
+        yield mock
 
 class TestMininetNetwork:
 

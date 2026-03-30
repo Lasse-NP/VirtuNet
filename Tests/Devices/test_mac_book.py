@@ -9,7 +9,7 @@ class TestMacBook(unittest.TestCase):
         device = MacBook()
 
         # Assert
-        self.assertEqual(device.os, 'MacOS')
+        self.assertEqual(type(device.os).__name__, 'MacOS')
 
     def test_name_max_length_is_10(self):
         # Arrange & Act

@@ -7,7 +7,7 @@ class TestIPhone(unittest.TestCase):
         device = IPhone()
 
         #Assert
-        self.assertLessEqual(device.os, 'iOS')
+        self.assertLessEqual(type(device.os).__name__, 'iOS')
 
     def test_name_max_length_is_10(self):
         #Arrange & Act

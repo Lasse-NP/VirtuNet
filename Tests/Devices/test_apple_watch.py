@@ -9,7 +9,7 @@ class TestAppleWatch(unittest.TestCase):
         device = AppleWatch()
 
         #Assert
-        self.assertEqual(device.os, 'iOS')
+        self.assertEqual(type(device.os).__name__, 'iOS')
 
     def test_name_max_length_is_10(self):
         #Arrange & Act
