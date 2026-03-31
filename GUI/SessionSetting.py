@@ -5,14 +5,14 @@ from pathlib import Path
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
 
-from Models.Vendor.Apple import Apple
-from Models.Vendor.Desktops import Desktops
-from Models.Vendor.Samsung import Samsung
-from Models.Vendor.Sony import Sony
+from Models.Devices.Vendor.Apple import Apple
+from Models.Devices.Vendor.Desktops import Desktops
+from Models.Devices.Vendor.Samsung import Samsung
+from Models.Devices.Vendor.Sony import Sony
 
 from Models.Devices.Apple import AppleWatch, IPhone, MacBook
 from Models.Devices.Desktops import WindowsComputer
-from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungGalaxy, SamsungSmartTV
+from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungSmartTV
 from Models.Devices.Sony import Playstation5
 
 import random

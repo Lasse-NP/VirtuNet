@@ -7,11 +7,6 @@ from Networking.cleanup import run_cleanup
 from Networking.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
 from Networking.server import verify_openvpn
 
-from Models.Vendor.Apple import Apple
-from Models.Vendor.Desktops import Desktops
-from Models.Vendor.Samsung import Samsung
-from Models.Vendor.Sony import Sony
-
 from Models.Devices.Apple.IPhone import IPhone
 from Models.Devices.Apple.AppleWatch import AppleWatch
 from Models.Devices.Apple.MacBook import MacBook

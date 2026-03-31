@@ -2,7 +2,7 @@ from faker import Faker
 
 from Models.Fingerprints.OS.Windows import Windows
 from Models.Fingerprints.Services import HTTP, HTTPS, FTP, SMTP, TFTP
-from Models.Vendor.Desktops import Desktops
+from Models.Devices.Vendor.Desktops import Desktops
 
 
 class WindowsComputer(Desktops):

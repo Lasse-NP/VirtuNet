@@ -2,7 +2,7 @@ from faker import Faker
 
 from Models.Fingerprints.OS.Linux import Linux
 from Models.Fingerprints.Services import HTTP, HTTPS, FTP
-from Models.Vendor.Desktops import Desktops
+from Models.Devices.Vendor.Desktops import Desktops
 
 
 class LinuxComputer(Desktops):

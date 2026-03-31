@@ -2,7 +2,7 @@ from faker import Faker
 
 from Models.Fingerprints.OS.Mobile import Android
 from Models.Fingerprints.Services import HTTP, HTTPS
-from Models.Vendor.Samsung import Samsung
+from Models.Devices.Vendor.Samsung import Samsung
 
 
 class SamsungFridge(Samsung):

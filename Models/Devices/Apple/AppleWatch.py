@@ -1,7 +1,7 @@
 from faker import Faker
 
 from Models.Fingerprints.Services import HTTP, HTTPS
-from Models.Vendor.Apple import Apple
+from Models.Devices.Vendor.Apple import Apple
 from Models.Fingerprints.OS.Mobile import iOS
 
 class AppleWatch(Apple):
