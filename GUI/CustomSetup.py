@@ -10,7 +10,6 @@ from Models.Fingerprints.OS.Linux import Linux
 from Models.Fingerprints.OS.Windows import Windows
 from Models.Fingerprints.OS.Mobile import iOS, Android
 from Models.Fingerprints.OS.MacOS import MacOS, FreeBSD, OpenBSD
-from Models.Fingerprints.OS.NetworkDevices import CiscoIOS, CiscoIOSXE, JuniperJunOS, Solaris11, AIX7, HPUX11
 from Models.Fingerprints.Services import HTTP, HTTPS, FTP, SMTP, TFTP, SSH
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
@@ -73,12 +72,6 @@ def custom_setup_page():
             'Android': Android,
             'Linux': Linux,
             'Windows': Windows,
-            'CiscoIOS': CiscoIOS,
-            'CiscoIOSXE': CiscoIOSXE,
-            'JuniperJunOS': JuniperJunOS,
-            'Solaris11': Solaris11,
-            'AIX7': AIX7,
-            'HPUX11': HPUX11,
         }
 
         SERVICE_OPTIONS = {
