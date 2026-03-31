@@ -13,6 +13,7 @@ class OSFingerprint:
     aliases: list = []
 
     # OS-Defining Setting Defaults
+    probe_responses: list = [True, True, True, True, True, True]
     tcp_options_order: list = None
     ttl: int = 64
     df_bit: int = 1
@@ -35,7 +36,7 @@ class OSFingerprint:
     tcp_rmem: str = "4096 87380 6291456"
     tcp_wmem: str = "4096 16384 4194304"
 
-    def apply(self, host) -> None:
+    def apply(self, host, open_ports) -> None:
         print(f'*** [{host.name}] Applying OS fingerprint: {self.name} (TTL={self.ttl})')
 
         # ── Kernel / sysctl settings ──────────────────────────────────────────
@@ -75,6 +76,22 @@ class OSFingerprint:
 
         # ── Firewall / INPUT rules ────────────────────────────────────────────
         host.cmd('iptables -I INPUT -p tcp --dport 81 -j REJECT --reject-with tcp-reset')
+
+        # ── Probe response suppression ────────────────────────────────────────
+        t2, t3, t4, t5, t6, t7 = self.probe_responses
+
+        if not t2:
+            host.cmd('iptables -A OUTPUT -p tcp --tcp-flags ALL NONE -j DROP')
+        if not t3:
+            host.cmd('iptables -A OUTPUT -p tcp --tcp-flags SYN,FIN,URG,PSH SYN,FIN,URG,PSH -j DROP')
+        if not t4:
+            host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport --sports {open_ports} -j DROP')
+        if not t5:
+            host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport ! --sports {open_ports} -j DROP')
+        if not t6:
+            host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport ! --sports {open_ports} -j DROP')
+        if not t7:
+            host.cmd('iptables -t mangle -A PREROUTING -p tcp --dport 1 --tcp-flags FIN,PSH,URG FIN,PSH,URG -j DROP')
 
         # ── Scapy daemon ──────────────────────────────────────────────────────
         ip = host.IP()

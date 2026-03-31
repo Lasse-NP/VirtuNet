@@ -9,7 +9,7 @@ from GUI import SessionSetting
 from Models.Fingerprints.OS.Linux import Linux, AndroidTV
 from Models.Fingerprints.OS.Windows import Windows
 from Models.Fingerprints.OS.Mobile import iOS, Android
-from Models.Fingerprints.OS.MacOS import MacOS, FreeBSD
+from Models.Fingerprints.OS.MacOS import MacOS, FreeBSD, OpenBSD
 from Models.Fingerprints.Services import HTTP, HTTPS, FTP, SMTP, TFTP, SSH
 from Networking.mininet import mininet_network
 from Networking.server import openvpn_server
@@ -68,6 +68,7 @@ def custom_setup_page():
             'iOS': iOS,
             'MacOS': MacOS,
             'FreeBSD': FreeBSD,
+            'OpenBSD': OpenBSD,
             'Android': Android,
             'Linux': Linux,
             'AndroidTV': AndroidTV,

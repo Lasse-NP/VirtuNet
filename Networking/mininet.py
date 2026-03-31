@@ -107,7 +107,9 @@ class MininetNetwork:
 
         for h, device in hosted_hosts.items():
             if device.os is not None:
-                proc = device.os.apply(h)
+                tcp_services = [s for s in device.services if s.protocol == 'tcp']
+                open_ports = ','.join(str(s.port) for s in tcp_services) or '80,443'
+                proc = device.os.apply(h, open_ports)
                 if proc:
                     self._daemon_procs[h.name] = proc
 
