@@ -23,7 +23,7 @@ class MacOS(OSFingerprint):
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"
 
-# NEEDS IMPROVEMENTS
+# WORKING
 class FreeBSD(OSFingerprint):
     name = "freebsd"
     aliases = ["bsd", "free bsd", "freebsd12", "freebsd13"]
@@ -34,17 +34,18 @@ class FreeBSD(OSFingerprint):
     tcp_options_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
-    tcp_syn_retries = 3
+    tcp_syn_retries = 6
     tcp_fin_timeout = 60
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 75
-    tcp_keepalive_probes = 8
+    tcp_keepalive_probes = 9
     df_bit = 1
     tcp_window_size = 65535
     tcp_mss = 1460
-    ip_id_random = 0
-    tcp_ip_id_zero = 1
-    tcp_ecn = 2
+    tcp_wscale = 6
+    ip_id_random = 1
+    tcp_ip_id_zero = 0
+    tcp_ecn = 0
     tcp_rmem = "4096 87380 8388608"
     tcp_wmem = "4096 16384 8388608"
 

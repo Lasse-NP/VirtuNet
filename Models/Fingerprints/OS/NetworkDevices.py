@@ -8,17 +8,22 @@ class CiscoIOS(OSFingerprint):
 
     ttl = 255
     tcp_timestamps = 0
-    tcp_window_scaling = 0
-    tcp_sack = 0
-    tcp_syn_retries = 3
-    tcp_fin_timeout = 30
-    tcp_keepalive_time = 3600
-    tcp_keepalive_intvl = 10
-    tcp_keepalive_probes = 6
+    tcp_options_timestamps = 0
+    tcp_window_scaling = 1
+    tcp_sack = 1
+    tcp_syn_retries = 6
+    tcp_fin_timeout = 60
+    tcp_keepalive_time = 7200
+    tcp_keepalive_intvl = 75
+    tcp_keepalive_probes = 9
     df_bit = 0
     tcp_window_size = 4128
-    tcp_mss = 536
-    ip_id_random = 0
+    tcp_mss = 1460
+    tcp_wscale = 8
+    ip_id_random = 1
+    tcp_ip_id_zero = 0
+    icmp_ip_id_ri = 1
+    tcp_ecn = 0
     tcp_rmem = "4096 4128 131072"
     tcp_wmem = "4096 4128 131072"
 
