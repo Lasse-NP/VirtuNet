@@ -76,9 +76,9 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                 tcp = scapy_pkt[TCP]
                 is_rst = bool(tcp.flags & 0x04)
 
-                if tcp_ip_id_zero:
+                if tcp_ip_id_zero and not is_rst:
                     scapy_pkt[IP].id = 0
-                elif icmp_ip_id_ri and is_rst:
+                elif is_rst:
                     icmp_id_state[0] = _ri_step(icmp_id_state[0])
                     scapy_pkt[IP].id = icmp_id_state[0]
                 elif ip_id_random == 0:

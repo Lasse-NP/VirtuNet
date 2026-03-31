@@ -31,8 +31,8 @@ class Android(OSFingerprint):
 # WORKING
 class iOS(OSFingerprint):
     name = "ios"
-    aliases = ["ios", "iphone", "ipad", "ipados", "ios16", "ios17", "ios18"]
-    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK', 'EOL']
+    aliases = ["ios", "iphone", "ipad", "ipados", "ios9"]
+    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK', 'EOL', 'EOL']
     probe_responses = [False, False, False, True, True, False]
 
     ttl = 64
@@ -40,18 +40,18 @@ class iOS(OSFingerprint):
     tcp_options_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
-    tcp_syn_retries = 3
+    tcp_syn_retries = 6
     tcp_fin_timeout = 60
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 75
-    tcp_keepalive_probes = 8
-    df_bit = 1
+    tcp_keepalive_probes = 9
+    df_bit = 0
     tcp_window_size = 65535
     tcp_mss = 1460
+    tcp_wscale = 5
     ip_id_random = 1
     tcp_ip_id_zero = 0
     icmp_ip_id_ri = 1
-    tcp_wscale = 5
     tcp_ecn = 0
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"
