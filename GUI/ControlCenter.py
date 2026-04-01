@@ -45,20 +45,22 @@ DEVICE_REGISTRY = {
 }
 
 device_states: dict[int, bool] = {}
+current_drawer_host = {'host': None}
 
 def get_devices():
     hosts = mininet_network.get_hosts()
-    return [
-        {
+    result = []
+    for i, (host, device) in enumerate(hosts.items()):
+        result.append({
             'id': i + 1,
             'device': host,
-            'os': hosts[host],
+            'os': device.os,
             'ip': host.IP(),
             'mac': host.MAC(),
+            'services': [s.name for s in device.services],
             'enabled': device_states.get(i, True),
-        }
-        for i, host in enumerate(hosts)
-    ]
+        })
+    return result
 
 def deserialize_hosts(raw_list):
     hosts = []
@@ -137,6 +139,7 @@ def control_center_page():
     }
 
     def open_drawer(host, info):
+        current_drawer_host['host'] = host
         hosts = mininet_network.get_hosts()
         device = hosts.get(host)
         if device is None:
@@ -148,8 +151,38 @@ def control_center_page():
         latency = device.latency if hasattr(device, 'latency') else 'None'
         ms = LATENCY_MAP.get(latency)
         drawer_latency.set_text(f"{latency} ({ms})" if ms else latency)
-        drawer_services.set_text(device.services if hasattr(device, 'services') else '')
+
+        stats = mininet_network.get_host_stats(host.name)
+        rx_pkts = stats.get('rx_packets', 0)
+        tx_pkts = stats.get('tx_packets', 0)
+        rx_bytes = stats.get('rx_bytes', 0)
+        tx_bytes = stats.get('tx_bytes', 0)
+        drawer_traffic_rx.set_text(f'RX {rx_pkts} pkts / {rx_bytes} B')
+        drawer_traffic_tx.set_text(f'TX {tx_pkts} pkts / {tx_bytes} B')
+
+        drawer_services.clear()
+        services = info["services"]
+        with drawer_services:
+            for service in services:
+                service = service.strip()
+                if service:
+                    ui.chip(service, icon='circle').props('outline color=blue').classes('q-ma-xs')
+
         drawer.show()
+
+    def refresh_stats():
+        host = current_drawer_host['host']
+        if host is None or not drawer.value:
+            return
+        stats = mininet_network.get_host_stats(host.name)
+        rx_pkts = stats.get('rx_packets', 0)
+        rx_bytes = stats.get('rx_bytes', 0)
+        tx_pkts = stats.get('tx_packets', 0)
+        tx_bytes = stats.get('tx_bytes', 0)
+        drawer_traffic_rx.set_text(f'RX {rx_pkts} pkts / {rx_bytes} B')
+        drawer_traffic_tx.set_text(f'TX {tx_pkts} pkts / {tx_bytes} B')
+
+    ui.timer(3.0, refresh_stats)
 
     def make_toggle(j):
         def _toggle(e):
@@ -247,8 +280,11 @@ def control_center_page():
             drawer_os       = ui.label('').classes('drawer-field')
             ui.label('Latency').classes('drawer-label')
             drawer_latency  = ui.label('').classes('drawer-field')
+            ui.label('Traffic').classes('drawer-label')
+            drawer_traffic_rx  = ui.label('').classes('drawer-field')
+            drawer_traffic_tx  = ui.label('').classes('drawer-field')
             ui.label('Services').classes('drawer-label')
-            drawer_services = ui.label('').classes('drawer-field-services')
+            drawer_services = ui.element('div').classes('drawer-services-chips')
 
     with ui.element('div').classes('cc-wrapper'):
         with ui.element('div').classes('cc-card'):

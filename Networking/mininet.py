@@ -160,6 +160,31 @@ class MininetNetwork:
         host.cmd(f'tc qdisc add dev {intf} root netem delay {delay}')
         print(f'*** Applied {delay} latency to {host_name}')
 
+    def get_host_stats(self, host_name: str) -> dict:
+        if self._net is None:
+            return {}
+        host = self._net.get(host_name)
+        if host is None:
+            return {}
+
+        intf_name = str(host.defaultIntf())
+        output = host.cmd(f'cat /proc/net/dev')
+
+        for line in output.splitlines():
+            if intf_name in line:
+                fields = line.split()
+                try:
+                    return {
+                        'rx_bytes': int(fields[1]),
+                        'rx_packets': int(fields[2]),
+                        'tx_bytes': int(fields[9]),
+                        'tx_packets': int(fields[10]),
+                    }
+                except (IndexError, ValueError):
+                    return {}
+
+        return {}
+
     def stop(self):
         for host_name, proc in self._daemon_procs.items():
             host = self._net.get(host_name)
