@@ -1,5 +1,6 @@
 from nicegui import ui, app
 from Networking.cleanup import run_cleanup
+from Networking.mdns import setup_avahi
 import setup
 import os
 
@@ -26,6 +27,7 @@ if __name__ == '__main__':
     print(f'*** PYTHON_PATH: {sys.executable}')
     setup.ensure_root()
     setup.check_dependencies()
+    setup_avahi()
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
     app.on_shutdown(on_shutdown)

@@ -10,6 +10,70 @@ HOSTS_FILE = '/etc/hosts'
 HOSTS_MARKER_START = '# virtunet-start'
 HOSTS_MARKER_END = '# virtunet-end'
 
+AVAHI_CONF_PATH = '/etc/avahi/avahi-daemon.conf'
+AVAHI_INTERFACE  = 's1'
+
+def setup_avahi():
+    resolved_conf = '/etc/systemd/resolved.conf'
+
+    if not os.path.exists(resolved_conf):
+        os.makedirs('/etc/systemd', exist_ok=True)
+        with open(resolved_conf, 'w') as f:
+            f.write('[Resolve]\nMulticastDNS=no\n')
+    else:
+        with open(resolved_conf, 'r') as f:
+            content = f.read()
+        if re.search(r'#?\s*MulticastDNS=', content):
+            content = re.sub(r'#?\s*MulticastDNS=\S+', 'MulticastDNS=no', content)
+        elif '[Resolve]' in content:
+            content = content.replace('[Resolve]', '[Resolve]\nMulticastDNS=no', 1)
+        else:
+            content += '\n[Resolve]\nMulticastDNS=no\n'
+        with open(resolved_conf, 'w') as f:
+            f.write(content)
+
+        subprocess.run(['systemctl', 'restart', 'systemd-resolved'],
+                       capture_output=True)
+        print('*** Disabled systemd-resolved mDNS to avoid port 5353 conflict')
+
+    os.makedirs('/etc/avahi', exist_ok=True)
+    avahi_conf = f"""[server]
+use-ipv4=yes
+use-ipv6=no
+allow-interfaces={AVAHI_INTERFACE}
+ratelimit-interval-usec=1000000
+ratelimit-burst=1000
+
+[wide-area]
+enable-wide-area=no
+
+[publish]
+publish-addresses=yes
+publish-hinfo=no
+publish-workstation=no
+publish-domain=yes
+
+[reflector]
+enable-reflector=no
+
+[rlimits]
+"""
+    with open(AVAHI_CONF_PATH, 'w') as f:
+        f.write(avahi_conf)
+    print(f'*** Wrote avahi config (interface: {AVAHI_INTERFACE})')
+
+    subprocess.run(['systemctl', 'enable', '--now', 'avahi-daemon'],
+                   capture_output=True)
+    result = subprocess.run(
+        ['systemctl', 'is-active', 'avahi-daemon'],
+        capture_output=True, text=True
+    )
+    if result.stdout.strip() != 'active':
+        print('WARNING: avahi-daemon did not start. mDNS hostnames may not resolve.')
+        print('Run: systemctl status avahi-daemon  for details.')
+    else:
+        print('*** avahi-daemon running')
+
 def _ensure_avahi_ready():
     result = subprocess.run(
         ['systemctl', 'is-active', 'avahi-daemon'],
