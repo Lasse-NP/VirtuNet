@@ -1,6 +1,6 @@
 from faker import Faker
 
-from Models.Fingerprints.OS.Mobile import Android
+from Models.Fingerprints.OS.Linux import AndroidTV
 from Models.Fingerprints.Services import HTTP, HTTPS
 from Models.Devices.Vendor.Samsung import Samsung
 
@@ -9,6 +9,6 @@ class SamsungSmartTV(Samsung):
          fake = Faker()
          super().__init__(
              f"{fake.first_name()[:4]}-SamTV"[:10],
-             Android(),
+             AndroidTV(),
              services=[HTTP(), HTTPS()]
          )
