@@ -78,7 +78,7 @@ class OSFingerprint:
         host.cmd('iptables -I INPUT -p tcp --dport 81 -j REJECT --reject-with tcp-reset')
 
         # ── Probe response suppression ────────────────────────────────────────
-        t2, t3, t4, t5, t6, t7 = self.probe_responses
+        t2, t3, t4, t6, t7 = self.probe_responses
 
         if not t2:
             host.cmd('iptables -A OUTPUT -p tcp --tcp-flags ALL NONE -j DROP')
@@ -86,8 +86,6 @@ class OSFingerprint:
             host.cmd('iptables -A OUTPUT -p tcp --tcp-flags SYN,FIN,URG,PSH SYN,FIN,URG,PSH -j DROP')
         if not t4:
             host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport --sports {open_ports} -j DROP')
-        if not t5:
-            host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport ! --sports {open_ports} -j DROP')
         if not t6:
             host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport ! --sports {open_ports} -j DROP')
         if not t7:
