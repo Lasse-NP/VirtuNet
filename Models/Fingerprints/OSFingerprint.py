@@ -13,7 +13,7 @@ class OSFingerprint:
     aliases: list = []
 
     # OS-Defining Setting Defaults
-    probe_responses: list = [True, True, True, True, True, True]
+    probe_responses: list = [True, True, True, True, True]
     tcp_options_order: list = None
     ttl: int = 64
     df_bit: int = 1
