@@ -80,15 +80,15 @@ class OSFingerprint:
         # ── Probe response suppression ────────────────────────────────────────
         t2, t3, t4, t6, t7 = self.probe_responses
 
-        if not t2:
+        if not t2: # Drop Probe 2 Response
             host.cmd('iptables -A OUTPUT -p tcp --tcp-flags ALL NONE -j DROP')
-        if not t3:
+        if not t3: # Drop Probe 3 Response
             host.cmd('iptables -A OUTPUT -p tcp --tcp-flags SYN,FIN,URG,PSH SYN,FIN,URG,PSH -j DROP')
-        if not t4:
+        if not t4: # Drop Probe 4 Response
             host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport --sports {open_ports} -j DROP')
-        if not t6:
+        if not t6: # Drop Probe 6 Response
             host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport ! --sports {open_ports} -j DROP')
-        if not t7:
+        if not t7: # Drop Probe 7 Response
             host.cmd('iptables -t mangle -A PREROUTING -p tcp --dport 1 --tcp-flags FIN,PSH,URG FIN,PSH,URG -j DROP')
 
         # ── Scapy daemon ──────────────────────────────────────────────────────
