@@ -10,6 +10,7 @@ from mininet.log import error, info
 EASY_RSA_SOURCE_DIRS = [
     '/etc/easy-rsa',
     '/usr/share/easy-rsa',
+    '/usr/share/doc/easy-rsa',
 ]
 
 def setup_pki():
