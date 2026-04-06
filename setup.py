@@ -21,7 +21,7 @@ DISTRO_FAMILIES = {
 }
 
 ALWAYS_INSTALL_PACKAGES = {
-    "debian": ["libnetfilter-queue-dev", "build-essential", "python3.13-dev", "libxcb-cursor0"],
+    "debian": ["libnetfilter-queue-dev", "build-essential", "python3.13-dev", "libxcb-cursor0", "openvswitch-testcontroller"],
     "arch":   ["libnetfilter_queue", "xcb-util-cursor"],
     "fedora": ["libnetfilter_queue-devel", "gcc", "python3-devel", "xcb-util-cursor"],
     "opensuse": ["libnetfilter_queue-devel", "gcc", "python313-devel", "xcb-util-cursor"],
@@ -195,6 +195,15 @@ def build_from_source(package: str):
 def install_debian_deps(packages):
     for pack in packages:
         subprocess.run(["apt-get", "install", "-y", pack], check=True, text=True)
+
+    symlinks = [
+        ('/usr/share/easy-rsa/easyrsa', '/usr/local/bin/easyrsa'),
+        ('/usr/bin/ovs-testcontroller', '/usr/local/bin/controller')
+    ]
+
+    for src, dst in symlinks:
+        if os.path.exists(src) and not shutil.which(os.path.basename(dst)):
+            os.symlink(src, dst)
 
 
 def install_arch_deps(packages):

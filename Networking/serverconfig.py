@@ -13,6 +13,7 @@ proto udp
 dev {TAP_IFACE}
 dev-type tap
 
+dh none
 disable-dco
 
 ca {PKI_DIR}/ca.crt
