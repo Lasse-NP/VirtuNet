@@ -6,6 +6,11 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+if ! command -v python3.13 &>/dev/null; then
+    echo "Python 3.13 is required. Please install it and run this script again."
+    exit 1
+fi
+
 INSTALL_DIR="/opt/virtunet"
 VENV="$INSTALL_DIR/.venv"
 
