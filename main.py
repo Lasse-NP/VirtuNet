@@ -18,7 +18,7 @@ import signal
 async def on_shutdown():
     await asyncio.to_thread(run_cleanup)
 
-async def handle_signal(sig, frame):
+def handle_signal(sig, frame):
     run_cleanup()
     sys.exit(1)
 

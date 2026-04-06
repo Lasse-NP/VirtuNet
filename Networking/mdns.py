@@ -103,8 +103,6 @@ def start_mdns(host):
     print(f'*** [mdns] Publishing {fqdn} -> {ip}  (PID={proc.pid})')
     _write_hosts_entry(name, ip)
 
-    atexit.register(stop_all_mdns)
-
 def _stop_one(name: str):
     proc = _publish_procs.pop(name, None)
     if proc and proc.poll() is None:
