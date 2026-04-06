@@ -7,12 +7,22 @@ from .serverconfig import write_server_conf
 from .terminal import run
 from mininet.log import error, info
 
+EASY_RSA_SOURCE_DIRS = [
+    '/etc/easy-rsa',
+    '/usr/share/easy-rsa',
+]
+
 def setup_pki():
     os.makedirs(BASE_DIR, exist_ok=True)
     os.makedirs(CLIENT_DIR, exist_ok=True)
 
     if not os.path.isdir(EASY_RSA_DIR):
-        run(f'cp -r /etc/easy-rsa {BASE_DIR}')
+        for source in EASY_RSA_SOURCE_DIRS:
+            if os.path.isdir(source):
+                run(f'cp -r {source} {EASY_RSA_DIR}')
+                break
+        else:
+            raise RuntimeError("Could not find easy-rsa source directory. Is easy-rsa installed?")
 
     vars_file = f'{EASY_RSA_DIR}/vars'
     if not os.path.exists(vars_file):

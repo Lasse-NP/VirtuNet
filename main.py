@@ -24,6 +24,7 @@ async def handle_signal(sig, frame):
 
 if __name__ == '__main__':
     os.environ['PYWEBVIEW_GUI'] = 'qt'
+    os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
     print(f'*** PYTHON_PATH: {sys.executable}')
     setup.ensure_root()
     setup.check_dependencies()
