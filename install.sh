@@ -28,16 +28,16 @@ done
 
 case "$FAMILY" in
     debian)
-        apt-get install -y build-essential libnetfilter-queue-dev python3.13-dev
+        apt-get install -y build-essential libnetfilter-queue-dev python3.13-dev libxcb-cursor0
         ;;
     arch)
-        pacman -S --noconfirm --needed base-devel libnetfilter_queue
+        pacman -S --noconfirm --needed base-devel libnetfilter_queue xcb-util-cursor
         ;;
     fedora)
-        dnf install -y gcc libnetfilter_queue-devel python3-devel
+        dnf install -y gcc libnetfilter_queue-devel python3-devel xcb-util-cursor
         ;;
     opensuse)
-        zypper install -y gcc libnetfilter_queue-devel python313-devel
+        zypper install -y gcc libnetfilter_queue-devel python313-devel xcb-util-cursor
         ;;
     *)
         echo "WARNING: Unknown distro, skipping build dependency install. netfilterqueue may fail to build."

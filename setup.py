@@ -21,10 +21,10 @@ DISTRO_FAMILIES = {
 }
 
 ALWAYS_INSTALL_PACKAGES = {
-    "debian": ["libnetfilter-queue-dev", "build-essential", "python3.13-dev"],
-    "arch":   ["libnetfilter_queue"],
-    "fedora": ["libnetfilter_queue-devel", "gcc", "python3-devel"],
-    "opensuse": ["libnetfilter_queue-devel", "gcc", "python313-devel"],
+    "debian": ["libnetfilter-queue-dev", "build-essential", "python3.13-dev", "libxcb-cursor0"],
+    "arch":   ["libnetfilter_queue", "xcb-util-cursor"],
+    "fedora": ["libnetfilter_queue-devel", "gcc", "python3-devel", "xcb-util-cursor"],
+    "opensuse": ["libnetfilter_queue-devel", "gcc", "python313-devel", "xcb-util-cursor"],
 }
 
 REQUIRED_COMMANDS = [
