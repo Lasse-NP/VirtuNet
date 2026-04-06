@@ -14,6 +14,36 @@ fi
 INSTALL_DIR="/opt/virtunet"
 VENV="$INSTALL_DIR/.venv"
 
+source /etc/os-release
+FAMILY=""
+for ID_CHECK in $ID $ID_LIKE; do
+    case "$ID_CHECK" in
+        ubuntu|debian)        FAMILY="debian" ;;
+        arch|manjaro|cachyos) FAMILY="arch" ;;
+        fedora|rhel|centos)   FAMILY="fedora" ;;
+        opensuse*)            FAMILY="opensuse" ;;
+    esac
+    [ -n "$FAMILY" ] && break
+done
+
+case "$FAMILY" in
+    debian)
+        apt-get install -y build-essential libnetfilter-queue-dev python3.13-dev
+        ;;
+    arch)
+        pacman -S --noconfirm --needed base-devel libnetfilter_queue
+        ;;
+    fedora)
+        dnf install -y gcc libnetfilter_queue-devel python3-devel
+        ;;
+    opensuse)
+        zypper install -y gcc libnetfilter_queue-devel python313-devel
+        ;;
+    *)
+        echo "WARNING: Unknown distro, skipping build dependency install. netfilterqueue may fail to build."
+        ;;
+esac
+
 mkdir -p "$INSTALL_DIR"
 cp -r . "$INSTALL_DIR"
 
