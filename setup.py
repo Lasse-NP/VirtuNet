@@ -8,13 +8,17 @@ import shutil
 import tempfile
 from pathlib import Path
 
-REQUIRED_COMMANDS = [
-    'openvpn',      #OpenVPN
-    'ovs-vsctl',    #OVSwitch
-    'easyrsa',      #EasyRSA
-    'mn',           #MiniNet
-    'avahi-publish',    #AvahiDNS
-]
+DISTRO_FAMILIES = {
+    "ubuntu": "debian",
+    "debian": "debian",
+    "arch": "arch",
+    "manjaro": "arch",
+    "cachyos": "arch",
+    "fedora": "fedora",
+    "rhel": "fedora",
+    "centos": "fedora",
+    "opensuse": "opensuse",
+}
 
 ALWAYS_INSTALL_PACKAGES = {
     "debian": ["libnetfilter-queue-dev"],
@@ -22,6 +26,14 @@ ALWAYS_INSTALL_PACKAGES = {
     "fedora": ["libnetfilter_queue-devel"],
     "opensuse": ["libnetfilter_queue-devel"],
 }
+
+REQUIRED_COMMANDS = [
+    'openvpn',      #OpenVPN
+    'ovs-vsctl',    #OVSwitch
+    'easyrsa',      #EasyRSA
+    'mn',           #MiniNet
+    'avahi-publish',    #AvahiDNS
+]
 
 PACKAGE_NAMES = {
     "debian": {
@@ -52,18 +64,6 @@ PACKAGE_NAMES = {
         "mn": "mininet",
         "avahi-publish":  "avahi",
     }
-}
-
-DISTRO_FAMILIES = {
-    "ubuntu": "debian",
-    "debian": "debian",
-    "arch": "arch",
-    "manjaro": "arch",
-    "cachyos": "arch",
-    "fedora": "fedora",
-    "rhel": "fedora",
-    "centos": "fedora",
-    "opensuse": "opensuse",
 }
 
 OVS_SERVICE_NAMES = [
