@@ -2,8 +2,8 @@ from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio, sys
 from pathlib import Path
-from Networking.mininet import mininet_network
-from Networking.server import openvpn_server
+from Networking.MiniNet.mininet import mininet_network
+from Networking.OpenVPN.server import openvpn_server
 
 from Models.Devices.Vendor.Apple import Apple
 from Models.Devices.Vendor.Desktops import Desktops

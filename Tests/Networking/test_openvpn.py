@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 
 class TestOpenVPNServer:
     def setup_method(self):
-        from Networking.server import OpenVPNServer
+        from Networking.OpenVPN.server import OpenVPNServer
         self.server = OpenVPNServer()
 
     def test_initial_state_is_not_running(self):
@@ -20,7 +20,7 @@ class TestOpenVPNServer:
         with pytest.raises(SystemExit):
             self.server.start()
 
-    @patch('Networking.server.run')
+    @patch('Networking.OpenVPN.server.run')
     @patch('os.path.exists', return_value=True)
     def test_start_sets_running_when_tap_comes_up(self, mock_exists, mock_run):
         # Arrange
@@ -40,7 +40,7 @@ class TestOpenVPNServer:
         assert self.server.get_running() == False
 
     @patch('os.path.exists', return_value=True)
-    @patch('Networking.server.run')
+    @patch('Networking.OpenVPN.server.run')
     def test_stop_sets_running_to_false(self, mock_run, mock_exists):
         # Arrange
         self.server._running = True

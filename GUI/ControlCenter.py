@@ -4,8 +4,8 @@ from pathlib import Path
 from nicegui import ui, app
 
 from Networking.cleanup import run_cleanup
-from Networking.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
-from Networking.server import verify_openvpn
+from Networking.MiniNet.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
+from Networking.OpenVPN.server import verify_openvpn
 
 from Models.Devices.Apple.IPhone import IPhone
 from Models.Devices.Apple.AppleWatch import AppleWatch

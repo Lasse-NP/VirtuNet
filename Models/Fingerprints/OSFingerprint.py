@@ -3,7 +3,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from Networking.mdns import start_mdns
+from Networking.MiniNet.mdns import start_mdns
 
 DAEMON_PATH = Path(__file__).parent.parent.parent / 'Networking' / 'scapydaemon.py'
 PYTHON_PATH = sys.executable

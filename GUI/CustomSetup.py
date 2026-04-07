@@ -11,8 +11,8 @@ from Models.Fingerprints.OS.Windows import Windows
 from Models.Fingerprints.OS.Mobile import iOS, Android
 from Models.Fingerprints.OS.MacOS import MacOS, FreeBSD, OpenBSD
 from Models.Fingerprints.Services import HTTP, HTTPS, FTP, SMTP, TFTP, SSH
-from Networking.mininet import mininet_network
-from Networking.server import openvpn_server
+from Networking.MiniNet.mininet import mininet_network
+from Networking.OpenVPN.server import openvpn_server
 
 def get_base_path():
     if getattr(sys, 'frozen', False):

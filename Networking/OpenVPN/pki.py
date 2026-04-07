@@ -1,10 +1,10 @@
 import os
 import sys
 import re
-from .config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE
+from Networking.config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE
 from .network import get_local_ip
 from .serverconfig import write_server_conf
-from .terminal import run
+from Networking.terminal import run
 from mininet.log import error, info
 
 EASY_RSA_SOURCE_DIRS = [

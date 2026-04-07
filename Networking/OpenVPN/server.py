@@ -1,10 +1,10 @@
 import os
 import sys
 import time
-from .config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID, CLIENT_DIR, LAB_SERVER_IP, LAB_PREFIX
+from Networking.config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID, CLIENT_DIR, LAB_SERVER_IP, LAB_PREFIX
 from .serverconfig import write_server_conf
 from .pki import setup_pki
-from .terminal import run
+from Networking.terminal import run
 from mininet.log import error, info
 
 def kill_current():
@@ -38,7 +38,7 @@ class OpenVPNServer:
 
         # Check if OpenVPN server started and is up and ready for 10 seconds.
         for _ in range(20):
-            result = run(f'ip link show {TAP_IFACE}')
+            result = run(f'ip link show {TAP_IFACE}', check=False)
             if result.returncode == 0:
                 info(f'*** TAP Interface {TAP_IFACE} is up\n')
                 run(f'ip link set {TAP_IFACE} up')

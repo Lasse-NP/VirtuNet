@@ -2,8 +2,8 @@ from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio, sys
 from pathlib import Path
-from Networking import pki
-from Networking.network import get_local_ip
+from Networking.OpenVPN import pki
+from Networking.OpenVPN.network import get_local_ip
 from Service.ConnectionHandler import start_join_server
 
 def get_base_path():

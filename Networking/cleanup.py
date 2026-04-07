@@ -1,7 +1,7 @@
 import subprocess
 
-from Networking.mininet import mininet_network, teardown_topo
-from Networking.server import openvpn_server
+from Networking.MiniNet.mininet import mininet_network, teardown_topo
+from Networking.OpenVPN.server import openvpn_server
 from Networking.config import BASE_DIR
 import os
 import shutil

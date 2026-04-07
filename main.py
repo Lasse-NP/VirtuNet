@@ -1,19 +1,19 @@
 from nicegui import ui, app
 from Networking.cleanup import run_cleanup
-from Networking.mdns import setup_avahi
+from Networking.MiniNet.mdns import setup_avahi
 import setup
 import os
-
-import GUI.Frontpage
-import GUI.Lobby
-import GUI.SessionSetting
-import GUI.CustomSetup
-import GUI.ControlCenter
-import GUI.AfterActionReport
 
 import asyncio
 import sys
 import signal
+
+import GUI.Frontpage
+import GUI.SessionSetting
+import GUI.CustomSetup
+import GUI.Lobby
+import GUI.ControlCenter
+import GUI.AfterActionReport
 
 async def on_shutdown():
     await asyncio.to_thread(run_cleanup)

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 @pytest.fixture
 def network():
-    from Networking.mininet import MininetNetwork
+    from Networking.MiniNet.mininet import MininetNetwork
     return MininetNetwork()
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def network_with_net(network):
 
 @pytest.fixture(autouse=True)
 def mock_mdns():
-    with patch('Networking.mininet.stop_all_mdns') as mock:
+    with patch('Networking.MiniNet.mininet.stop_all_mdns') as mock:
         yield mock
 
 class TestMininetNetwork:

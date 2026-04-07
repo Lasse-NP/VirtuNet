@@ -5,12 +5,12 @@ class TestPKI:
 
     @patch('builtins.open', mock_open())
     @patch('os.path.exists', return_value=False)  # Prevents open() on vars file
-    @patch('os.path.isdir', return_value=False)  # isdir=False triggers directory creation
+    @patch('os.path.isdir', side_effect=[False, True, False])  # isdir=False triggers directory creation
     @patch('os.makedirs')
-    @patch('Networking.pki.run')
-    @patch('Networking.pki.write_server_conf')
+    @patch('Networking.OpenVPN.pki.run')
+    @patch('Networking.OpenVPN.pki.write_server_conf')
     def test_setup_pki_initializes_directories(self, mock_write_conf, mock_run, mock_makedirs, mock_isdir, mock_exists):
-        from Networking.pki import setup_pki
+        from Networking.OpenVPN.pki import setup_pki
 
         # Act
         setup_pki()
@@ -18,12 +18,12 @@ class TestPKI:
         # Assert
         mock_makedirs.assert_called()
 
-    @patch('Networking.pki.get_local_ip', return_value='10.0.0.1')
+    @patch('Networking.OpenVPN.pki.get_local_ip', return_value='10.0.0.1')
     @patch('os.path.isdir', return_value=True)  # PKI_DIR exists, so sys.exit is not triggered
     @patch('os.path.exists', return_value=True)  # Cert already present, skips build-client-full
-    @patch('Networking.pki.run')
+    @patch('Networking.OpenVPN.pki.run')
     def test_gen_client_reuses_existing_cert(self, mock_run, mock_exists, mock_isdir, mock_get_ip):
-        from Networking.pki import gen_client
+        from Networking.OpenVPN.pki import gen_client
 
         # Arrange
         client_name = 'testclient'
@@ -46,7 +46,7 @@ class TestPKI:
         assert not any('build-client-full' in c for c in calls)
 
     def test_pem_block_extracts_correctly(self):
-        from Networking.pki import _pem_block
+        from Networking.OpenVPN.pki import _pem_block
 
         # Arrange
         sample_pem = "-----BEGIN CERTIFICATE-----\nABCD\n-----END CERTIFICATE-----"
@@ -59,7 +59,7 @@ class TestPKI:
         assert "BEGIN CERTIFICATE" in result
 
     def test_pem_block_raises_when_missing(self):
-        from Networking.pki import _pem_block
+        from Networking.OpenVPN.pki import _pem_block
 
         # Arrange
         invalid_pem = "no cert here"
@@ -71,7 +71,7 @@ class TestPKI:
 
     @patch('os.path.exists', return_value=True)
     def test_get_connected_clients_parses_status_file(self, mock_exists):
-        from Networking.pki import get_connected_clients
+        from Networking.OpenVPN.pki import get_connected_clients
 
         # Arrange
         fake_status = (

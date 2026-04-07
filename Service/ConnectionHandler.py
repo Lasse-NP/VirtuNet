@@ -5,9 +5,9 @@ import threading
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from Networking.mininet import mininet_network
-from Networking.network import get_local_ip
-from Networking.pki import gen_client
+from Networking.MiniNet.mininet import mininet_network
+from Networking.OpenVPN.network import get_local_ip
+from Networking.OpenVPN.pki import gen_client
 
 class ReusableHTTPServer(HTTPServer):
     def server_bind(self):
