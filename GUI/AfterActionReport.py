@@ -46,7 +46,7 @@ def after_action_report_page():
                 ui.html(f'<span class="report-line">Session Duration: {report["session_duration"]} min</span>')
                 ui.html(f'<span class="report-line">Average time per device: {report["avg_time_per_device"]} min</span>')
             with ui.element('div').classes('bottom-row'):
-                ui.button('Restart', on_click=lambda: reset_session).classes('btn-restart').props('flat')
+                ui.button('Restart', on_click=lambda: reset_session()).classes('btn-restart').props('flat')
                 ui.button('Exit', on_click=lambda: app.shutdown()).classes('btn-exit').props('flat')
 
 
