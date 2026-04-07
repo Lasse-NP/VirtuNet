@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from nicegui import ui, app
 
+from Models.Fingerprints.Services import HTTP, HTTPS, FTP, SMTP, TFTP, SSH
 from Networking.cleanup import run_cleanup
 from Networking.MiniNet.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
 from Networking.OpenVPN.server import verify_openvpn
@@ -62,6 +63,15 @@ def get_devices():
         })
     return result
 
+SERVICE_REGISTRY = {
+    'HTTP': HTTP,
+    'HTTPS': HTTPS,
+    'FTP': FTP,
+    'SMTP': SMTP,
+    'TFTP': TFTP,
+    'SSH': SSH,
+}
+
 def deserialize_hosts(raw_list):
     hosts = []
     for d in raw_list:
@@ -74,6 +84,7 @@ def deserialize_hosts(raw_list):
         obj.os = cls().os
         obj.latency = d.get('latency', 'None')
         obj.macAddress = d['mac']
+        obj.services = [SERVICE_REGISTRY[s]() for s in d.get('services', []) if s in SERVICE_REGISTRY]
         hosts.append(obj)
     return hosts
 
