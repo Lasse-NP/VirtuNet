@@ -148,14 +148,15 @@ def check_dependencies():
 
     if packages:
         try:
-            if family == "debian":
-                install_debian_deps(packages)
-            elif family == "arch":
-                install_arch_deps(packages)
-            elif family == "fedora":
-                install_fedora_deps(packages)
-            elif family == "opensuse":
-                install_opensuse_deps(packages)
+            match family:
+                case "debian":
+                    install_debian_deps(packages)
+                case "arch":
+                    install_arch_deps(packages)
+                case "fedora":
+                    install_fedora_deps(packages)
+                case "opensuse":
+                    install_opensuse_deps(packages)
         except subprocess.CalledProcessError as e:
             print(f"Failed to install packages: {e}")
             print(f"Try and fetch these yourself and rerun.")
