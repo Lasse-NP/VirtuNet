@@ -135,12 +135,16 @@ def check_installed(family, package):
 def check_dependencies():
     family = get_distro_family()
 
+    #Checks all the missing commands and adds them to list
     missing = []
     for cmd in REQUIRED_COMMANDS:
         if shutil.which(cmd) is None:
             missing.append(cmd)
 
+    #Finds the right packages for distro
     packages = [PACKAGE_NAMES[family][cmd] for cmd in missing]
+
+    #Finds the right libraries for distro
     packages += [
         pkg for pkg in ALWAYS_INSTALL_PACKAGES.get(family, [])
         if not check_installed(family, pkg)
