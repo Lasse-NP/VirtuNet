@@ -35,7 +35,7 @@ def start_gui():
             with ui.element('div').style('width: min(600px, 70%); height: auto;'):
                 ui.image('/assets/VirtuNetIcon.png').style('width: 100%; height: 100%;')
             ui.space()
-            ui.button('Initialize ➤', on_click=lambda: ui.navigate.to('/Session')
+            ui.button('Begin ➤', on_click=lambda: ui.navigate.to('/Session')
                       ).style('font-size: clamp(2rem, 3vw + 1rem, 4rem); padding: 2vw 6vw; border-radius: 2px; '
                               'margin-bottom: 80px; background-color: #4a7cdc !important; border-radius: 30px; font-family: "Orbitron", sans-serif;')
 
