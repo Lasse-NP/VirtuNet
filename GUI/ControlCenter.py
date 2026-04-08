@@ -2,6 +2,7 @@ import asyncio
 import sys
 from pathlib import Path
 from nicegui import ui, app
+import GUI.Lobby as lobby_module
 
 from Models.Fingerprints.Services import HTTP, HTTPS, FTP, SMTP, TFTP, SSH
 from Networking.cleanup import run_cleanup
@@ -127,6 +128,7 @@ def control_center_page():
     def init_started():
         global start_initiated
         start_initiated = True
+        return_btn.disable()
         reset_btn.disable()
         reboot_btn.disable()
         end_btn.disable()
@@ -136,6 +138,7 @@ def control_center_page():
     def init_stopped():
         global start_initiated
         start_initiated = False
+        return_btn.enable()
         reset_btn.enable()
         reboot_btn.enable()
         end_btn.enable()
@@ -267,6 +270,7 @@ def control_center_page():
             'avg_time_per_device': uptime // disabled if disabled else 0,
             }
             await asyncio.to_thread(run_cleanup)
+            lobby_module.reset_join_server()
             ui.navigate.to('/AfterActionReport')
         except RuntimeError as e:
             init_stopped()
@@ -307,9 +311,11 @@ def control_center_page():
             ui.timer(5.0, render_pipeline.refresh)
 
             with ui.element('div').classes('bottom-row'):
+                return_btn = ui.button('Trainees',  on_click=lambda: ui.navigate.to('/Lobby')).classes('btn-return').props('flat')
                 reset_btn = ui.button('Reset',  on_click=reset_devices).classes('btn-reset').props('flat')
                 reboot_btn = ui.button('Reboot', on_click=reboot_network).classes('btn-reboot').props('flat')
-                end_btn = ui.button('End',   on_click=end_session).classes('btn-end').props('flat')
+            with ui.element('div').classes('bottom-row-second'):
+                end_btn = ui.button('End', on_click=end_session).classes('btn-end').props('flat')
 
         loading_indicator = ui.element('div').style(
             'position: fixed; bottom: 0; left: 0; width: 100%; display: none;').classes('loading-bar')

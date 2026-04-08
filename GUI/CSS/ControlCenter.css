@@ -142,6 +142,19 @@
     margin-bottom: 10px;
 }
 
+.btn-return {
+    background-color: #2a2a2a;
+    border: 1px solid #4a7cdc;
+    border-radius: 14px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    flex: 1;
+    padding: 14px;
+    text-transform: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
 .btn-reset {
     background-color: #2a2a2a;
     border: 1px solid #4a7cdc;
@@ -166,6 +179,14 @@
     padding: 14px;
     text-transform: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.bottom-row-second {
+    display: flex;
+    width: clamp(20rem, 40vw + 1rem, 50rem);
+    gap: 10px;
+    margin-top: 4px;
+    margin-bottom: 10px;
 }
 
 .btn-end {

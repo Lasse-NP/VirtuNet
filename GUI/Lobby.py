@@ -11,13 +11,24 @@ def get_base_path():
         return Path(sys._MEIPASS)
     return Path(__file__).parent
 
-def open_join_server():
-    code = start_join_server()
-    ui.notify('Opening Join Server...')
-    return code
+_join_server_started = False
+_join_code = None
 
 known_trainees = {}
 trainee_list: List | None = None
+
+def open_join_server():
+    global _join_server_started, _join_code
+    if not _join_server_started:
+        _join_code = start_join_server()
+        _join_server_started = True
+        ui.notify('Opening Join Server...')
+    return _join_code
+
+def reset_join_server():
+    global _join_server_started, _join_code
+    _join_server_started = False
+    _join_code = None
 
 def refresh_trainees():
     connected = {c['name']: c for c in pki.get_connected_clients()}
@@ -122,7 +133,7 @@ def create_lobby():
             ui.timer(10.0, lambda: [refresh_trainees(), render_trainees(trainee_list)])
 
         with ui.column().style('width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
-            ui.button('Continue', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue').props('flat')
+            ui.button('Control Center', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue').props('flat')
 
 if __name__ == '__main__':
     @ui.page('/')
