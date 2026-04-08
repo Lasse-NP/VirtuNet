@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from Networking.MiniNet.mdns import start_mdns
 
-DAEMON_PATH = Path(__file__).parent.parent.parent / 'Networking' / 'scapydaemon.py'
+DAEMON_PATH = Path(__file__).parent.parent.parent / 'Networking' / 'MiniNet' / 'scapydaemon.py'
 PYTHON_PATH = sys.executable
 
 class OSFingerprint:
