@@ -135,10 +135,10 @@ def create_lobby():
                 f'The local network interface is unreachable.\n\n'
                 f'Error: {e}\n\n'
                 f'This usually means the tap interface or routing table is not ready. '
-                f'Try running "mn -c" to clean up stale Mininet state, then retry.'
+                f'"mn -c" will run to clean up stale Mininet state on back.'
             ),
             back_to='/Session',
-            retry_to='/Lobby',
+            cleanup_on_back=True,
         )
         print(f"[VirtuNet] WARNING: get_local_ip failed: {e}")
         return

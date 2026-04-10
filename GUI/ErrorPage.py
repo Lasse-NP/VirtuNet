@@ -1,8 +1,12 @@
+import asyncio
 import sys
 from pathlib import Path
 import html as html_lib
 
 from nicegui import ui, app
+
+from Networking.cleanup import run_cleanup
+
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -16,7 +20,7 @@ def error_page():
     title = app.storage.user.get('error_title', 'Something went wrong')
     message = app.storage.user.get('error_message', 'An unexpected error occurred.')
     back_to = app.storage.user.get('error_back_to', '/')
-    retry_to = app.storage.user.get('error_retry_to', None)
+    cleanup_on_back = app.storage.user.get('error_cleanup_on_back', False)
 
     with ui.element('div').style(
             'height: calc(100vh - 50px); width: 100%; display: flex; '
@@ -41,26 +45,20 @@ def error_page():
                     f'margin: 0; user-select: text;">{html_lib.escape(message)}</pre>'
                 )
 
+            async def go_back():
+                if cleanup_on_back:
+                    await asyncio.to_thread(run_cleanup)
+                ui.navigate.to(back_to)
+
             with ui.row().style('justify-content: center; gap: 12px; margin-top: 24px;'):
-                ui.button('Go Back', on_click=lambda: ui.navigate.to(back_to)).style(
+                ui.button('Go Back', on_click=go_back).style(
                     'background-color: #2a2a2a !important; border-radius: 16px; border: 1px solid #4a7cdc; font-family: "Orbitron", sans-serif; border-radius: 12px;'
                 ).props('flat')
 
-                if retry_to:
-                    def retry():
-                        app.storage.user.pop('error_retry_to', None)
-                        ui.navigate.to(retry_to)
-
-                    ui.button('Retry', on_click=retry).style(
-                        'background-color: #2a2a2a !important; border-radius: 16px; border: 1px solid #4a7cdc; font-family: "Orbitron", sans-serif; border-radius: 12px;'
-                    ).props('flat')
-
-def redirect_to_error(title: str, message: str, back_to: str = '/Session', retry_to: str | None = None) -> None:
+def redirect_to_error(title: str, message: str, back_to: str = '/Session', cleanup_on_back: bool = False) -> None:
     app.storage.user['error_title'] = title
     app.storage.user['error_message'] = message
     app.storage.user['error_back_to'] = back_to
-    if retry_to:
-        app.storage.user['error_retry_to'] = retry_to
-    else:
-        app.storage.user.pop('error_retry_to', None)
+    app.storage.user['error_cleanup_on_back'] = cleanup_on_back
+    app.storage.user.pop('error_retry_to', None)
     ui.navigate.to('/Error')

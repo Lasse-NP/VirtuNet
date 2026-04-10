@@ -85,7 +85,7 @@ def get_available_device_options(current_row_idx, vendor_class):
 
 def render_devices(devices_list):
     devices_list.clear()
-    with (((devices_list))):
+    with devices_list:
         ui.item_label('Devices').props('header')
         ui.separator()
 
@@ -183,6 +183,11 @@ def render_devices(devices_list):
 def session_settings_page():
     ui.dark_mode().enable()
 
+    # Clear Previous States
+    global start_initiated, delete_mode
+    start_initiated = False
+    delete_mode = False
+
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/SessionSettings.css">')
     ui.add_head_html('''
@@ -225,7 +230,7 @@ def session_settings_page():
                     f'Ensure OpenVPN is installed and the PKI directory is accessible.'
                 ),
                 back_to='/Session',
-                retry_to='/Session',
+                cleanup_on_back=False,
             )
             return
 
@@ -244,7 +249,7 @@ def session_settings_page():
                     f'then retry.'
                 ),
                 back_to='/Session',
-                retry_to='/Session',
+                cleanup_on_back=True,
             )
             return
 
