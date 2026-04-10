@@ -2,6 +2,8 @@ from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio, sys
 from pathlib import Path
+
+from GUI.ErrorPage import redirect_to_error
 from Networking.OpenVPN import pki
 from Networking.OpenVPN.network import get_local_ip
 from Service.ConnectionHandler import start_join_server
@@ -21,8 +23,9 @@ def open_join_server():
     global _join_server_started, _join_code
     if not _join_server_started:
         _join_code = start_join_server()
-        _join_server_started = True
-        ui.notify('Opening Join Server...')
+        if _join_code is not None:
+            _join_server_started = True
+            ui.notify('Opening Join Server...')
     return _join_code
 
 def reset_join_server():
@@ -105,8 +108,6 @@ def add_trainee(name):
 @ui.page('/Lobby')
 def create_lobby():
     ui.dark_mode().enable()
-    code = open_join_server()
-    ip = get_local_ip()
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/Lobby.css">')
@@ -118,6 +119,46 @@ def create_lobby():
             });
         </script>
         ''')
+
+    try:
+        code = open_join_server()
+    except Exception as e:
+        print(f"[VirtuNet] ERROR: open_join_server raised unexpectedly: {e}")
+        code = None
+
+    if code is None:
+        redirect_to_error(
+            title='Join Server Unavailable',
+            message=(
+                f'Could not start the join server on port 8080.\n\n'
+                f'Another process is still holding the port. '
+                f'Check the console for netstat output to identify it.\n\n'
+                f'PID shown in console: run "sudo kill -9 <PID>" then retry.'
+            ),
+            back_to='/Session',
+            retry_to='/Lobby',
+        )
+        return
+
+    try:
+        ip = get_local_ip()
+    except OSError as e:
+        redirect_to_error(
+            title='Network Unreachable',
+            message=(
+                f'The local network interface is unreachable.\n\n'
+                f'Error: {e}\n\n'
+                f'This usually means the tap interface or routing table is not ready. '
+                f'Try running "mn -c" to clean up stale Mininet state, then retry.'
+            ),
+            back_to='/Session',
+            retry_to='/Lobby',
+        )
+        print(f"[VirtuNet] WARNING: get_local_ip failed: {e}")
+        return
+    except Exception as e:
+        print(f"[VirtuNet] WARNING: get_local_ip raised unexpectedly: {e}")
+        ip = 'Unknown'
 
     global trainee_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%').classes('items-center'):

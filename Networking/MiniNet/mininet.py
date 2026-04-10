@@ -186,16 +186,20 @@ class MininetNetwork:
 
     def stop(self):
         for host_name, proc in self._daemon_procs.items():
-            host = self._net.get(host_name)
-            if host:
-                proc.terminate()
-                proc.wait()
-                queue_num = int(host.IP().split('.')[-1])
-                host.cmd(f'iptables -t mangle -D OUTPUT -p tcp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
-                host.cmd(f'iptables -t mangle -D OUTPUT -p udp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
-                host.cmd(f'iptables -t mangle -D OUTPUT -p icmp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
-                host.cmd('fuser -k 80/tcp 2>/dev/null || true')
-                host.cmd('fuser -k 443/tcp 2>/dev/null || true')
+            try:
+                host = self._net.get(host_name)
+                if host:
+                    proc.terminate()
+                    proc.wait()
+                    queue_num = int(host.IP().split('.')[-1])
+                    host.cmd(f'iptables -t mangle -D OUTPUT -p tcp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
+                    host.cmd(f'iptables -t mangle -D OUTPUT -p udp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
+                    host.cmd(f'iptables -t mangle -D OUTPUT -p icmp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
+                    host.cmd('fuser -k 80/tcp 2>/dev/null || true')
+                    host.cmd('fuser -k 443/tcp 2>/dev/null || true')
+            except KeyError:
+                print(f"[VirtuNet] WARNING: Host '{host_name}' not found in Mininet during shutdown, skipping.")
+                continue
         self._daemon_procs.clear()
         stop_all_mdns()
 

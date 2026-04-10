@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import html as html_lib
 
 from nicegui import ui, app
 
@@ -23,26 +24,26 @@ def error_page():
     ):
         with ui.element('div').style(
                 'background-color: #2a2a2a; border: 2px solid #ef4444; border-radius: 20px; '
-                'padding: 40px; max-width: 500px; width: 90%; text-align: center;'
+                'padding: 40px; max-width: 1000px; width: 90%; text-align: center;'
         ):
             ui.label(title).style(
                 'font-family: "Orbitron", sans-serif; font-size: 22px; '
                 'font-weight: 700; color: #ef4444; margin-top: 12px;'
             )
             with ui.element('div').style(
-                'margin-top: 12px; width: 100%; max-height: 220px; overflow-y: auto; '
-                'background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; '
-                'padding: 12px; text-align: left; box-sizing: border-box;'
+                    'margin-top: 12px; width: 100%; max-height: 220px; overflow-y: auto; '
+                    'background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; '
+                    'padding: 12px; text-align: left; box-sizing: border-box; user-select: text;'
             ):
-                ui.label(message).style(
-                    'font-family: "Courier New", Courier, monospace; font-size: 12px; '
-                    'color: #ccc; white-space: pre-wrap; word-break: break-word;'
+                ui.html(
+                    f'<pre style="font-family: \'Courier New\', Courier, monospace; font-size: 12px; '
+                    f'color: #ccc; white-space: pre-wrap; word-break: break-word; '
+                    f'margin: 0; user-select: text;">{html_lib.escape(message)}</pre>'
                 )
 
             with ui.row().style('justify-content: center; gap: 12px; margin-top: 24px;'):
                 ui.button('Go Back', on_click=lambda: ui.navigate.to(back_to)).style(
-                    'margin-top: 24px; background-color: #4a4a4a !important; '
-                    'border-radius: 12px; font-family: "Orbitron", sans-serif;'
+                    'background-color: #2a2a2a !important; border-radius: 16px; border: 1px solid #4a7cdc; font-family: "Orbitron", sans-serif; border-radius: 12px;'
                 ).props('flat')
 
                 if retry_to:
@@ -51,8 +52,7 @@ def error_page():
                         ui.navigate.to(retry_to)
 
                     ui.button('Retry', on_click=retry).style(
-                        'background-color: #4a7cdc !important; '
-                        'border-radius: 12px; font-family: "Orbitron", sans-serif;'
+                        'background-color: #2a2a2a !important; border-radius: 16px; border: 1px solid #4a7cdc; font-family: "Orbitron", sans-serif; border-radius: 12px;'
                     ).props('flat')
 
 def redirect_to_error(title: str, message: str, back_to: str = '/Session', retry_to: str | None = None) -> None:
