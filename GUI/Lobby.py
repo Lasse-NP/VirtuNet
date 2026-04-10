@@ -126,20 +126,6 @@ def create_lobby():
         print(f"[VirtuNet] ERROR: open_join_server raised unexpectedly: {e}")
         code = None
 
-    if code is None:
-        redirect_to_error(
-            title='Join Server Unavailable',
-            message=(
-                f'Could not start the join server on port 8080.\n\n'
-                f'Another process is still holding the port. '
-                f'Check the console for netstat output to identify it.\n\n'
-                f'PID shown in console: run "sudo kill -9 <PID>" then retry.'
-            ),
-            back_to='/Session',
-            retry_to='/Lobby',
-        )
-        return
-
     try:
         ip = get_local_ip()
     except OSError as e:
@@ -162,19 +148,56 @@ def create_lobby():
 
     global trainee_list
     with ui.column().style('height: calc(100vh - 50px); width: 100%').classes('items-center'):
-        ui.label('Trainee Lobby').style('font-family: "Orbitron", sans-serif; font-size: 32px; font-weight: 700; color: #4a7cdc;')
+        ui.label('Trainee Lobby').style(
+            'font-family: "Orbitron", sans-serif; font-size: 32px; font-weight: 700; color: #4a7cdc;')
         ui.separator()
         ui.label('Join Code').style(
             'font-family: "Orbitron", sans-serif; font-size: 20px; font-weight: 700; color: #4a7cdc;')
-        ui.label(f'{code}').style('font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
-        ui.label(f'{ip}').style('font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
-        with ui.element('div').style('flex: 1; width: 100%; max-width: 60rem; border: 4px solid #4a7cdc; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
-            trainee_list = ui.list().props('bordered separator').style('width: 100%; background-color: #383838').classes('trainee_list')
+
+        code_label = ui.label(code or '—').style(
+            'font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
+        ip_label = ui.label(ip).style(
+            'font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
+
+        if code is None:
+            ui.notify(
+                'Could not start join server on port 8080. '
+                'Another process is holding the port — check the console for the PID.',
+                type='negative',
+                timeout=0,
+            )
+
+        with ui.element('div').style(
+                'flex: 1; width: 100%; max-width: 60rem; border: 4px solid #4a7cdc; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
+            trainee_list = ui.list().props('bordered separator').style(
+                'width: 100%; background-color: #383838').classes('trainee_list')
             render_trainees(trainee_list)
             ui.timer(10.0, lambda: [refresh_trainees(), render_trainees(trainee_list)])
 
-        with ui.column().style('width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
-            ui.button('Control Center', on_click=lambda: ui.navigate.to('/ControlCenter')).classes('btn-continue').props('flat')
+        with ui.column().style(
+                'width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
+
+            def retry_join_server():
+                new_code = open_join_server()
+                if new_code is not None:
+                    code_label.set_text(new_code)
+                    retry_btn.set_visibility(False)
+                    control_btn.enable()
+                    ui.notify('Join server started successfully.', type='positive')
+                else:
+                    ui.notify(
+                        'Still could not bind port 8080. Check the console.',
+                        type='negative',
+                        timeout=0,
+                    )
+
+            retry_btn = ui.button('Retry Join Server', on_click=retry_join_server).classes('btn-continue').props('flat')
+            retry_btn.set_visibility(code is None)
+
+            control_btn = ui.button('Control Center', on_click=lambda: ui.navigate.to('/ControlCenter')).classes(
+                'btn-continue').props('flat')
+            if code is None:
+                control_btn.disable()
 
 if __name__ == '__main__':
     @ui.page('/')
