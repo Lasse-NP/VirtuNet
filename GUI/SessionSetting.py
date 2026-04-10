@@ -2,6 +2,8 @@ from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio, sys
 from pathlib import Path
+
+from GUI.ErrorPage import redirect_to_error
 from Networking.MiniNet.mininet import mininet_network
 from Networking.OpenVPN.server import openvpn_server
 
@@ -50,6 +52,7 @@ PRESET_CONFIGS = {
 
 session_rows = []
 host_list = []
+device_list: List | None = None
 
 vendor_dictionary = {
     "Apple": Apple,
@@ -57,10 +60,6 @@ vendor_dictionary = {
     "Desktops": Desktops,
     "Sony": Sony
     }
-
-device_list: List | None = None
-
-
 
 def build_host_list():
     hosts = []
@@ -199,6 +198,11 @@ def session_settings_page():
     async def initialize_configure_and_go(custom: bool = False):
         global host_list
 
+        incomplete = [r for r in session_rows if r['device_class'] is None]
+        if not session_rows or incomplete:
+            ui.notify('Please select a device for every row before starting.', type='warning')
+            return
+
         host_list = build_host_list()
         app.storage.user['selected_hosts'] = [d.to_dict() for d in host_list]
 
@@ -206,17 +210,45 @@ def session_settings_page():
             ui.navigate.to('/CustomSetup')
             return
 
+        init_started()
         try:
-            init_started()
             await asyncio.to_thread(openvpn_server.initialize)
             ui.notify('Starting OpenVPN...')
+        except Exception as e:
+            print(f"[VirtuNet] ERROR: OpenVPN initialization failed: {e}")
+            init_stopped()
+            redirect_to_error(
+                title='OpenVPN Failed to Start',
+                message=(
+                    f'The OpenVPN server could not be initialized.\n\n'
+                    f'Error: {e}\n\n'
+                    f'Ensure OpenVPN is installed and the PKI directory is accessible.'
+                ),
+                back_to='/Session',
+                retry_to='/Session',
+            )
+            return
+
+        try:
             await asyncio.to_thread(mininet_network.configuration, host_list)
             ui.notify('Configuring MiniNet...')
-            ui.navigate.to('/Lobby')
-        except RuntimeError as e:
+        except Exception as e:
+            print(f"[VirtuNet] ERROR: Mininet configuration failed: {e}")
             init_stopped()
-            ui.notify(str(e), type='negative')
+            redirect_to_error(
+                title='Network Configuration Failed',
+                message=(
+                    f'Mininet could not configure the virtual network.\n\n'
+                    f'Error: {e}\n\n'
+                    f'Try running "mn -c" in a terminal to clean up stale state, '
+                    f'then retry.'
+                ),
+                back_to='/Session',
+                retry_to='/Session',
+            )
             return
+
+        ui.navigate.to('/Lobby')
 
     def init_started():
         global start_initiated
@@ -317,8 +349,6 @@ def session_settings_page():
                 start_btn = ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start').props('flat')
 
                 loading_indicator = ui.element('div').style('position: fixed; bottom: 0; left: 0; width: 100%; display: none;').classes('loading-bar')
-
-
 
 if __name__ == '__main__':
     @ui.page('/')

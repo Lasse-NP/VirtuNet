@@ -195,7 +195,6 @@ def custom_setup_page():
             loading_indicator = ui.element('div').style(
                 'position: fixed; bottom: 0; left: 0; width: 100%; display: none;').classes('loading-bar')
 
-
 if __name__ == '__main__':
     app.native.window_args['min_size'] = (550, 1000)
     ui.run(native=True, reload=False, window_size=(600, 1000), storage_secret='my-super-secret-key-123')

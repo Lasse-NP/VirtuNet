@@ -1,6 +1,7 @@
 import random
 import socket
 import string
+import subprocess
 import threading
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -77,18 +78,64 @@ class _Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
 
-def start_join_server() -> str:
+def _print_port_diagnostics(port: int) -> None:
+    print(f"[VirtuNet] Diagnosing port {port} conflict:")
+    try:
+        result = subprocess.run(
+            ["netstat", "-tlnp"],
+            capture_output=True,
+            text=True,
+        )
+        lines = [
+            line for line in result.stdout.splitlines()
+            if f":{port}" in line or "Proto" in line or "Active" in line
+        ]
+        if lines:
+            print("\n".join(lines))
+        else:
+            print(f"[VirtuNet] No netstat entries found for port {port}.")
+    except FileNotFoundError:
+        try:
+            result = subprocess.run(
+                ["ss", "-tlnp", f"sport = :{port}"],
+                capture_output=True,
+                text=True,
+            )
+            print(result.stdout or f"[VirtuNet] ss returned no output for port {port}.")
+        except Exception as e:
+            print(f"[VirtuNet] Could not run netstat or ss: {e}")
+    except Exception as e:
+        print(f"[VirtuNet] netstat failed: {e}")
+
+def start_join_server() -> str | None:
     global _server, _thread, _active_code
 
     if _server:
         stop_join_server()
 
-    _active_code = _make_code()
-    _server = ReusableHTTPServer(("0.0.0.0", PORT), _Handler)
+    try:
+        _active_code = _make_code()
+        _server = ReusableHTTPServer(("0.0.0.0", PORT), _Handler)
+    except OSError as e:
+        print(f"[VirtuNet] ERROR: Could not bind join server to port {PORT}: {e}")
+        _print_port_diagnostics(PORT)
+        _server = None
+        _active_code = None
+        return None
+    except Exception as e:
+        print(f"[VirtuNet] ERROR: Unexpected error starting join server: {e}")
+        _server = None
+        _active_code = None
+        return None
+
     _thread = threading.Thread(target=_server.serve_forever, daemon=True)
     _thread.start()
 
-    ip = get_local_ip()
+    try:
+        ip = get_local_ip()
+    except Exception:
+        ip = "unknown"
+
     print(f"[VirtuNet] Join server running on {ip}:{PORT}")
     print(f"[VirtuNet] Join code: {_active_code}")
     return _active_code
