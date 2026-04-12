@@ -13,6 +13,8 @@ class HTTP(ServiceFingerPrint):
     def start_daemon(self, host) -> None:
         host.cmd(f'nohup {PYTHON_PATH} -m http.server 80 --directory / > /dev/null 2>&1 &')
 
+
+
 class HTTPS(ServiceFingerPrint):
     name = "HTTPS"
     port = 443
@@ -68,3 +70,8 @@ class SSH(ServiceFingerPrint):
                  f'-o StrictModes=no '
                  f'-o HostKey={key_path} '
                  f'> /dev/null 2>&1 &')
+
+    def stop_daemon(self, host) -> None:
+        pid_file = f'/tmp/sshd-{host.name}.pid'
+        host.cmd(f'[ -f {pid_file} ] && kill $(cat {pid_file}) 2>/dev/null || true')
+        host.cmd(f'rm -f {pid_file} /tmp/sshd-{host.name}-key /tmp/sshd-{host.name}-key.pub')

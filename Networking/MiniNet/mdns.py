@@ -3,6 +3,7 @@ import re
 import subprocess
 import signal
 import atexit
+import textwrap
 
 _publish_procs: dict[str, subprocess.Popen] = {}
 
@@ -13,8 +14,17 @@ HOSTS_MARKER_END = '# virtunet-end'
 AVAHI_CONF_PATH = '/etc/avahi/avahi-daemon.conf'
 AVAHI_INTERFACE  = 's1'
 
+_resolved_original_state: str | None = None
+
 def setup_avahi():
     resolved_conf = '/etc/systemd/resolved.conf'
+    global _resolved_original_state
+
+    if os.path.exists(resolved_conf):
+        with open(resolved_conf, 'r') as f:
+            _resolved_original_state = f.read()
+    else:
+        _resolved_original_state = None
 
     if not os.path.exists(resolved_conf):
         os.makedirs('/etc/systemd', exist_ok=True)
@@ -23,12 +33,12 @@ def setup_avahi():
     else:
         with open(resolved_conf, 'r') as f:
             content = f.read()
-        if re.search(r'#?\s*MulticastDNS=', content):
-            content = re.sub(r'#?\s*MulticastDNS=\S+', 'MulticastDNS=no', content)
-        elif '[Resolve]' in content:
-            content = content.replace('[Resolve]', '[Resolve]\nMulticastDNS=no', 1)
-        else:
-            content += '\n[Resolve]\nMulticastDNS=no\n'
+
+        if '[Resolve]' not in content:
+            content += '\n[Resolve]\n'
+        content = re.sub(r'#?\s*MulticastDNS=\S+', '', content)
+        content += 'MulticastDNS=no\n'
+
         with open(resolved_conf, 'w') as f:
             f.write(content)
 
@@ -37,27 +47,29 @@ def setup_avahi():
         print('*** Disabled systemd-resolved mDNS to avoid port 5353 conflict')
 
     os.makedirs('/etc/avahi', exist_ok=True)
-    avahi_conf = f"""[server]
-use-ipv4=yes
-use-ipv6=no
-allow-interfaces={AVAHI_INTERFACE}
-ratelimit-interval-usec=1000000
-ratelimit-burst=1000
+    avahi_conf = textwrap.dedent(f"""\
+            [server]
+            use-ipv4=yes
+            use-ipv6=no
+            allow-interfaces={AVAHI_INTERFACE}
+            ratelimit-interval-usec=1000000
+            ratelimit-burst=1000
+            
+            [wide-area]
+            enable-wide-area=no
+            
+            [publish]
+            publish-addresses=yes
+            publish-hinfo=no
+            publish-workstation=no
+            publish-domain=yes
+            
+            [reflector]
+            enable-reflector=no
+            
+            [rlimits]
+        """)
 
-[wide-area]
-enable-wide-area=no
-
-[publish]
-publish-addresses=yes
-publish-hinfo=no
-publish-workstation=no
-publish-domain=yes
-
-[reflector]
-enable-reflector=no
-
-[rlimits]
-"""
     with open(AVAHI_CONF_PATH, 'w') as f:
         f.write(avahi_conf)
     print(f'*** Wrote avahi config (interface: {AVAHI_INTERFACE})')
@@ -73,6 +85,21 @@ enable-reflector=no
         print('Run: systemctl status avahi-daemon  for details.')
     else:
         print('*** avahi-daemon running')
+
+def teardown_avahi():
+    subprocess.run(['systemctl', 'stop', 'avahi-daemon'], capture_output=True)
+    subprocess.run(['systemctl', 'disable', 'avahi-daemon'], capture_output=True)
+    print('*** avahi-daemon stopped and disabled')
+
+    resolved_conf = '/etc/systemd/resolved.conf'
+    if _resolved_original_state is not None:
+        with open(resolved_conf, 'w') as f:
+            f.write(_resolved_original_state)
+    else:
+        os.remove(resolved_conf)
+    subprocess.run(['systemctl', 'restart', 'systemd-resolved'], capture_output=True)
+    print('*** Restored systemd-resolved config')
+
 
 def _ensure_avahi_ready():
     result = subprocess.run(

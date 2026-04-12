@@ -33,7 +33,7 @@ class iOS(OSFingerprint):
     name = "ios"
     aliases = ["ios", "iphone", "ipad", "ipados", "ios9"]
     tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK', 'EOL', 'EOL']
-    probe_responses = [False, False, False, True, False]
+    probe_responses = [False, False, False, True, True]
 
     ttl = 64
     tcp_timestamps = 1
@@ -45,13 +45,13 @@ class iOS(OSFingerprint):
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 75
     tcp_keepalive_probes = 9
-    df_bit = 0
-    tcp_window_size = 65535
+    df_bit = 1
+    tcp_window_size = 2896
     tcp_mss = 1460
-    tcp_wscale = 5
-    ip_id_random = 1
-    tcp_ip_id_zero = 0
+    tcp_wscale = 6
+    ip_id_random = 0
+    tcp_ip_id_zero = 1
     icmp_ip_id_ri = 1
-    tcp_ecn = 0
+    tcp_ecn = 1
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"

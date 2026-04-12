@@ -72,6 +72,7 @@ class MininetNetwork:
         self._net = None
         self._hosts = {}
         self._daemon_procs = {}
+        self._host_services = {}
         self._start_time = None
 
     def get_net(self):
@@ -113,6 +114,7 @@ class MininetNetwork:
                     self._daemon_procs[h.name] = proc
 
         for h, device in hosted_hosts.items():
+            self._host_services[h.name] = device.services
             for service in device.services:
                 service.apply(h)
 
@@ -202,6 +204,13 @@ class MininetNetwork:
                 continue
         self._daemon_procs.clear()
         stop_all_mdns()
+
+        for host_name, services in self._host_services.items():
+            host = self._net.get(host_name)
+            if host:
+                for service in services:
+                    service.stop_daemon(host)
+        self._host_services.clear()
 
         if self._net is not None:
             for host in self._net.hosts:

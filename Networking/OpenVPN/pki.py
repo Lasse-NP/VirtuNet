@@ -1,6 +1,8 @@
 import os
 import sys
 import re
+import textwrap
+
 from Networking.config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE
 from .network import get_local_ip
 from .serverconfig import write_server_conf
@@ -107,47 +109,48 @@ def gen_client(name, port=1194):
     key = _pem_block(read(f'{PKI_DIR}/private/{name}.key'), "PRIVATE KEY")
     tls_key = read(f'{BASE_DIR}/ta.key')
 
-    traineeconfig = f"""client
-dev tap
-dev-type tap
-proto udp
-remote {server_ip} {port}
-
-disable-dco
-
-resolv-retry infinite
-nobind
-persist-key
-persist-tun
-
-cipher AES-256-GCM
-auth SHA256
-tls-version-min 1.2
-key-direction 1
-verb 3
-
-<ca>
-{ca}
-</ca>
-
-<cert>
-{cert}
-</cert>
-
-<key>
-{key}
-</key>
-
-<tls-auth>
-{tls_key}
-</tls-auth>
-"""
+    trainee_config = textwrap.dedent(f"""\
+        client
+        dev tap
+        dev-type tap
+        proto udp
+        remote {server_ip} {port}
+        
+        disable-dco
+        
+        resolv-retry infinite
+        nobind
+        persist-key
+        persist-tun
+        
+        cipher AES-256-GCM
+        auth SHA256
+        tls-version-min 1.2
+        key-direction 1
+        verb 3
+        
+        <ca>
+        {ca}
+        </ca>
+        
+        <cert>
+        {cert}
+        </cert>
+        
+        <key>
+        {key}
+        </key>
+        
+        <tls-auth>
+        {tls_key}
+        </tls-auth>
+    """)
 
     out_path = f'{CLIENT_DIR}/{name}.ovpn'
     with open(out_path, 'w') as f:
-        f.write(traineeconfig)
+        f.write(trainee_config)
 
-    return traineeconfig
+    return trainee_config
 
 
 def remove_connected_client(name):

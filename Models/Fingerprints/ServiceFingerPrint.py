@@ -14,3 +14,9 @@ class ServiceFingerPrint:
 
     def start_daemon(self, host) -> None:
         pass
+
+    def stop_daemon(self, host) -> None:
+        if self.protocol == 'tcp':
+            host.cmd(f'fuser -k {self.port}/tcp 2>/dev/null || true')
+        elif self.protocol == 'udp':
+            host.cmd(f'fuser -k {self.port}/udp 2>/dev/null || true')

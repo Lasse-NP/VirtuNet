@@ -5,7 +5,7 @@ class MacOS(OSFingerprint):
     name = "macos"
     aliases = ["mac", "osx", "macosx", "mac os", "mac os x", "darwin", "macos"]
     tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK', 'EOL', 'EOL']
-    probe_responses = [False, False, True, True, True]
+    probe_responses = [False, False, False, True, True]
 
     ttl = 64
     tcp_timestamps = 1
