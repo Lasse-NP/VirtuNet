@@ -43,6 +43,7 @@ def run_cleanup():
         _log('Closing MiniNet')
         teardown_topo()
         mininet_network.stop()
+        _run_labeled(['pkill', '-f', 'scapydaemon.py'])
         _run_labeled(['mn', '--clean'])
         _log('MiniNet Down')
 
