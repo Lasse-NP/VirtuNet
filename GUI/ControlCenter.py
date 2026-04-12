@@ -114,6 +114,9 @@ def render_pipeline():
 def control_center_page():
     ui.dark_mode().enable()
 
+    global start_initiated
+    start_initiated = False
+
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/ControlCenter.css">')
     ui.add_head_html('''
@@ -185,16 +188,19 @@ def control_center_page():
         drawer.show()
 
     def refresh_stats():
-        host = current_drawer_host['host']
-        if host is None or not drawer.value:
-            return
-        stats = mininet_network.get_host_stats(host.name)
-        rx_pkts = stats.get('rx_packets', 0)
-        rx_bytes = stats.get('rx_bytes', 0)
-        tx_pkts = stats.get('tx_packets', 0)
-        tx_bytes = stats.get('tx_bytes', 0)
-        drawer_traffic_rx.set_text(f'RX {rx_pkts} pkts / {rx_bytes} B')
-        drawer_traffic_tx.set_text(f'TX {tx_pkts} pkts / {tx_bytes} B')
+        try:
+            host = current_drawer_host['host']
+            if host is None or not drawer.value:
+                return
+            stats = mininet_network.get_host_stats(host.name)
+            rx_pkts = stats.get('rx_packets', 0)
+            rx_bytes = stats.get('rx_bytes', 0)
+            tx_pkts = stats.get('tx_packets', 0)
+            tx_bytes = stats.get('tx_bytes', 0)
+            drawer_traffic_rx.set_text(f'RX {rx_pkts} pkts / {rx_bytes} B')
+            drawer_traffic_tx.set_text(f'TX {tx_pkts} pkts / {tx_bytes} B')
+        except Exception:
+            pass
 
     ui.timer(3.0, refresh_stats)
 
@@ -241,18 +247,23 @@ def control_center_page():
 
     async def reboot_network():
         init_started()
-        raw = app.storage.user.get('selected_hosts', [])
-        host_list = deserialize_hosts(raw)
-        if not host_list:
-            ui.notify('No host list found!', type = 'negative')
-            return
-        teardown_topo()
-        mininet_network.stop()
-        await asyncio.to_thread(mininet_network.configuration, host_list)
-        device_states.clear()
-        render_devices()
-        ui.notify('Network rebooted', type = 'positive')
-        init_stopped()
+        try:
+            raw = app.storage.user.get('selected_hosts', [])
+            host_list = deserialize_hosts(raw)
+            if not host_list:
+                ui.notify('No host list found!', type='negative')
+                init_stopped()
+                return
+            teardown_topo()
+            mininet_network.stop()
+            await asyncio.to_thread(mininet_network.configuration, host_list)
+            device_states.clear()
+            render_devices()
+            ui.notify('Network rebooted', type='positive')
+        except Exception as e:
+            ui.notify(str(e), type='negative')
+        finally:
+            init_stopped()
 
     async def end_session():
         try:
@@ -264,19 +275,17 @@ def control_center_page():
             disabled = sum(1 for v in device_states.values() if not v)
 
             app.storage.user['report'] = {
-            'found_devices': disabled,
-            'missing_devices': total_devices - disabled,
-            'session_duration': uptime,
-            'avg_time_per_device': uptime // disabled if disabled else 0,
+                'found_devices': disabled,
+                'missing_devices': total_devices - disabled,
+                'session_duration': uptime,
+                'avg_time_per_device': uptime // disabled if disabled else 0,
             }
             await asyncio.to_thread(run_cleanup)
             lobby_module.reset_join_server()
             ui.navigate.to('/AfterActionReport')
-        except RuntimeError as e:
-            init_stopped()
+        except Exception as e:
             ui.notify(str(e), type='negative')
-
-
+            init_stopped()
 
     with ui.right_drawer(fixed=True, bordered=False, elevated=True).style(
             'background-color: #3a3a3a; width: 220px;'
@@ -308,7 +317,7 @@ def control_center_page():
 
             render_devices()
             render_pipeline()
-            ui.timer(5.0, render_pipeline.refresh)
+            ui.timer(3.0, render_pipeline.refresh)
 
             with ui.element('div').classes('bottom-row'):
                 return_btn = ui.button('Trainees',  on_click=lambda: ui.navigate.to('/Lobby')).classes('btn-return').props('flat')

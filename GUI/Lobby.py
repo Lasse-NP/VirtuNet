@@ -34,24 +34,27 @@ def reset_join_server():
     _join_code = None
 
 def refresh_trainees():
-    connected = {c['name']: c for c in pki.get_connected_clients()}
-    for name, data in connected.items():
-        if name not in known_trainees:
-            known_trainees[name] = {
-                'name': name,
-                'connected': True,
-                'ip': data['ip'],
-                'connected_since': data['connected_since']
-            }
-    for name in known_trainees:
-        if name in connected:
-            known_trainees[name]['connected'] = True
-            known_trainees[name]['ip'] = connected[name]['ip']
-            known_trainees[name]['connected_since'] = connected[name]['connected_since']
-        else:
-            known_trainees[name]['connected'] = False
-            known_trainees[name]['ip'] = None
-            known_trainees[name]['connected_since'] = None
+    try:
+        connected = {c['name']: c for c in pki.get_connected_clients()}
+        for name, data in connected.items():
+            if name not in known_trainees:
+                known_trainees[name] = {
+                    'name': name,
+                    'connected': True,
+                    'ip': data['ip'],
+                    'connected_since': data['connected_since']
+                }
+        for name in known_trainees:
+            if name in connected:
+                known_trainees[name]['connected'] = True
+                known_trainees[name]['ip'] = connected[name]['ip']
+                known_trainees[name]['connected_since'] = connected[name]['connected_since']
+            else:
+                known_trainees[name]['connected'] = False
+                known_trainees[name]['ip'] = None
+                known_trainees[name]['connected_since'] = None
+    except Exception as e:
+        print(f'[VirtuNet] WARNING: refresh_trainees failed: {e}')
 
 
 def render_trainees(trainees_list):
@@ -172,7 +175,7 @@ def create_lobby():
             trainee_list = ui.list().props('bordered separator').style(
                 'width: 100%; background-color: #383838').classes('trainee_list')
             render_trainees(trainee_list)
-            ui.timer(10.0, lambda: [refresh_trainees(), render_trainees(trainee_list)])
+            ui.timer(3.0, lambda: [refresh_trainees(), render_trainees(trainee_list)])
 
         with ui.column().style(
                 'width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):

@@ -1,5 +1,6 @@
 import subprocess
 
+from Networking.MiniNet.mdns import teardown_avahi
 from Networking.MiniNet.mininet import mininet_network, teardown_topo
 from Networking.OpenVPN.server import openvpn_server
 from Networking.config import BASE_DIR
@@ -47,6 +48,7 @@ def run_cleanup():
 
     openvpn_server.stop()
     stop_join_server()
+    teardown_avahi()
 
     if os.path.exists(BASE_DIR):
         shutil.rmtree(BASE_DIR)

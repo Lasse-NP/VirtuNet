@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 from GUI import SessionSetting
+from GUI.ErrorPage import redirect_to_error
 from Models.Fingerprints.OS.Linux import Linux, AndroidTV
 from Models.Fingerprints.OS.Windows import Windows
 from Models.Fingerprints.OS.Mobile import iOS, Android
@@ -39,6 +40,9 @@ def build_devices_from_host_list():
 @ui.page('/CustomSetup')
 def custom_setup_page():
     ui.dark_mode().enable()
+
+    global start_initiated
+    start_initiated = False
 
     app.add_static_files('/CSS', str(get_base_path() / 'CSS'))
     ui.add_head_html('<link rel="stylesheet" href="/CSS/CustomSetup.css">')
@@ -95,6 +99,10 @@ def custom_setup_page():
             if idx is None:
                 return
 
+            if not os_select.value or not latency_select.value:
+                ui.notify('Please select an OS and latency mode.', type='warning')
+                return
+
             name = name_input.value
             mac = mac_input.value
             os = OS_OPTIONS[os_select.value]()
@@ -135,16 +143,45 @@ def custom_setup_page():
         drawer.show()
 
     async def start_from_custom():
+        init_started()
         try:
-            init_started()
             await asyncio.to_thread(openvpn_server.initialize)
             ui.notify('Starting OpenVPN...')
+        except Exception as e:
+            print(f"[VirtuNet] ERROR: OpenVPN initialization failed: {e}")
+            init_stopped()
+            redirect_to_error(
+                title='OpenVPN Failed to Start',
+                message=(
+                    f'The OpenVPN server could not be initialized.\n\n'
+                    f'Error: {e}\n\n'
+                    f'Ensure OpenVPN is installed and the PKI directory is accessible.'
+                ),
+                back_to='/Session',
+                cleanup_on_back=False,
+            )
+            return
+
+        try:
             await asyncio.to_thread(mininet_network.configuration, SessionSetting.host_list)
             ui.notify('Configuring MiniNet...')
-            ui.navigate.to('/Lobby')
-        except RuntimeError as e:
+        except Exception as e:
+            print(f"[VirtuNet] ERROR: Mininet configuration failed: {e}")
             init_stopped()
-            ui.notify(str(e), type='negative')
+            redirect_to_error(
+                title='Network Configuration Failed',
+                message=(
+                    f'Mininet could not configure the virtual network.\n\n'
+                    f'Error: {e}\n\n'
+                    f'Try running "mn -c" in a terminal to clean up stale state, '
+                    f'then retry.'
+                ),
+                back_to='/Session',
+                cleanup_on_back=True,
+            )
+            return
+
+        ui.navigate.to('/Lobby')
 
     def init_started():
         global start_initiated

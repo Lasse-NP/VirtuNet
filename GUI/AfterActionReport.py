@@ -3,6 +3,7 @@ from nicegui import app
 from pathlib import Path
 import sys
 
+from Networking.MiniNet.mdns import setup_avahi
 from Networking.cleanup import reset_clean_state
 
 def get_base_path():
@@ -33,6 +34,7 @@ def after_action_report_page():
 
     def reset_session():
         reset_clean_state()
+        setup_avahi()
         ui.navigate.to('/')
 
     with ui.element('div').classes('aar-wrapper'):
