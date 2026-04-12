@@ -34,5 +34,5 @@ if __name__ == '__main__':
     app.on_shutdown(on_shutdown)
     app.native.window_args['min_size'] = (550, 1000)
     app.native.start_args['icon'] = 'GUI/Assets/VirtuNetIcon.png'
-    ui.run(native=True, reload=False, window_size=(600, 1000), title='VirtuNet', storage_secret='my-super-secret-key-123')
+    ui.run(native=True, reload=False, window_size=(1000, 1000), title='VirtuNet', storage_secret='my-super-secret-key-123')
     run_cleanup()

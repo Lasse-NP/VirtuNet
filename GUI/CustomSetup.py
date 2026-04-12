@@ -26,6 +26,7 @@ LATENCY_MODES = ['Far', 'Near', 'Medium', 'None']
 def build_devices_from_host_list():
     return [
         {
+            'id':       host.id,
             'name':     host.name,
             'os':       host.os,
             'mac':      host.macAddress,
@@ -88,11 +89,23 @@ def custom_setup_page():
             'SSH': SSH,
         }
 
+        id_input = ui.number(label='ID', min=1, precision=0).style('width: 100%;')
         name_input = ui.input(label='Name').style('width: 100%;')
         mac_input = ui.input(label='Mac Addess').style('width: 100%;')
         os_select = ui.select(list(OS_OPTIONS.keys()), label='OS').style('width: 100%;')
         latency_select = ui.select(LATENCY_MODES, label='Latency Mode').style('width: 100%;')
         services_select = ui.select(list(SERVICE_OPTIONS.keys()), multiple=True, label='Services').style('width: 100%; flex: 1;').props('use-chips')
+
+        def open_drawer(idx):
+            selected_device['index'] = idx
+            dev = devices[idx]
+            id_input.set_value(dev['id'])
+            name_input.set_value(dev['name'])
+            mac_input.set_value(dev['mac'])
+            os_select.set_value(type(dev['os']).__name__)
+            latency_select.set_value(dev['latency'])
+            services_select.set_value([type(s).__name__ for s in dev['services']])
+            drawer.show()
 
         def update_device():
             idx = selected_device['index']
@@ -103,44 +116,49 @@ def custom_setup_page():
                 ui.notify('Please select an OS and latency mode.', type='warning')
                 return
 
-            name = name_input.value
-            mac = mac_input.value
-            os = OS_OPTIONS[os_select.value]()
-            latency = latency_select.value
-            services = [SERVICE_OPTIONS[s]() for s in (services_select.value or [])]
+            input_id = int(id_input.value or 0)
+            input_name = name_input.value
+            input_mac = mac_input.value
+            input_os = OS_OPTIONS[os_select.value]()
+            input_latency = latency_select.value
+            input_services = [SERVICE_OPTIONS[s]() for s in (services_select.value or [])]
 
-            if len(name) > 10:
+            if input_id < 1:
+                ui.notify('ID must be 1 or greater.', type='warning')
+                return
+
+            if len(input_name) > 10:
                 ui.notify("Name cannot be above 10 characters.", type='negative')
                 return
 
-            devices[idx]['name'] = name
-            devices[idx]['mac'] = mac
-            devices[idx]['os'] = os
-            devices[idx]['latency'] = latency
-            devices[idx]['services'] = services
+            old_id = devices[idx]['id']
+            if input_id != old_id:
+                for other in devices:
+                    if other is not devices[idx] and other['id'] == input_id:
+                        other['id'] = old_id
+                        other['_host'].id = old_id
+                        break
+
+            devices[idx]['id'] = input_id
+            devices[idx]['name'] = input_name
+            devices[idx]['mac'] = input_mac
+            devices[idx]['os'] = input_os
+            devices[idx]['latency'] = input_latency
+            devices[idx]['services'] = input_services
 
             host = devices[idx]['_host']
-            host.name = name
-            host.macAddress = mac
-            host.os = os
-            host.latency = latency
-            host.services = services
+            host.id = input_id
+            host.name = input_name
+            host.macAddress = input_mac
+            host.os = input_os
+            host.latency = input_latency
+            host.services = input_services
 
             drawer.hide()
             render_devices()
             ui.notify('Device updated!', type='positive')
 
         ui.button('Update', on_click=update_device).classes('btn-update').props('flat')
-
-    def open_drawer(idx):
-        selected_device['index'] = idx
-        dev = devices[idx]
-        name_input.set_value(dev['name'])
-        mac_input.set_value(dev['mac'])
-        os_select.set_value(type(dev['os']).__name__)
-        latency_select.set_value(dev['latency'])
-        services_select.set_value([type(s).__name__ for s in dev['services']])
-        drawer.show()
 
     async def start_from_custom():
         init_started()
@@ -210,8 +228,9 @@ def custom_setup_page():
             def render_devices():
                 device_container.clear()
                 with device_container:
-                    for i, dev in enumerate(devices):
+                    for i, dev in sorted(enumerate(devices), key=lambda x: x[1]['id']):
                         with ui.element('div').classes('device-row initiated' if start_initiated else 'device-row'):
+                            ui.html(f'<span class="dev-id">{dev["id"]}</span>')
                             ui.html(f'<span class="dev-name">{dev["name"]}</span>')
                             ui.html(f'<span class="dev-os">{type(dev["os"]).__name__}</span>')
                             ui.html(f'<span class="dev-latency">{dev["latency"]}</span>')

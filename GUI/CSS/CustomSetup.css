@@ -67,8 +67,13 @@ body {
     padding: 10px;
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr auto;
+    grid-template-columns: 0.2fr 2fr 1fr 1fr auto;
     gap: 6px;
+}
+
+.dev-id {
+    font-size: 16px;
+    font-weight: 900;
 }
 
 .device-row {

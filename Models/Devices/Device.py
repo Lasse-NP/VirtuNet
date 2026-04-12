@@ -3,6 +3,7 @@ from Models.Fingerprints.Services import HTTP, HTTPS
 
 class Device:
     def __init__(self, name, os, macAddressPrefix, services):
+        self.id = 0
         self.name = name
         self.os = os
         self.services = services if services is not None else [HTTP(), HTTPS()]
@@ -18,6 +19,7 @@ class Device:
     def to_dict(self):
         return {
             'type': type(self).__name__,
+            'id': self.id,
             'name': self.name,
             'os': type(self.os).__name__,
             'latency': self.latency,

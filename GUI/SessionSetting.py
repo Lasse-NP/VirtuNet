@@ -69,6 +69,10 @@ def build_host_list():
             continue
         for _ in range(row['count']):
             hosts.append(device_class())
+
+    for i, host in enumerate(hosts, start=1):
+        host.id = i
+
     return hosts
 
 def get_available_device_options(current_row_idx, vendor_class):
@@ -82,6 +86,10 @@ def get_available_device_options(current_row_idx, vendor_class):
         for cls in vendor_class.__subclasses__()
         if cls not in already_chosen
     ]
+
+def reset_session_rows():
+    session_rows.clear()
+    host_list.clear()
 
 def render_devices(devices_list):
     devices_list.clear()
@@ -184,7 +192,7 @@ def session_settings_page():
     ui.dark_mode().enable()
 
     # Clear Previous States
-    global start_initiated, delete_mode
+    global start_initiated, delete_mode, device_list
     start_initiated = False
     delete_mode = False
 
@@ -198,7 +206,30 @@ def session_settings_page():
             });
         </script>
         ''')
-    global device_list
+
+    def init_started():
+        global start_initiated
+        global delete_mode
+        delete_mode = False
+        start_initiated = True
+        remove_btn.disable()
+        add_btn.disable()
+        custom_btn.disable()
+        start_btn.disable()
+        preset_select.disable()
+        loading_indicator.style('display: block;')
+        render_devices(device_list)
+
+    def init_stopped():
+        global start_initiated
+        start_initiated = False
+        remove_btn.enable()
+        add_btn.enable()
+        custom_btn.enable()
+        start_btn.enable()
+        preset_select.enable()
+        loading_indicator.style('display: none;')
+        render_devices(device_list)
 
     async def initialize_configure_and_go(custom: bool = False):
         global host_list
@@ -254,31 +285,6 @@ def session_settings_page():
             return
 
         ui.navigate.to('/Lobby')
-
-    def init_started():
-        global start_initiated
-        global delete_mode
-        delete_mode = False
-        start_initiated = True
-        remove_btn.disable()
-        add_btn.disable()
-        custom_btn.disable()
-        start_btn.disable()
-        preset_select.disable()
-        loading_indicator.style('display: block;')
-        render_devices(device_list)
-
-    def init_stopped():
-        global start_initiated
-        start_initiated = False
-        remove_btn.enable()
-        add_btn.enable()
-        custom_btn.enable()
-        start_btn.enable()
-        preset_select.enable()
-        loading_indicator.style('display: none;')
-        render_devices(device_list)
-
 
     with ui.column().style('height: calc(100vh - 50px); width: 100%;').classes('items-center'):
         with ui.column().style('width: 90%; height: 100%;').classes('items-center'):

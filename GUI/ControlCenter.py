@@ -54,7 +54,7 @@ def get_devices():
     result = []
     for i, (host, device) in enumerate(hosts.items()):
         result.append({
-            'id': i + 1,
+            'id': device.id,
             'device': host,
             'os': device.os,
             'ip': host.IP(),
@@ -81,6 +81,7 @@ def deserialize_hosts(raw_list):
         if cls is None:
             continue
         obj = cls.__new__(cls)
+        obj.id = d.get('id', 0)
         obj.name = d['name']
         obj.os = cls().os
         obj.latency = d.get('latency', 'None')
@@ -218,7 +219,7 @@ def control_center_page():
 
     def render_devices():
         device_container.clear()
-        current_devices = get_devices()
+        current_devices = sorted(get_devices(), key=lambda d: d['id'])
         with device_container:
             for i, dev in enumerate(current_devices):
                 with ui.element('div').classes('device-row'):
