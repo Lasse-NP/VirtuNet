@@ -28,7 +28,7 @@ class Android(OSFingerprint):
     tcp_rmem = "4096 87380 4194304"
     tcp_wmem = "4096 16384 4194304"
 
-# WORKING (NMAP 7.99)
+# WORKING (NMAP 7.99) (RESULT = Apple iOS 14.0 - 15.6)
 class iOS(OSFingerprint):
     name = "ios"
     aliases = ["ios", "iphone", "ipad", "ipados", "ios9"]

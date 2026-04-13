@@ -1,14 +1,14 @@
 from Models.Fingerprints.OSFingerprint import OSFingerprint
 
-# WORKING
+# WORKING (NMAP 7.99) (RESULT = Apple macOS 10.13 (High Sierra) - 10.15 (Catalina))
 class MacOS(OSFingerprint):
     name = "macos"
     aliases = ["mac", "osx", "macosx", "mac os", "mac os x", "darwin", "macos"]
-    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK', 'EOL', 'EOL']
-    probe_responses = [False, False, True, True, False]
+    tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK']
+    probe_responses = [False, False, True, True, True]
 
     ttl = 64
-    tcp_timestamps = 1
+    tcp_timestamps = 0
     tcp_options_timestamps = 1
     tcp_window_scaling = 1
     tcp_sack = 1
@@ -18,13 +18,16 @@ class MacOS(OSFingerprint):
     tcp_keepalive_intvl = 75
     tcp_keepalive_probes = 9
     df_bit = 1
-    rst_df_bit = 1
+    rst_ip_id = "rd"
+    rst_df_bit = 0
     tcp_window_size = 65535
     tcp_mss = 1460
     tcp_wscale = 6
     ip_id_random = 0
     tcp_ip_id_zero = 1
-    icmp_ip_id_ri = 0
+    icmp_ip_id = "rd"
+    icmp_echo_df = 1
+    icmp_unreach_ruck_zero = 1
     tcp_ecn = 0
     tcp_rmem = "4096 131072 33554432"
     tcp_wmem = "4096 131072 33554432"
