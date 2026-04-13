@@ -15,6 +15,10 @@ logging.basicConfig(
 
 ICMP_ERROR_TYPES = {3, 4, 5, 11, 12}
 
+TCP_FLAG_ECE     = 0x40   # ECN-Echo
+TCP_FLAG_CWR     = 0x80   # Congestion Window Reduced
+TCP_FLAGS_ECN_SYN = TCP_FLAG_ECE | TCP_FLAG_CWR  # both set on an ECN-capable SYN
+
 def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                   tcp_options_timestamps, tcp_wscale, tcp_mss,
                   tcp_window_size, df_bit, icmp_ip_id_ri, tcp_ecn):
@@ -81,7 +85,7 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                 is_syn = tcp.flags & 0x02 and not tcp.flags & 0x10
                 is_synack = tcp.flags & 0x12 == 0x12
 
-                if is_syn and (int(tcp.flags) & 0xC0) == 0xC0:
+                if is_syn and (int(tcp.flags) & TCP_FLAGS_ECN_SYN) == TCP_FLAGS_ECN_SYN:
                     ecn_connections.add((scapy_pkt[IP].src, tcp.sport, scapy_pkt[IP].dst, tcp.dport))
                     logging.debug(
                         f'ECN SYN tracked: {scapy_pkt[IP].src}:{tcp.sport} -> {scapy_pkt[IP].dst}:{tcp.dport}')
@@ -122,7 +126,7 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                 if is_synack:
                     reverse_key = (scapy_pkt[IP].dst, tcp.dport, scapy_pkt[IP].src, tcp.sport)
                     if tcp_ecn >= 2 and reverse_key in ecn_connections:
-                        tcp.flags = int(tcp.flags) | 0x40  # set ECE
+                        tcp.flags = int(tcp.flags) | TCP_FLAG_ECE  # set ECE
                         ecn_connections.discard(reverse_key)
                         logging.debug(f'Set ECE on SYN-ACK for {reverse_key}')
 

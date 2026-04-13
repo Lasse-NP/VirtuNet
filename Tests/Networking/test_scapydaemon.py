@@ -9,10 +9,10 @@ nfqueue_mock.NetfilterQueue = MagicMock()
 sys.modules['netfilterqueue'] = nfqueue_mock
 
 from scapy.layers.inet import IP, TCP
-from Networking.scapydaemon import make_callback
+from Networking.scapydaemon import make_callback, TCP_FLAG_ECE, TCP_FLAG_CWR
 
-ECN_FLAG_ECE = 0x40
-ECN_FLAG_CWR = 0x80
+ECN_FLAG_ECE = TCP_FLAG_ECE
+ECN_FLAG_CWR = TCP_FLAG_CWR
 FLAG_SYN     = 0x02
 FLAG_ACK     = 0x10
 FLAG_SYN_ACK = FLAG_SYN | FLAG_ACK
