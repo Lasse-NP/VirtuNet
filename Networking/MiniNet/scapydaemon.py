@@ -22,7 +22,8 @@ TCP_FLAGS_ECN_SYN = TCP_FLAG_ECE | TCP_FLAG_CWR  # both set on an ECN-capable SY
 
 def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                   tcp_options_timestamps, tcp_wscale, tcp_mss,
-                  tcp_window_size, df_bit, icmp_ip_id_ri, tcp_ecn):
+                  tcp_window_size, df_bit, icmp_ip_id_ri, tcp_ecn,
+                  rst_df_bit, rst_ack_seq_only):
     tcp_id_counter  = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     udp_id_counter  = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     icmp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
@@ -68,6 +69,9 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                 rewritten.append(('WScale', tcp_wscale))
             elif scapy_name == 'MSS':
                 rewritten.append(('MSS', tcp_mss))
+            elif scapy_name == 'SAckOK':
+                if 'SAckOK' in existing:
+                    rewritten.append(('SAckOK', existing['SAckOK']))
             elif scapy_name in existing:
                 rewritten.append((scapy_name, existing[scapy_name]))
             elif default_val is not None:
@@ -97,12 +101,16 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                 elif is_rst:
                     icmp_id_state[0] = _ri_step(icmp_id_state[0])
                     scapy_pkt[IP].id = icmp_id_state[0]
+                    if rst_df_bit == 0:
+                        scapy_pkt[IP].flags = 0
+                    elif rst_df_bit == 1:
+                        scapy_pkt[IP].flags = 'DF'
+                    if rst_ack_seq_only and is_rst:
+                        scapy_pkt[TCP].ack = scapy_pkt[TCP].seq
                 elif ip_id_random == 0:
                     scapy_pkt[IP].id = next(tcp_id_counter) % 65536
                 else:
                     scapy_pkt[IP].id = random.randint(1, 65536)
-
-
 
                 if (is_syn or is_synack) and options_order:
                     logging.debug(
@@ -191,13 +199,17 @@ if __name__ == '__main__':
     tcp_options_timestamps = config.get('tcp_options_timestamps', 0)
     tcp_wscale         = config.get('tcp_wscale', 8)
     df_bit             = config.get('df_bit', 1)
+    rst_df_bit         = config.get('rst_df_bit', 0)
+    rst_ack_seq_only   = config.get('rst_ack_seq_only', 0)
     queue_num          = config.get('queue_num', 1)
     icmp_ip_id_ri      = config.get('icmp_ip_id_ri', 0)
     tcp_ecn            = config.get('tcp_ecn', 0)
 
-    logging.info(f'Config: options_order={options_order}, ip_id_random={ip_id_random}, tcp_ip_id_zero={tcp_ip_id_zero}, tcp_window_size={tcp_window_size}')
+    logging.info(f'Config: options_order={options_order}, ip_id_random={ip_id_random}, tcp_ip_id_zero={tcp_ip_id_zero}, tcp_window_size={tcp_window_size}, tcp_mss={tcp_mss}')
     nfq = NetfilterQueue()
-    nfq.bind(queue_num, make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_timestamps, tcp_wscale, tcp_mss, tcp_window_size, df_bit, icmp_ip_id_ri, tcp_ecn))
+    nfq.bind(queue_num, make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_timestamps,
+                                      tcp_wscale, tcp_mss, tcp_window_size, df_bit, rst_df_bit,
+                                      rst_ack_seq_only, icmp_ip_id_ri, tcp_ecn))
     logging.info(f'Bound to NFQUEUE {queue_num}, running...')
     try:
         nfq.run()

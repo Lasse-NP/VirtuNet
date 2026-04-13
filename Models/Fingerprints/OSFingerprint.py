@@ -17,6 +17,8 @@ class OSFingerprint:
     tcp_options_order: list = None
     ttl: int = 64
     df_bit: int = 1
+    rst_df_bit: int = 0
+    rst_ack_seq_only: int = 0
     ip_id_random: int = 1
     tcp_ip_id_zero: int = 0
     icmp_ip_id_ri: int = 0
@@ -105,6 +107,8 @@ class OSFingerprint:
                 'tcp_mss': self.tcp_mss,
                 'tcp_window_size': self.tcp_window_size,
                 'df_bit': self.df_bit,
+                'rst_df_bit': self.rst_df_bit,
+                'rst_ack_seq_only': self.rst_ack_seq_only,
                 'queue_num': queue_num,
                 'icmp_ip_id_ri': self.icmp_ip_id_ri,
                 'tcp_ecn': self.tcp_ecn,
