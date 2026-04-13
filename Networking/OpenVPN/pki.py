@@ -109,42 +109,42 @@ def gen_client(name, port=1194):
     key = _pem_block(read(f'{PKI_DIR}/private/{name}.key'), "PRIVATE KEY")
     tls_key = read(f'{BASE_DIR}/ta.key')
 
-    trainee_config = textwrap.dedent(f"""\
-        client
-        dev tap
-        dev-type tap
-        proto udp
-        remote {server_ip} {port}
-        
-        disable-dco
-        
-        resolv-retry infinite
-        nobind
-        persist-key
-        persist-tun
-        
-        cipher AES-256-GCM
-        auth SHA256
-        tls-version-min 1.2
-        key-direction 1
-        verb 3
-        
-        <ca>
-        {ca}
-        </ca>
-        
-        <cert>
-        {cert}
-        </cert>
-        
-        <key>
-        {key}
-        </key>
-        
-        <tls-auth>
-        {tls_key}
-        </tls-auth>
-    """)
+    trainee_config = f"""
+client
+dev tap
+dev-type tap
+proto udp
+remote {server_ip} {port}
+
+disable-dco
+
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+
+cipher AES-256-GCM
+auth SHA256
+tls-version-min 1.2
+key-direction 1
+verb 3
+
+<ca>
+{ca}
+</ca>
+
+<cert>
+{cert}
+</cert>
+
+<key>
+{key}
+</key>
+
+<tls-auth>
+{tls_key}
+</tls-auth>
+"""
 
     out_path = f'{CLIENT_DIR}/{name}.ovpn'
     with open(out_path, 'w') as f:

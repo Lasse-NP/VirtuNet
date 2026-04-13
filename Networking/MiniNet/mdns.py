@@ -48,27 +48,27 @@ def setup_avahi():
 
     os.makedirs('/etc/avahi', exist_ok=True)
     avahi_conf = textwrap.dedent(f"""\
-            [server]
-            use-ipv4=yes
-            use-ipv6=no
-            allow-interfaces={AVAHI_INTERFACE}
-            ratelimit-interval-usec=1000000
-            ratelimit-burst=1000
-            
-            [wide-area]
-            enable-wide-area=no
-            
-            [publish]
-            publish-addresses=yes
-            publish-hinfo=no
-            publish-workstation=no
-            publish-domain=yes
-            
-            [reflector]
-            enable-reflector=no
-            
-            [rlimits]
-        """)
+[server]
+use-ipv4=yes
+use-ipv6=no
+allow-interfaces={AVAHI_INTERFACE}
+ratelimit-interval-usec=1000000
+ratelimit-burst=1000
+
+[wide-area]
+enable-wide-area=no
+
+[publish]
+publish-addresses=yes
+publish-hinfo=no
+publish-workstation=no
+publish-domain=yes
+
+[reflector]
+enable-reflector=no
+
+[rlimits]
+""")
 
     with open(AVAHI_CONF_PATH, 'w') as f:
         f.write(avahi_conf)
