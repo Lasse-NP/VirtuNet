@@ -106,8 +106,16 @@ class OSFingerprint:
                 'tcp_window_size': self.tcp_window_size,
                 'df_bit': self.df_bit,
                 'queue_num': queue_num,
-                'icmp_ip_id_ri': self.icmp_ip_id_ri
+                'icmp_ip_id_ri': self.icmp_ip_id_ri,
+                'tcp_ecn': self.tcp_ecn,
             })
+
+            if self.tcp_ecn >= 2:
+                host.cmd(
+                    f'iptables -t mangle -A PREROUTING -p tcp '
+                    f'--tcp-flags SYN,ACK,ECE,CWR SYN,ECE,CWR '
+                    f'-j NFQUEUE --queue-num {queue_num}'
+                )
 
             host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN -j NFQUEUE --queue-num {queue_num}')
             host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN,ACK -j NFQUEUE --queue-num {queue_num}')

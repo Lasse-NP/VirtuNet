@@ -3,6 +3,7 @@ import itertools
 import json
 import logging
 import random
+import subprocess
 import sys
 from scapy.layers.inet import TCP, IP, ICMP, UDP
 from netfilterqueue import NetfilterQueue
@@ -17,11 +18,13 @@ ICMP_ERROR_TYPES = {3, 4, 5, 11, 12}
 
 def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                   tcp_options_timestamps, tcp_wscale, tcp_mss,
-                  tcp_window_size, df_bit, icmp_ip_id_ri):
+                  tcp_window_size, df_bit, icmp_ip_id_ri, tcp_ecn):
     tcp_id_counter  = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     udp_id_counter  = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     icmp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     icmp_id_state   = [random.randint(1000, 30000)]
+
+    ecn_connections = set()
 
     def _ri_step(current_id):
         for _ in range(100):
@@ -74,7 +77,16 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
 
             if scapy_pkt.haslayer(TCP):
                 tcp = scapy_pkt[TCP]
+                is_syn = tcp.flags & 0x02 and not tcp.flags & 0x10
+                is_synack = tcp.flags & 0x12 == 0x12
                 is_rst = bool(tcp.flags & 0x04)
+
+                if is_syn and (int(tcp.flags) & 0xC0) == 0xC0:
+                    ecn_connections.add((scapy_pkt[IP].src, tcp.sport, scapy_pkt[IP].dst, tcp.dport))
+                    logging.debug(
+                        f'ECN SYN tracked: {scapy_pkt[IP].src}:{tcp.sport} -> {scapy_pkt[IP].dst}:{tcp.dport}')
+                    pkt.accept()
+                    return
 
                 if tcp_ip_id_zero and not is_rst:
                     scapy_pkt[IP].id = 0
@@ -86,8 +98,7 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                 else:
                     scapy_pkt[IP].id = random.randint(1, 65536)
 
-                is_syn = tcp.flags & 0x02 and not tcp.flags & 0x10
-                is_synack = tcp.flags & 0x12 == 0x12
+
 
                 if (is_syn or is_synack) and options_order:
                     logging.debug(
@@ -107,6 +118,12 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                     opts_serialized_len = len(bytes(TCP(options=tcp.options))) - 20
                     logging.debug(f'tcplen={len(bytes(TCP(options=tcp.options)))}')
                     logging.debug(f'opts={opts_serialized_len}')
+                    if is_synack:
+                        reverse_key = (scapy_pkt[IP].dst, tcp.dport, scapy_pkt[IP].src, tcp.sport)
+                        if tcp_ecn >= 2 and reverse_key in ecn_connections:
+                            tcp.flags = int(tcp.flags) | 0x40  # ECE
+                            ecn_connections.discard(reverse_key)
+                            logging.debug(f'Set ECE on SYN-ACK for {reverse_key}')
                     tcp.dataofs = (20 + opts_serialized_len) // 4
                     logging.debug(f'options_after={tcp.options} window={tcp.window} dataofs={tcp.dataofs}')
 
@@ -171,10 +188,11 @@ if __name__ == '__main__':
     df_bit             = config.get('df_bit', 1)
     queue_num          = config.get('queue_num', 1)
     icmp_ip_id_ri      = config.get('icmp_ip_id_ri', 0)
+    tcp_ecn            = config.get('tcp_ecn', 0)
 
     logging.info(f'Config: options_order={options_order}, ip_id_random={ip_id_random}, tcp_ip_id_zero={tcp_ip_id_zero}, tcp_window_size={tcp_window_size}')
     nfq = NetfilterQueue()
-    nfq.bind(queue_num, make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_timestamps, tcp_wscale, tcp_mss, tcp_window_size, df_bit, icmp_ip_id_ri))
+    nfq.bind(queue_num, make_callback(options_order, ip_id_random, tcp_ip_id_zero, tcp_options_timestamps, tcp_wscale, tcp_mss, tcp_window_size, df_bit, icmp_ip_id_ri, tcp_ecn))
     logging.info(f'Bound to NFQUEUE {queue_num}, running...')
     try:
         nfq.run()

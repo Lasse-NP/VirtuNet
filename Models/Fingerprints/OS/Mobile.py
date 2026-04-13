@@ -52,6 +52,6 @@ class iOS(OSFingerprint):
     ip_id_random = 0
     tcp_ip_id_zero = 1
     icmp_ip_id_ri = 1
-    tcp_ecn = 1
+    tcp_ecn = 2
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"
