@@ -142,6 +142,10 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                     pkt.accept()
                     return
 
+                if is_syn and not is_ecn_syn:
+                    pkt.accept()
+                    return
+
                 # ── IP ID assignment ──────────────────────────────────────────
                 old_id = scapy_pkt[IP].id
                 if tcp_ip_id_zero and not is_rst:

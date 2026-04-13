@@ -21,7 +21,7 @@ class Android(OSFingerprint):
     tcp_mss = 1460
     tcp_wscale = 6
     tcp_ip_id_zero = 1
-    tcp_ecn = 0
+    tcp_ecn = 2
     tcp_rmem = "4096 87380 4194304"
     tcp_wmem = "4096 16384 4194304"
     df_bit = 1

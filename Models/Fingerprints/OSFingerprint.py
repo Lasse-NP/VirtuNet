@@ -121,11 +121,13 @@ class OSFingerprint:
             })
 
             if self.tcp_ecn >= 2:
-                host.cmd(
+                cmd = (
                     f'iptables -t mangle -A PREROUTING -p tcp '
-                    f'--tcp-flags SYN,ACK,ECE,CWR SYN,ECE,CWR '
-                    f'-j NFQUEUE --queue-num {queue_num}'
+                    f'--syn -j NFQUEUE --queue-num {queue_num}'
                 )
+                print(f'*** [{host.name}] Running PREROUTING cmd: {cmd}')
+                result = host.cmd(cmd)
+                print(f'*** [{host.name}] PREROUTING result: "{result.strip()}"')
 
             host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN -j NFQUEUE --queue-num {queue_num}')
             host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN,ACK -j NFQUEUE --queue-num {queue_num}')
