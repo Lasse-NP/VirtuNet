@@ -8,6 +8,7 @@ import asyncio, sys
 from pathlib import Path
 
 from GUI.ErrorPage import redirect_to_error
+from Logic.Presets import PRESET_CONFIGS
 from Networking.MiniNet.mininet import mininet_network
 from Networking.OpenVPN.server import openvpn_server
 
@@ -32,28 +33,7 @@ def get_base_path():
 
 start_initiated = False
 delete_mode = False
-PRESETS = ['Home Setup', 'Office Setup', 'Dev Setup', 'Random']
-
-PRESET_CONFIGS = {
-    'Home Setup': [
-        {'count': 2, 'vendor_name': 'Apple',   'device_class': IPhone},
-        {'count': 1, 'vendor_name': 'Apple',   'device_class': MacBook},
-        {'count': 1, 'vendor_name': 'Samsung', 'device_class': SamsungFridge},
-        {'count': 1, 'vendor_name': 'Samsung', 'device_class': SamsungSmartTV},
-    ],
-    'Office Setup': [
-        {'count': 3, 'vendor_name': 'Apple',   'device_class': MacBook},
-        {'count': 2, 'vendor_name': 'Apple',   'device_class': IPhone},
-        {'count': 1, 'vendor_name': 'Desktops',    'device_class': WindowsComputer},
-    ],
-    'Dev Setup': [
-        {'count': 1, 'vendor_name': 'Apple',   'device_class': MacBook},
-        {'count': 1, 'vendor_name': 'Apple',   'device_class': AppleWatch},
-        {'count': 1, 'vendor_name': 'Sony',    'device_class': Playstation5},
-        {'count': 1, 'vendor_name': 'Samsung', 'device_class': GalaxyBook},
-    ],
-}
-
+PRESETS = ['HomeSetup', 'OfficeSetup', 'DevSetup', 'Random']
 session_rows = []
 host_list = []
 device_list: List | None = None
