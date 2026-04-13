@@ -26,6 +26,7 @@ class OSFingerprint:
     tcp_timestamps: int = 1
     tcp_options_timestamps: int = 0
     tcp_window_scaling: int = 1
+    tcp_wscale_always: int = 0
     tcp_wscale: int = 8
     tcp_sack: int = 1
     tcp_syn_retries: int = 6
@@ -106,6 +107,7 @@ class OSFingerprint:
                 'tcp_options_order': self.tcp_options_order,
                 'tcp_ip_id_zero': self.tcp_ip_id_zero,
                 'tcp_options_timestamps': self.tcp_options_timestamps,
+                'tcp_wscale_always': self.tcp_wscale_always,
                 'tcp_wscale': self.tcp_wscale,
                 'tcp_mss': self.tcp_mss,
                 'tcp_window_size': self.tcp_window_size,
@@ -120,14 +122,17 @@ class OSFingerprint:
                 'queue_num': queue_num,
             })
 
-            if self.tcp_ecn >= 2:
+            if self.tcp_ecn == 2:
                 cmd = (
                     f'iptables -t mangle -A PREROUTING -p tcp '
                     f'--syn -j NFQUEUE --queue-num {queue_num}'
                 )
                 print(f'*** [{host.name}] Running PREROUTING cmd: {cmd}')
                 result = host.cmd(cmd)
-                print(f'*** [{host.name}] PREROUTING result: "{result.strip()}"')
+                if result == "":
+                    print(f'*** [{host.name}] PREROUTING Success, ECN Active.')
+                else:
+                    print(f'*** [{host.name}] PREROUTING Failed: {result}')
 
             host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN -j NFQUEUE --queue-num {queue_num}')
             host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN,ACK -j NFQUEUE --queue-num {queue_num}')

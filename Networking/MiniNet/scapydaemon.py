@@ -20,7 +20,7 @@ TCP_FLAG_CWR = 0x80  # Congestion Window Reduced
 TCP_FLAGS_ECN_SYN = TCP_FLAG_ECE | TCP_FLAG_CWR  # both set on an ECN-capable SYN
 
 def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
-                  tcp_options_timestamps, tcp_wscale, tcp_mss,
+                  tcp_options_timestamps, tcp_wscale_always, tcp_wscale, tcp_mss,
                   tcp_window_size, df_bit, icmp_ip_id, tcp_ecn, rst_ip_id,
                   rst_df_bit, rst_ack_seq_only, icmp_echo_df, icmp_unreach_ruck_zero):
 
@@ -29,6 +29,7 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
     logging.info(f'  ip_id_random={ip_id_random}')
     logging.info(f'  tcp_ip_id_zero={tcp_ip_id_zero}')
     logging.info(f'  tcp_options_timestamps={tcp_options_timestamps}')
+    logging.info(f'  tcp_wscale_always={tcp_wscale_always}')
     logging.info(f'  tcp_wscale={tcp_wscale}')
     logging.info(f'  tcp_mss={tcp_mss} (0x{tcp_mss:X})')
     logging.info(f'  tcp_window_size={tcp_window_size} (0x{tcp_window_size:X})')
@@ -196,12 +197,14 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                     ws_present_in_incoming = 'WScale' in [opt[0] for opt in tcp.options]
                     logging.debug(f'  WScale present in incoming options: {ws_present_in_incoming}')
                     if not ws_present_in_incoming:
-                        if 'WS' in effective_order:
+                        if 'WS' in effective_order and not tcp_wscale_always:
                             ws_index = effective_order.index('WS')
                             before = effective_order[:]
                             effective_order = [o for i, o in enumerate(effective_order)
                                                if o != 'WS' and not (o == 'NOP' and i == ws_index - 1)]
                             logging.debug(f'  WScale stripped from effective_order: {before} -> {effective_order}')
+                        elif tcp_wscale_always:
+                            logging.debug(f'  WScale kept (tcp_wscale_always=1)')
                         else:
                             logging.debug(f'  WS not in effective_order, nothing to strip')
 
@@ -349,6 +352,7 @@ if __name__ == '__main__':
     tcp_mss            = config.get('tcp_mss', 1460)
     tcp_window_size    = config.get('tcp_window_size', 65536)
     tcp_options_timestamps = config.get('tcp_options_timestamps', 0)
+    tcp_wscale_always  = config.get('tcp_wscale_always', 0)
     tcp_wscale         = config.get('tcp_wscale', 8)
     df_bit             = config.get('df_bit', 1)
     rst_ip_id          = config.get('rst_ip_id', 'ri')
@@ -368,6 +372,7 @@ if __name__ == '__main__':
     logging.info(f'  tcp_mss={tcp_mss} (0x{tcp_mss:X})')
     logging.info(f'  tcp_window_size={tcp_window_size} (0x{tcp_window_size:X})')
     logging.info(f'  tcp_options_timestamps={tcp_options_timestamps}')
+    logging.info(f'  tcp_wscale_always={tcp_wscale_always}')
     logging.info(f'  tcp_wscale={tcp_wscale}')
     logging.info(f'  df_bit={df_bit}')
     logging.info(f'  rst_ip_id={rst_ip_id}')
@@ -381,7 +386,7 @@ if __name__ == '__main__':
 
     nfq = NetfilterQueue()
     nfq.bind(queue_num, make_callback(options_order, ip_id_random, tcp_ip_id_zero,
-                                      tcp_options_timestamps, tcp_wscale, tcp_mss,
+                                      tcp_options_timestamps, tcp_wscale_always, tcp_wscale, tcp_mss,
                                       tcp_window_size, df_bit, icmp_ip_id, tcp_ecn, rst_ip_id,
                                       rst_df_bit, rst_ack_seq_only, icmp_echo_df, icmp_unreach_ruck_zero))
     logging.info(f'Bound to NFQUEUE {queue_num}, running...')

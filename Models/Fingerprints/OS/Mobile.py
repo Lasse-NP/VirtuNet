@@ -19,6 +19,7 @@ class Android(OSFingerprint):
     tcp_keepalive_probes = 9
     tcp_window_size = 65535
     tcp_mss = 1460
+    tcp_wscale_always = 0
     tcp_wscale = 6
     tcp_ip_id_zero = 1
     tcp_ecn = 2
@@ -52,13 +53,17 @@ class iOS(OSFingerprint):
     tcp_keepalive_probes = 9
     df_bit = 1
     rst_df_bit = 0
+    rst_ip_id = "ri"
     rst_ack_seq_only = 1
     tcp_window_size = 65535
     tcp_mss = 1460
+    tcp_wscale_always = 0
     tcp_wscale = 5
     ip_id_random = 0
     tcp_ip_id_zero = 1
-    icmp_ip_id_ri = 0
+    icmp_ip_id = "ri"
+    icmp_echo_df = 1
+    icmp_unreach_ruck_zero = 1
     tcp_ecn = 0
     tcp_rmem = "4096 131072 8388608"
     tcp_wmem = "4096 131072 8388608"
