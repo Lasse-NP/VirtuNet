@@ -1,4 +1,8 @@
-from nicegui import ui, app
+import os
+
+import files
+import webview
+from nicegui import ui, app, native
 from nicegui.elements.list import List
 import asyncio, sys
 from pathlib import Path
@@ -18,7 +22,7 @@ from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungSmartTV
 from Models.Devices.Sony import Playstation5
 
 import random
-
+import pickle
 
 
 def get_base_path():
@@ -186,6 +190,26 @@ def render_devices(devices_list):
                     ui.button('+', on_click=make_increment(i)).classes('btn-small').props('flat dense').props('disabled' if start_initiated else '')
                     ui.button('−', on_click=make_decrement(i)).classes('btn-small').props('flat dense').props('disabled' if start_initiated else '')
 
+async def save_preset():
+    result = await app.native.main_window.create_file_dialog(
+        webview.FileDialog.SAVE, directory='Device_Presets', save_filename='test', file_types=["Pickle (*.pkl)"]
+    )
+    # Force the extension if not already there
+    file = str(result[0])
+    if not file.endswith(".pkl"):
+        file += ".pkl"
+    with open(file, "wb") as f:  # "wb" = write bytes
+        pickle.dump(session_rows, f)  # converts list → bytes → writes to file
+
+async def load_preset():
+    file = await app.native.main_window.create_file_dialog(allow_multiple=False, directory="Device_Presets", file_types=["Pickle (*.pkl)"])
+    print(file)
+    global session_rows
+    with open(file[0], "rb") as f:  # "rb" = read bytes
+        my_list = pickle.load(f)  # reads bytes → reconstructs your list
+    session_rows = my_list
+    render_devices(device_list)
+    print(session_rows)
 
 @ui.page('/Session')
 def session_settings_page():
@@ -357,9 +381,14 @@ def session_settings_page():
                     'font-family: "Orbitron", sans-serif; font-size: 14px; width: clamp(15rem, 15vw + 1rem, 30rem);'
                 ).props('outlined rounded').classes('preset-select')
                 custom_btn = ui.button('Customize', on_click=lambda: initialize_configure_and_go(True)).classes('btn-custom').props('flat')
+                with ui.row():
+                    save_preset_btn = ui.button('Save preset', on_click=lambda: save_preset()).classes('btn-custom').props('flat')
+                    load_preset_btn = ui.button('Load preset', on_click=lambda: load_preset()).classes('btn-custom').props('flat')
+
                 start_btn = ui.button('Start Server', on_click=lambda: initialize_configure_and_go(False)).classes('btn-start').props('flat')
 
                 loading_indicator = ui.element('div').style('position: fixed; bottom: 0; left: 0; width: 100%; display: none;').classes('loading-bar')
+
 
 if __name__ == '__main__':
     @ui.page('/')
