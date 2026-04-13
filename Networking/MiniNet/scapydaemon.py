@@ -94,9 +94,9 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
             elif scapy_name == 'SAckOK':
                 if 'SAckOK' in existing:
                     rewritten.append(('SAckOK', existing['SAckOK']))
-                    logging.debug(f'    injected SAckOK (peer offered it)')
                 else:
-                    logging.debug(f'    skipped SAckOK (peer did not offer it)')
+                    rewritten.append(('NOP', None))
+                    rewritten.append(('NOP', None))
             elif scapy_name in existing:
                 rewritten.append((scapy_name, existing[scapy_name]))
                 logging.debug(f'    kept {scapy_name}={existing[scapy_name]}')
@@ -150,8 +150,12 @@ def make_callback(options_order, ip_id_random, tcp_ip_id_zero,
                 elif is_rst:
                     if rst_ip_id == 'rd':
                         new_id = (icmp_id_state[0] + random.randint(20001, 40000)) % 65536
-                    else:  # 'ri'
+                    elif rst_ip_id == 'ri':
                         new_id = _ri_step(icmp_id_state[0])
+                    elif rst_ip_id == 'zero':
+                        new_id = 0
+                    else:
+                        new_id = next(tcp_id_counter) % 65536
                     icmp_id_state[0] = new_id
                     scapy_pkt[IP].id = new_id
                     logging.debug(f'  IP.id: {old_id} -> {new_id} (RST, rst_ip_id={rst_ip_id})')

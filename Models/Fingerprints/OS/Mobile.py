@@ -1,6 +1,6 @@
 from Models.Fingerprints.OSFingerprint import OSFingerprint
 
-# UNTESTED
+# WORKING (NMAP 7.99) (RESULT = Android 9 - 11)
 class Android(OSFingerprint):
     name = "android"
     aliases = ["android", "android 10", "android 11", "android 12", "android 13", "android 14"]
@@ -17,16 +17,21 @@ class Android(OSFingerprint):
     tcp_keepalive_time = 7200
     tcp_keepalive_intvl = 75
     tcp_keepalive_probes = 9
-    df_bit = 1
-    tcp_window_size = 43440
+    tcp_window_size = 65535
     tcp_mss = 1460
     tcp_wscale = 6
-    ip_id_random = 0
     tcp_ip_id_zero = 1
-    icmp_ip_id_ri = 0
     tcp_ecn = 0
     tcp_rmem = "4096 87380 4194304"
     tcp_wmem = "4096 16384 4194304"
+    df_bit = 1
+    rst_df_bit = 1
+    rst_ip_id = "seq"
+    ip_id_random = 0
+    icmp_ip_id = "seq"
+    icmp_echo_df = 0
+    icmp_unreach_ruck_zero = 0
+
 
 # WORKING (NMAP 7.99) (RESULT = Apple iOS 14.0 - 15.6)
 class iOS(OSFingerprint):
