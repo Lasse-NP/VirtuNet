@@ -160,12 +160,12 @@ def create_lobby():
 
         code_label = ui.label(code or '—').style(
             'font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
-        ip_label = ui.label(f'{ip}:{runtime_config["openvpn_port"]}').style(
+        ip_label = ui.label(f'{ip}:{runtime_config["join_server_port"]}').style(
             'font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
 
         if code is None:
             ui.notify(
-                f'Could not start join server on port {runtime_config["openvpn_port"]}. '
+                f'Could not start join server on port {runtime_config["join_server_port"]}. '
                 f'Another process is holding the port — check the console for the PID.',
                 type='negative',
                 timeout=0,
