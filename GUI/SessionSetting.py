@@ -171,6 +171,10 @@ def render_devices(devices_list):
                     ui.button('−', on_click=make_decrement(i)).classes('btn-small').props('flat dense').props('disabled' if start_initiated else '')
 
 async def save_preset():
+    if len(session_rows) <= 0:
+        ui.notify("No devices added")
+        return
+
     result = await app.native.main_window.create_file_dialog(
         webview.FileDialog.SAVE, directory='Device_Presets', save_filename='test', file_types=["Pickle (*.pkl)"]
     )
@@ -189,7 +193,6 @@ async def load_preset():
         my_list = pickle.load(f)  # reads bytes → reconstructs your list
     session_rows = my_list
     render_devices(device_list)
-    print(session_rows)
 
 @ui.page('/Session')
 def session_settings_page():
@@ -216,6 +219,8 @@ def session_settings_page():
         global delete_mode
         delete_mode = False
         start_initiated = True
+        save_preset_btn.disable()
+        load_preset_btn.disable()
         remove_btn.disable()
         add_btn.disable()
         custom_btn.disable()
@@ -227,6 +232,8 @@ def session_settings_page():
     def init_stopped():
         global start_initiated
         start_initiated = False
+        save_preset_btn.enable()
+        load_preset_btn.enable()
         remove_btn.enable()
         add_btn.enable()
         custom_btn.enable()
