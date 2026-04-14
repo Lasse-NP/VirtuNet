@@ -1,11 +1,10 @@
 import os
 import sys
 import re
-import textwrap
 
-from Networking.config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE
-from .network import get_local_ip
-from .serverconfig import write_server_conf
+from Networking.config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE, \
+    runtime_config
+from .network import get_server_ip
 from Networking.terminal import run
 from mininet.log import error, info
 
@@ -85,9 +84,11 @@ def _pem_block(text: str, kind: str) -> str:
     return m.group(0).strip()
 
 
-def gen_client(name, port=1194):
+def gen_client(name):
     easyrsa = EASYRSA_BIN
-    server_ip = get_local_ip()
+    server_ip = get_server_ip(runtime_config['lab_subnet'])
+    port = runtime_config['openvpn_port']
+
     print(f"[VirtuNet] User {name} is joining the Network.")
 
     if not os.path.isdir(PKI_DIR):

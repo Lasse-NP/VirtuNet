@@ -1,12 +1,19 @@
 import time
 
 from .mdns import stop_all_mdns
-from Networking.config import TAP_IFACE, LAB_SUBNET, LAB_SERVER_IP, LAB_PREFIX
-from Networking.OpenVPN.network import get_base_ip
+from Networking.config import TAP_IFACE, runtime_config
+from Networking.OpenVPN.network import get_base_ip, get_server_ip
 from Networking.terminal import run
 from mininet.net import Mininet
 from mininet.node import Controller, OVSBridge
 from mininet.link import TCLink
+
+def _server_ip() -> str:
+    return get_server_ip(runtime_config['lab_subnet'])
+
+
+def _prefix() -> str:
+    return runtime_config['lab_subnet'].split('/')[1]
 
 def verify_mininet():
     net = mininet_network.get_net()
@@ -25,7 +32,7 @@ def verify_bridge():
     if TAP_IFACE not in run('ovs-vsctl list-ports s1', check=False).stdout:
         return False
 
-    if LAB_SERVER_IP not in run('ip addr show s1', check=False).stdout:
+    if _server_ip() not in run('ip addr show s1', check=False).stdout:
         return False
 
     return True
@@ -41,12 +48,15 @@ def wait_for_tap(iface, timeout=30):
     raise RuntimeError(f'Timed out waiting for {iface} — is OpenVPN running?')
 
 def build_topo():
+    server_ip = _server_ip()
+    prefix = _prefix()
+
     wait_for_tap(TAP_IFACE)
     run(f'ovs-vsctl add-port s1 {TAP_IFACE}')
     run(f'ip link set {TAP_IFACE} promisc on')
     run(f'ip link set {TAP_IFACE} up')
-    run(f'ip addr del {LAB_SERVER_IP}/{LAB_PREFIX} dev {TAP_IFACE}', check=False)
-    run(f'ip addr add {LAB_SERVER_IP}/{LAB_PREFIX} dev s1')
+    run(f'ip addr del {server_ip}/{prefix} dev {TAP_IFACE}', check=False)
+    run(f'ip addr add {server_ip}/{prefix} dev s1')
     run(f'ip link set s1 up')
 
     run(f'ovs-ofctl add-flow s1 priority=100,arp,actions=flood')
@@ -55,10 +65,13 @@ def build_topo():
 
 
 def teardown_topo():
-    run(f'ip addr del {LAB_SERVER_IP}/{LAB_PREFIX} dev s1', check=False)
+    server_ip = _server_ip()
+    prefix = _prefix()
+
+    run(f'ip addr del {server_ip}/{prefix} dev s1', check=False)
     run(f'ovs-vsctl del-port s1 {TAP_IFACE}', check=False)
     run(f'ip link set {TAP_IFACE} promisc off', check=False)
-    run(f'ip addr add {LAB_SERVER_IP}/{LAB_PREFIX} dev {TAP_IFACE}', check=False)
+    run(f'ip addr add {server_ip}/{prefix} dev {TAP_IFACE}', check=False)
 
 LATENCY_MAP = {
     'None': '0ms',
@@ -87,7 +100,8 @@ class MininetNetwork:
         return int(time.time() - self._start_time) // 60
 
     def configuration(self, device_list):
-        base_ip = get_base_ip(LAB_SUBNET)
+        base_ip = get_base_ip(runtime_config['lab_subnet'])
+        prefix = _prefix()
 
         net = Mininet(controller=Controller, link=TCLink, switch=OVSBridge)
         self._net = net
@@ -96,7 +110,7 @@ class MininetNetwork:
 
         hosted_hosts = {}
         for index, device in enumerate(device_list, start=1):
-            ip = f'{base_ip}.{index + 2}/{LAB_PREFIX}'
+            ip = f'{base_ip}.{index + 2}/{prefix}'
             h = net.addHost(device.name, ip=ip, mac=device.macAddress)
             hosted_hosts[h] = device
             self._net.addLink(h, s1)

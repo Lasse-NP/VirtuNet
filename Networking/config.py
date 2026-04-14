@@ -21,7 +21,8 @@ LOG_FILE        = f'{BASE_DIR}/openvpn.log'
 STATUS_FILE     = f'{BASE_DIR}/openvpn-status.log'
 OPENVPN_PID     = f'{BASE_DIR}/openvpn.pid'
 
-LAB_SUBNET      = '192.168.100.0/24'
-LAB_SERVER_IP   = '192.168.100.1'
-LAB_PREFIX      = '24'
-
+runtime_config: dict = {
+    'lab_subnet':        '192.168.100.0/24',
+    'openvpn_port':      1194,
+    'join_server_port':  8080,
+}

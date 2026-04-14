@@ -9,13 +9,14 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from Networking.MiniNet.mininet import mininet_network
 from Networking.OpenVPN.network import get_local_ip
 from Networking.OpenVPN.pki import gen_client
+from Networking.config import runtime_config
+
 
 class ReusableHTTPServer(HTTPServer):
     def server_bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         super().server_bind()
 
-PORT = 8080
 _server: ReusableHTTPServer | None = None
 _thread: threading.Thread | None = None
 _active_code: str | None = None
@@ -113,12 +114,14 @@ def start_join_server() -> str | None:
     if _server:
         stop_join_server()
 
+    port = runtime_config['join_server_port']
+
     try:
         _active_code = _make_code()
-        _server = ReusableHTTPServer(("0.0.0.0", PORT), _Handler)
+        _server = ReusableHTTPServer(("0.0.0.0", port), _Handler)
     except OSError as e:
-        print(f"[VirtuNet] ERROR: Could not bind join server to port {PORT}: {e}")
-        _print_port_diagnostics(PORT)
+        print(f"[VirtuNet] ERROR: Could not bind join server to port {port}: {e}")
+        _print_port_diagnostics(port)
         _server = None
         _active_code = None
         return None
@@ -136,7 +139,7 @@ def start_join_server() -> str | None:
     except Exception:
         ip = "unknown"
 
-    print(f"[VirtuNet] Join server running on {ip}:{PORT}")
+    print(f"[VirtuNet] Join server running on {ip}:{port}")
     print(f"[VirtuNet] Join code: {_active_code}")
     return _active_code
 
