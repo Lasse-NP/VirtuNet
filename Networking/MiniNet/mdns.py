@@ -1,8 +1,6 @@
 import os
 import re
 import subprocess
-import signal
-import atexit
 import textwrap
 
 _publish_procs: dict[str, subprocess.Popen] = {}
