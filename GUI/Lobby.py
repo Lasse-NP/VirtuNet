@@ -6,6 +6,7 @@ from pathlib import Path
 from GUI.ErrorPage import redirect_to_error
 from Networking.OpenVPN import pki
 from Networking.OpenVPN.network import get_local_ip
+from Networking.config import runtime_config
 from Service.ConnectionHandler import start_join_server
 
 def get_base_path():
@@ -159,13 +160,13 @@ def create_lobby():
 
         code_label = ui.label(code or '—').style(
             'font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
-        ip_label = ui.label(ip).style(
+        ip_label = ui.label(f'{ip}:{runtime_config["openvpn_port"]}').style(
             'font-family: "Orbitron", sans-serif; font-size: 36px; font-weight: 700; color: #33F579;')
 
         if code is None:
             ui.notify(
-                'Could not start join server on port 8080. '
-                'Another process is holding the port — check the console for the PID.',
+                f'Could not start join server on port {runtime_config["openvpn_port"]}. '
+                f'Another process is holding the port — check the console for the PID.',
                 type='negative',
                 timeout=0,
             )
