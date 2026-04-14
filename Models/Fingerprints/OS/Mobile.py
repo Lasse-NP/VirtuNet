@@ -1,6 +1,6 @@
 from Models.Fingerprints.OSFingerprint import OSFingerprint
 
-# WORKING (NMAP 7.99) (RESULT = Android 9 - 11)
+# WORKING (NMAP 7.99) (RESULT = Android 9 - 11/Android 4.1 - 6.0)
 class Android(OSFingerprint):
     name = "android"
     aliases = ["android", "android 10", "android 11", "android 12", "android 13", "android 14"]
