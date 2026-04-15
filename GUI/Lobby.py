@@ -138,8 +138,8 @@ def create_lobby():
             message=(
                 f'The local network interface is unreachable.\n\n'
                 f'Error: {e}\n\n'
-                f'This usually means the tap interface or routing table is not ready. '
-                f'"mn -c" will run to clean up stale Mininet state on back.'
+                f'Something went wrong with setting up Tap (tap0) bridge. '
+                f'Program will run to clean up to remove stale Mininet state on back.'
             ),
             back_to='/Session',
             cleanup_on_back=True,
