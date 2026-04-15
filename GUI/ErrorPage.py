@@ -60,5 +60,4 @@ def redirect_to_error(title: str, message: str, back_to: str = '/Session', clean
     app.storage.user['error_message'] = message
     app.storage.user['error_back_to'] = back_to
     app.storage.user['error_cleanup_on_back'] = cleanup_on_back
-    app.storage.user.pop('error_retry_to', None)
     ui.navigate.to('/Error')
