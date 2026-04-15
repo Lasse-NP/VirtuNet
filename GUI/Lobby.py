@@ -2,12 +2,13 @@ from nicegui import ui, app
 from nicegui.elements.list import List
 import asyncio, sys
 from pathlib import Path
+import html as html_lib
 
 from GUI.ErrorPage import redirect_to_error
 from Networking.OpenVPN import pki
 from Networking.OpenVPN.network import get_local_ip
 from Networking.config import runtime_config
-from Service.ConnectionHandler import start_join_server
+from Service.ConnectionHandler import start_join_server, get_port_diagnostics
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -171,12 +172,22 @@ def create_lobby():
                 timeout=0,
             )
 
+        border_color = '#ef4444' if code is None else '#4a7cdc'
         with ui.element('div').style(
-                'flex: 1; width: 100%; max-width: 60rem; border: 4px solid #4a7cdc; overflow-y: auto; border-radius: 20px; background-color: #383838; min-height: 0;'):
-            trainee_list = ui.list().props('bordered separator').style(
-                'width: 100%; background-color: #383838').classes('trainee_list')
-            render_trainees(trainee_list)
-            ui.timer(3.0, lambda: [refresh_trainees(), render_trainees(trainee_list)])
+                f'flex: 1; width: 100%; max-width: 60rem; border: 4px solid {border_color}; overflow-y: auto; '
+                f'border-radius: 20px; background-color: #383838; min-height: 0;'):
+            if code is None:
+                diag = get_port_diagnostics() or 'No diagnostic information available.'
+                ui.html(
+                    f'<pre style="font-family: \'Courier New\', Courier, monospace; font-size: 12px; '
+                    f'color: #ef4444; white-space: pre-wrap; word-break: break-word; '
+                    f'padding: 16px; margin: 0;">{html_lib.escape(diag)}</pre>'
+                )
+            else:
+                trainee_list = ui.list().props('bordered separator').style(
+                    'width: 100%; background-color: #383838').classes('trainee_list')
+                render_trainees(trainee_list)
+                ui.timer(3.0, lambda: [refresh_trainees(), render_trainees(trainee_list)])
 
         with ui.column().style(
                 'width: 100%; justify-content: center; align-items: center; gap: 16px; padding: 16px 0; flex-shrink: 0;'):
@@ -184,10 +195,7 @@ def create_lobby():
             def retry_join_server():
                 new_code = open_join_server()
                 if new_code is not None:
-                    code_label.set_text(new_code)
-                    retry_btn.set_visibility(False)
-                    control_btn.enable()
-                    ui.notify('Join server started successfully.', type='positive')
+                    ui.navigate.to('/Lobby')
                 else:
                     ui.notify(
                         'Still could not bind port 8080. Check the console.',

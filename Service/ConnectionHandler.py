@@ -20,6 +20,7 @@ class ReusableHTTPServer(HTTPServer):
 _server: ReusableHTTPServer | None = None
 _thread: threading.Thread | None = None
 _active_code: str | None = None
+_port_diagnostics: str | None = None
 
 def _make_code(length=6) -> str:
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -79,37 +80,24 @@ class _Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
 
-def _print_port_diagnostics(port: int) -> None:
-    print(f"[VirtuNet] Diagnosing port {port} conflict:")
+def _generate_port_diagnostics(port: int) -> str:
+    lines = [f"Port {port} conflict diagnostics:"]
     try:
-        result = subprocess.run(
-            ["netstat", "-tlnp"],
-            capture_output=True,
-            text=True,
-        )
-        lines = [
+        result = subprocess.run(["netstat", "-tlnp"], capture_output=True, text=True)
+        matched = [
             line for line in result.stdout.splitlines()
             if f":{port}" in line or "Proto" in line or "Active" in line
         ]
-        if lines:
-            print("\n".join(lines))
-        else:
-            print(f"[VirtuNet] No netstat entries found for port {port}.")
-    except FileNotFoundError:
-        try:
-            result = subprocess.run(
-                ["ss", "-tlnp", f"sport = :{port}"],
-                capture_output=True,
-                text=True,
-            )
-            print(result.stdout or f"[VirtuNet] ss returned no output for port {port}.")
-        except Exception as e:
-            print(f"[VirtuNet] Could not run netstat or ss: {e}")
+        lines += matched if matched else [f"No netstat entries found for port {port}."]
     except Exception as e:
-        print(f"[VirtuNet] netstat failed: {e}")
+        lines.append(f"netstat failed: {e}")
+    return "\n".join(lines)
+
+def get_port_diagnostics() -> str | None:
+    return _port_diagnostics
 
 def start_join_server() -> str | None:
-    global _server, _thread, _active_code
+    global _server, _thread, _active_code, _port_diagnostics
 
     if _server:
         stop_join_server()
@@ -121,7 +109,8 @@ def start_join_server() -> str | None:
         _server = ReusableHTTPServer(("0.0.0.0", port), _Handler)
     except OSError as e:
         print(f"[VirtuNet] ERROR: Could not bind join server to port {port}: {e}")
-        _print_port_diagnostics(port)
+        _port_diagnostics = _generate_port_diagnostics(port)
+        print(_port_diagnostics)
         _server = None
         _active_code = None
         return None

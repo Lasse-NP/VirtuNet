@@ -5,7 +5,8 @@ import html as html_lib
 
 from nicegui import ui, app
 
-from Networking.cleanup import run_cleanup
+from Networking.MiniNet.mdns import setup_avahi
+from Networking.cleanup import run_cleanup, reset_clean_state
 
 
 def get_base_path():
@@ -48,6 +49,8 @@ def error_page():
             async def go_back():
                 if cleanup_on_back:
                     await asyncio.to_thread(run_cleanup)
+                    await asyncio.to_thread(setup_avahi)
+                    reset_clean_state()
                 ui.navigate.to(back_to)
 
         with ui.row().style('justify-content: center; gap: 12px; margin-top: 24px;'):
