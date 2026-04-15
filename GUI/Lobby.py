@@ -138,8 +138,8 @@ def create_lobby():
             message=(
                 f'The local network interface is unreachable.\n\n'
                 f'Error: {e}\n\n'
-                f'Something went wrong with setting up Tap (tap0) bridge. '
-                f'Program will run to clean up to remove stale Mininet state on back.'
+                f'Could not determine active Join Server IP address. '
+                f'The machine may have no active network interface. Check your network connectivity.'
             ),
             back_to='/Session',
             cleanup_on_back=True,
