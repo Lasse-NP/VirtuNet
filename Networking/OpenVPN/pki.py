@@ -4,7 +4,7 @@ import re
 
 from Networking.config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE, \
     runtime_config
-from .network import get_server_ip
+from .network import get_local_ip
 from Networking.terminal import run
 from mininet.log import error, info
 
@@ -86,7 +86,7 @@ def _pem_block(text: str, kind: str) -> str:
 
 def gen_client(name):
     easyrsa = EASYRSA_BIN
-    server_ip = get_server_ip(runtime_config['lab_subnet'])
+    server_ip = get_local_ip()
     port = runtime_config['openvpn_port']
 
     print(f"[VirtuNet] User {name} is joining the Network.")

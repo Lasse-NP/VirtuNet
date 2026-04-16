@@ -15,7 +15,7 @@ def kill_current():
         os.remove(OPENVPN_PID)
 
 def verify_openvpn():
-    if not openvpn_server.get_running:
+    if not openvpn_server.get_running():
         return False
     tap = run(f'ip link show {TAP_IFACE}', check=False)
     return tap.returncode == 0
