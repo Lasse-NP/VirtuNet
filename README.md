@@ -19,26 +19,13 @@
 
 # Table of Contents
 
-- [About the Project](#star2-about-the-project)
-  * [Screenshots](#camera-screenshots)
-  * [Tech Stack](#space_invader-tech-stack)
-  * [Features](#dart-features)
-  * [Color Reference](#art-color-reference)
-  * [Environment Variables](#key-environment-variables)
-- [Getting Started](#toolbox-getting-started)
-  * [Prerequisites](#bangbang-prerequisites)
-  * [Installation](#gear-installation)
-  * [Running Tests](#test_tube-running-tests)
-  * [Run Locally](#running-run-locally)
-  * [Deployment](#triangular_flag_on_post-deployment)
-- [Usage](#eyes-usage)
-- [Roadmap](#compass-roadmap)
-- [Contributing](#wave-contributing)
-  * [Code of Conduct](#scroll-code-of-conduct)
-- [FAQ](#grey_question-faq)
-- [License](#warning-license)
-- [Contact](#handshake-contact)
-- [Acknowledgements](#gem-acknowledgements)
+- [About the Project](#about-the-project)
+  * [Screenshots](#screenshots)
+- [Getting Started](#getting-started)
+  * [Supported Distros](#supported-distros)
+  * [Installation](#installation)
+- [Usage](#usage)
+- [Dependencies](#dependencies)
 
 ## About the Project
 VirtuNet is a complex virtual network builder that allows you to create virtual training environments specifically for NMAP. 
@@ -65,10 +52,14 @@ Therefore we advise you stick to the tested distros, unless you want to potentia
 
 ### Installation
 Getting started with VirtuNet is straightforward. VirtuNet comes packaged with an Install script that will take care of the initial setup.
+However, you will need to install Python 3.13 before the installation will be able to take place.
 
 **If the install script fails to install certain dependencies, you will have to find and install them yourself**
 
 ```sh
+# Fetch and Install Python3.13
+# This varies by Distro, figure it out yourself.
+
 # Open a terminal and pull the newest version:
 git clone https://github.com/Lasse-NP/VirtuNet
 
@@ -99,3 +90,17 @@ After connecting the clients to the server, they will now be able to scan the de
 </p>
 
 The Control Panel has a few different buttons. The Trainees button redirects you back to the clients list. The Reset button resets the status of all devices back to online. The Reboot button tears down the virtual network and builds it back up again with the same structure, allowing for a quick network rebuild.
+
+## Dependencies
+If the install.sh fails to automatically install the program, more manual means are necessary to complete the installation. Therefore we provide the list below of dependencies that VirtuNet requires to work:
+- Python 3.13
+- OpenVPN
+- OVSwitch (Openvswitch-switch + Openvswitch-testcontroller)
+- EasyRSA
+- MiniNet
+- AvahiDNS
+- Libnetfilter-queue
+- xcb-util-cursor
+- build-essentials
+  - gcc
+  - makepkg
