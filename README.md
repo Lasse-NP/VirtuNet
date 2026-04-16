@@ -8,7 +8,7 @@
   </p>
 
    <h4>
-      <a href="https://github.com/Louis3797/awesome-readme-template/">View Demo</a>
+      <a href="https://github.com/Lasse-NP/VirtuNet">View Demo</a>
     <span> · </span>
       <a href="https://github.com/Lasse-NP/VirtuNet/wiki">Documentation</a>
     <span> · </span>
