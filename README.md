@@ -85,10 +85,17 @@ sudo virtunet
 ## Usage
 VirtuNet allows for a variety of different virtual devices to be added to the network. You will be able to customize the structure of the network within the Session Settings page. VirtuNet even allows more granular customization by using the Custom Setup page, accessed through the Customize button. On this page you are allowed to change individual settings for each device, allowing full control to build devices outside of the standard templates.
 
-<img width="200" height="auto" alt="image" src="https://github.com/user-attachments/assets/f9ade818-a1e7-4b5b-83a1-581e32d83715" />
-<img width="318" height="auto" alt="image" src="https://github.com/user-attachments/assets/cfc7df95-6ee5-4d91-95ce-318ca47f8274" />
+<p align="center"> <img width="200" height="auto" alt="image" src="https://github.com/user-attachments/assets/f9ade818-a1e7-4b5b-83a1-581e32d83715" />
+<img width="318" height="auto" alt="image" src="https://github.com/user-attachments/assets/cfc7df95-6ee5-4d91-95ce-318ca47f8274" /> </p>
 
 After having chosen an assortment of devices, you can now start the server, which in turn starts the virtual network. To allow clients to scan the virtual network, they first have to join the server. This is done by using the Windows Client from the [VirtuNet-Client](https://github.com/Lasse-NP/VirtuNet-Client) project. This is specifically made to work with this program and therefore allows for a simple join code connection flow. Therefore to connect clients to the server, all you have to do is give them the Join Code displayed, along with the IP and Port of the server.
 
-<img width="200" height="auto" alt="image" src="https://github.com/user-attachments/assets/a61c048a-8f6d-4ea3-93e7-782495721c51" />
+<p align="center"> <img width="200" height="auto" alt="image" src="https://github.com/user-attachments/assets/a61c048a-8f6d-4ea3-93e7-782495721c51" /> </p>
 
+After connecting the clients to the server, they will now be able to scan the devices on the virtual Network. To help manage and control the virtual Network, the program comes with a Control Panel page, that gives the ability to view statistics about each virtual device, along with buttons to toggle on and off the devices.
+
+<p align="center"> <img width="200" height="auto" alt="image" src="https://github.com/user-attachments/assets/d9104e58-9c21-49fa-9084-798a1e4a828d" /> 
+<img width="200" height="auto" alt="image" src="https://github.com/user-attachments/assets/e3c4621c-41e2-4e50-8548-b9f24b3fe7cb" />
+</p>
+
+The Control Panel has a few different buttons. The Trainees button redirects you back to the clients list. The Reset button resets the status of all devices back to online. The Reboot button tears down the virtual network and builds it back up again with the same structure, allowing for a quick network rebuild.
