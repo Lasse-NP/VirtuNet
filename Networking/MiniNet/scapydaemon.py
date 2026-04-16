@@ -14,7 +14,6 @@ logging.basicConfig(
 )
 
 ICMP_ERROR_TYPES = {3, 4, 5, 11, 12}
-
 TCP_FLAG_ECE = 0x40
 TCP_FLAG_CWR = 0x80
 TCP_FLAGS_ECN_SYN = TCP_FLAG_ECE | TCP_FLAG_CWR
@@ -30,19 +29,20 @@ OPTION_MAP = {
 
 CFG = {}
 
-tcp_id_counter  = None
-udp_id_counter  = None
-icmp_id_counter = None
-icmp_id_state   = None
-ecn_connections = None
+max_16bit_value = 65536
+tcp_id_counter:  itertools.count = itertools.count(0)
+udp_id_counter:  itertools.count = itertools.count(0)
+icmp_id_counter: itertools.count = itertools.count(0)
+shared_id_state: list[int] = [0]
+ecn_connections: set = set()
 
 
 def _init_state():
-    global tcp_id_counter, udp_id_counter, icmp_id_counter, icmp_id_state, ecn_connections
+    global tcp_id_counter, udp_id_counter, icmp_id_counter, shared_id_state, ecn_connections
     tcp_id_counter  = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     udp_id_counter  = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
     icmp_id_counter = itertools.count(start=random.randint(1000, 30000), step=random.randint(1, 10))
-    icmp_id_state   = [random.randint(1000, 30000)]
+    shared_id_state = [random.randint(1000, 30000)]
     ecn_connections = set()
 
 
@@ -99,11 +99,11 @@ def _rewrite_options(pkt_options, desired_order):
 
 def _handle_tcp(scapy_pkt, pkt):
     tcp = scapy_pkt[TCP]
-    flags_int = int(tcp.flags)
-    is_syn    = bool(tcp.flags & 0x02) and not bool(tcp.flags & 0x10)
-    is_synack = (flags_int & 0x12) == 0x12
-    is_rst    = bool(tcp.flags & 0x04)
-    is_ecn_syn = is_syn and (flags_int & TCP_FLAGS_ECN_SYN) == TCP_FLAGS_ECN_SYN
+    flags_int = int(tcp.flags) # Cast flags to Integer for accurate Equals (==) Math Operations.
+    is_syn    = bool(tcp.flags & 0x02) and not bool(tcp.flags & 0x10) # Is a Syn (Synchronize), But NOT also Ack (Acknowledge).
+    is_synack = bool(tcp.flags & 0x02) and bool(tcp.flags & 0x10) # Is a Syn (Synchronize), But is also Ack (Acknowledge).
+    is_rst    = bool(tcp.flags & 0x04) # Is an RST (Reset Packet)
+    is_ecn_syn = is_syn and (flags_int & TCP_FLAGS_ECN_SYN) == TCP_FLAGS_ECN_SYN # Has both ECE (ECN-Echo) and CWR (Congestion Window Reduced) flags.
 
     logging.debug(f'  TCP: sport={tcp.sport} dport={tcp.dport} flags=0x{flags_int:02X} '
                   f'is_syn={is_syn} is_synack={is_synack} is_rst={is_rst} is_ecn_syn={is_ecn_syn}')
@@ -125,20 +125,18 @@ def _handle_tcp(scapy_pkt, pkt):
 
     # ── IP ID ─────────────────────────────────────────────────────────────────
     old_id = scapy_pkt[IP].id
-    if CFG['tcp_ip_id_zero'] and not is_rst:
-        scapy_pkt[IP].id = 0
-        logging.debug(f'  IP.id: {old_id} -> 0 (tcp_ip_id_zero)')
-    elif is_rst:
+    if is_rst: # TCP RST-specific handling
         rst_ip_id = CFG['rst_ip_id']
         if rst_ip_id == 'rd':
-            new_id = (icmp_id_state[0] + random.randint(20001, 40000)) % 65536
+            new_id = (shared_id_state[0] + random.randint(20001, 40000)) % max_16bit_value # Random RST IDs
         elif rst_ip_id == 'ri':
-            new_id = _ri_step(icmp_id_state[0])
+            new_id = _ri_step(shared_id_state[0]) # Random Increment RST IDs
         elif rst_ip_id == 'zero':
-            new_id = 0
+            new_id = 0 # Zero Value RST IDs
         else:
-            new_id = next(tcp_id_counter) % 65536
-        icmp_id_state[0] = new_id
+            new_id = next(tcp_id_counter) % max_16bit_value # Sequential Value RST IDs
+
+        shared_id_state[0] = new_id
         scapy_pkt[IP].id = new_id
         logging.debug(f'  IP.id: {old_id} -> {new_id} (RST, rst_ip_id={rst_ip_id})')
 
@@ -151,17 +149,21 @@ def _handle_tcp(scapy_pkt, pkt):
             old_ack = tcp.ack
             scapy_pkt[TCP].ack = scapy_pkt[TCP].seq
             logging.debug(f'  TCP.ack: {old_ack} -> {scapy_pkt[TCP].ack} (rst_ack_seq_only)')
-    elif CFG['ip_id_random'] == 0:
-        new_id = next(tcp_id_counter) % 65536
-        scapy_pkt[IP].id = new_id
-        logging.debug(f'  IP.id: {old_id} -> {new_id} (sequential)')
-    else:
-        new_id = random.randint(1, 65536)
+
+    elif CFG['tcp_ip_id_zero'] == 1:
+        scapy_pkt[IP].id = 0  # Set ID to 0 for all TCP Packets
+        logging.debug(f'  IP.id: {old_id} -> 0 (tcp_ip_id_zero)')
+    elif CFG['ip_id_random'] == 1:
+        new_id = random.randint(1, max_16bit_value)  # Random ID Setting
         scapy_pkt[IP].id = new_id
         logging.debug(f'  IP.id: {old_id} -> {new_id} (random)')
+    else:
+        new_id = next(tcp_id_counter) % max_16bit_value  # Sequential ID Setting
+        scapy_pkt[IP].id = new_id
+        logging.debug(f'  IP.id: {old_id} -> {new_id} (sequential)')
 
     # ── Options rewrite ───────────────────────────────────────────────────────
-    if (is_syn or is_synack) and CFG['tcp_options_order']:
+    if is_synack and CFG['tcp_options_order']:
         effective_order = [
             o for o in CFG['tcp_options_order']
             if o != 'TS' or CFG['tcp_options_timestamps']
@@ -196,16 +198,16 @@ def _handle_tcp(scapy_pkt, pkt):
     if is_synack:
         reverse_key = (dst, tcp.dport, src, tcp.sport)
         logging.debug(f'  SYN-ACK: checking reverse_key={reverse_key}')
-        if CFG['tcp_ecn'] >= 2 and reverse_key in ecn_connections:
+        if CFG['tcp_ecn'] == 2 and reverse_key in ecn_connections:
             old_flags = int(tcp.flags)
             tcp.flags = old_flags | TCP_FLAG_ECE
             ecn_connections.discard(reverse_key)
             logging.debug(f'  ECE set: 0x{old_flags:02X} -> 0x{int(tcp.flags):02X}')
 
     # ── Rebuild ───────────────────────────────────────────────────────────────
-    scapy_pkt[IP].len = None
-    scapy_pkt[IP].chksum = None
-    scapy_pkt[TCP].chksum = None
+    scapy_pkt[IP].len = None        # Scapy Recalculates length
+    scapy_pkt[IP].chksum = None     # Scapy Recalculates IP checksum
+    scapy_pkt[TCP].chksum = None    # Scapy Recalculates TCP checksum
     rebuilt = IP(bytes(scapy_pkt))
     logging.debug(f'  rebuilt: IP.id={rebuilt[IP].id} flags={rebuilt[IP].flags} '
                   f'win={rebuilt[TCP].window} opts={rebuilt[TCP].options}')
@@ -220,10 +222,10 @@ def _handle_udp(scapy_pkt, pkt):
 
     old_id = scapy_pkt[IP].id
     if CFG['ip_id_random'] == 0:
-        new_id = next(udp_id_counter) % 65536
+        new_id = next(udp_id_counter) % max_16bit_value
         logging.debug(f'  IP.id: {old_id} -> {new_id} (sequential)')
     else:
-        new_id = random.randint(1, 65536)
+        new_id = random.randint(1, max_16bit_value)
         logging.debug(f'  IP.id: {old_id} -> {new_id} (random)')
     scapy_pkt[IP].id = new_id
 
@@ -248,18 +250,18 @@ def _handle_icmp(scapy_pkt, pkt):
     old_id = scapy_pkt[IP].id
     icmp_ip_id = CFG['icmp_ip_id']
     if icmp_ip_id == 'rd':
-        new_id = (icmp_id_state[0] + random.randint(20001, 40000)) % 65536
-        icmp_id_state[0] = new_id
+        new_id = (shared_id_state[0] + random.randint(20001, 40000)) % max_16bit_value
+        shared_id_state[0] = new_id
         logging.debug(f'  IP.id: {old_id} -> {new_id} (rd)')
     elif icmp_ip_id == 'ri':
-        new_id = _ri_step(icmp_id_state[0])
-        icmp_id_state[0] = new_id
+        new_id = _ri_step(shared_id_state[0])
+        shared_id_state[0] = new_id
         logging.debug(f'  IP.id: {old_id} -> {new_id} (ri)')
     elif icmp_ip_id == 'zero':
         new_id = 0
         logging.debug(f'  IP.id: {old_id} -> 0 (zero)')
     else:
-        new_id = next(icmp_id_counter) % 65536
+        new_id = next(icmp_id_counter) % max_16bit_value
         logging.debug(f'  IP.id: {old_id} -> {new_id} (sequential)')
     scapy_pkt[IP].id = new_id
 
