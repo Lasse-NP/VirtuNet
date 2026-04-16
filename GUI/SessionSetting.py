@@ -178,19 +178,18 @@ async def save_preset():
     result = await app.native.main_window.create_file_dialog(
         webview.FileDialog.SAVE, directory='Device_Presets', save_filename='test', file_types=["Pickle (*.pkl)"]
     )
-    # Force the extension if not already there
     file = str(result[0])
     if not file.endswith(".pkl"):
         file += ".pkl"
-    with open(file, "wb") as f:  # "wb" = write bytes
-        pickle.dump(session_rows, f)  # converts list → bytes → writes to file
+    with open(file, "wb") as f:
+        pickle.dump(session_rows, f)
 
 async def load_preset():
     file = await app.native.main_window.create_file_dialog(allow_multiple=False, directory="Device_Presets", file_types=["Pickle (*.pkl)"])
     print(file)
     global session_rows
-    with open(file[0], "rb") as f:  # "rb" = read bytes
-        my_list = pickle.load(f)  # reads bytes → reconstructs your list
+    with open(file[0], "rb") as f:
+        my_list = pickle.load(f)
     session_rows = my_list
     render_devices(device_list)
 
