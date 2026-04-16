@@ -36,8 +36,10 @@ class OSFingerprint:
     tcp_keepalive_time: int = 7200
     tcp_keepalive_intvl: int = 75
     tcp_keepalive_probes: int = 9
-    tcp_rmem: str = "4096 87380 6291456"
-    tcp_wmem: str = "4096 16384 4194304"
+    tcp_mem: dict = {
+        "rmem": "4096 87380 6291456",
+        "wmem": "4096 16384 4194304",
+    }
     icmp_ip_id: str = "rd"
     icmp_echo_df: int = 1
     icmp_unreach_ruck_zero: int = 1
@@ -58,8 +60,8 @@ class OSFingerprint:
             f'sysctl -w net.ipv4.tcp_keepalive_probes={self.tcp_keepalive_probes}',
             f'sysctl -w net.ipv4.tcp_ecn={self.tcp_ecn}',
             f'sysctl -w net.ipv4.tcp_base_mss={self.tcp_mss}',
-            f'sysctl -w net.ipv4.tcp_rmem="{self.tcp_rmem}"',
-            f'sysctl -w net.ipv4.tcp_wmem="{self.tcp_wmem}"',
+            f'sysctl -w net.ipv4.tcp_rmem="{self.tcp_mem["rmem"]}"',
+            f'sysctl -w net.ipv4.tcp_wmem="{self.tcp_mem["wmem"]}"',
             f'sysctl -w net.ipv4.ip_no_pmtu_disc={0 if self.df_bit == 1 else 1}',
         ]
         if self.ip_id_random == 0:

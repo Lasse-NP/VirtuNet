@@ -9,16 +9,18 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from Networking.MiniNet.mininet import mininet_network
 from Networking.OpenVPN.network import get_local_ip
 from Networking.OpenVPN.pki import gen_client
+from Networking.config import runtime_config
+
 
 class ReusableHTTPServer(HTTPServer):
     def server_bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         super().server_bind()
 
-PORT = 8080
 _server: ReusableHTTPServer | None = None
 _thread: threading.Thread | None = None
 _active_code: str | None = None
+_port_diagnostics: str | None = None
 
 def _make_code(length=6) -> str:
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -78,47 +80,37 @@ class _Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
 
-def _print_port_diagnostics(port: int) -> None:
-    print(f"[VirtuNet] Diagnosing port {port} conflict:")
+def _generate_port_diagnostics(port: int) -> str:
+    lines = [f"Port {port} conflict diagnostics:"]
     try:
-        result = subprocess.run(
-            ["netstat", "-tlnp"],
-            capture_output=True,
-            text=True,
-        )
-        lines = [
+        result = subprocess.run(["netstat", "-tlnp"], capture_output=True, text=True)
+        matched = [
             line for line in result.stdout.splitlines()
             if f":{port}" in line or "Proto" in line or "Active" in line
         ]
-        if lines:
-            print("\n".join(lines))
-        else:
-            print(f"[VirtuNet] No netstat entries found for port {port}.")
-    except FileNotFoundError:
-        try:
-            result = subprocess.run(
-                ["ss", "-tlnp", f"sport = :{port}"],
-                capture_output=True,
-                text=True,
-            )
-            print(result.stdout or f"[VirtuNet] ss returned no output for port {port}.")
-        except Exception as e:
-            print(f"[VirtuNet] Could not run netstat or ss: {e}")
+        lines += matched if matched else [f"No netstat entries found for port {port}."]
     except Exception as e:
-        print(f"[VirtuNet] netstat failed: {e}")
+        lines.append(f"netstat failed: {e}")
+    return "\n".join(lines)
+
+def get_port_diagnostics() -> str | None:
+    return _port_diagnostics
 
 def start_join_server() -> str | None:
-    global _server, _thread, _active_code
+    global _server, _thread, _active_code, _port_diagnostics
 
     if _server:
         stop_join_server()
 
+    port = runtime_config['join_server_port']
+
     try:
         _active_code = _make_code()
-        _server = ReusableHTTPServer(("0.0.0.0", PORT), _Handler)
+        _server = ReusableHTTPServer(("0.0.0.0", port), _Handler)
     except OSError as e:
-        print(f"[VirtuNet] ERROR: Could not bind join server to port {PORT}: {e}")
-        _print_port_diagnostics(PORT)
+        print(f"[VirtuNet] ERROR: Could not bind join server to port {port}: {e}")
+        _port_diagnostics = _generate_port_diagnostics(port)
+        print(_port_diagnostics)
         _server = None
         _active_code = None
         return None
@@ -136,7 +128,7 @@ def start_join_server() -> str | None:
     except Exception:
         ip = "unknown"
 
-    print(f"[VirtuNet] Join server running on {ip}:{PORT}")
+    print(f"[VirtuNet] Join server running on {ip}:{port}")
     print(f"[VirtuNet] Join code: {_active_code}")
     return _active_code
 

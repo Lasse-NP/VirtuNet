@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-from Networking.config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID, CLIENT_DIR, LAB_SERVER_IP, LAB_PREFIX
+from Networking.config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID
 from .serverconfig import write_server_conf
 from .pki import setup_pki
 from Networking.terminal import run
