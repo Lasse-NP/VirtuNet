@@ -51,12 +51,12 @@ def _ri_step(current_id):
         step = random.randint(1001, 19999)
         if step % 256 == 0:
             step += 1
-        new_id = (current_id + step) % 65536
-        diff = (new_id - current_id) % 65536
+        new_id = (current_id + step) % max_16bit_value
+        diff = (new_id - current_id) % max_16bit_value
         if 1001 <= diff <= 19999 and diff % 256 != 0:
             logging.debug(f'    _ri_step: {current_id} -> {new_id} (step={step}, diff={diff})')
             return new_id
-    fallback = (current_id + 1001) % 65536
+    fallback = (current_id + 1001) % max_16bit_value
     logging.debug(f'    _ri_step: fallback {current_id} -> {fallback}')
     return fallback
 
