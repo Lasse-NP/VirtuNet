@@ -198,7 +198,7 @@ def create_lobby():
                     ui.navigate.to('/Lobby')
                 else:
                     ui.notify(
-                        'Still could not bind port 8080. Check the console.',
+                        f'Still could not bind port {runtime_config["join_server_port"]}. Check the console.',
                         type='negative',
                         timeout=0,
                     )

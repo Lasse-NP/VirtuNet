@@ -1,6 +1,4 @@
-import textwrap
-
-from .network import get_netmask, get_base_ip, get_server_ip
+from Networking.OpenVPN.network import get_netmask, get_base_ip, get_server_ip
 from Networking.config import SERVER_CONF, TAP_IFACE, LOG_FILE, STATUS_FILE, BASE_DIR, PKI_DIR, OPENVPN_PID, runtime_config
 
 
@@ -13,7 +11,7 @@ def write_server_conf():
     server_pool_start = f'{base_ip}.150'
     server_pool_end = f'{base_ip}.250'
 
-    config = textwrap.dedent(f"""\
+    config = f"""
 # VirtuNet - OpenVPN Server Config (TAP Mode)
 port {port}
 proto udp
@@ -43,7 +41,7 @@ auth SHA256
 
 keepalive 10 120
 writepid {OPENVPN_PID}
-""")
+"""
 
     with open(SERVER_CONF, 'w') as f:
         f.write(config)

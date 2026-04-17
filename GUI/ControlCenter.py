@@ -272,14 +272,36 @@ def control_center_page():
             await asyncio.sleep(0.1)
 
             uptime = mininet_network.get_uptime_minutes()
-            total_devices = len(mininet_network.get_hosts())
+            hosts = mininet_network.get_hosts()
+            total_devices = len(hosts)
             disabled = sum(1 for v in device_states.values() if not v)
+
+            devices = get_devices()
+            device_breakdown = []
+            for dev in devices:
+                stats = mininet_network.get_host_stats(dev['device'].name)
+                device_breakdown.append({
+                    'id': dev['id'],
+                    'name': dev['device'].name,
+                    'ip': dev['ip'],
+                    'os': type(dev['os']).__name__ if dev['os'] else 'Unknown',
+                    'found': not dev['enabled'],
+                    'rx_bytes': stats.get('rx_bytes', 0),
+                    'tx_bytes': stats.get('tx_bytes', 0),
+                    'rx_packets': stats.get('rx_packets', 0),
+                    'tx_packets': stats.get('tx_packets', 0),
+                })
+
+            top = mininet_network.get_top_host('rx_bytes')
 
             app.storage.user['report'] = {
                 'found_devices': disabled,
                 'missing_devices': total_devices - disabled,
                 'session_duration': uptime,
                 'avg_time_per_device': uptime // disabled if disabled else 0,
+                'device_breakdown': device_breakdown,
+                'top_host': top['host'] if top else None,
+                'top_host_rx': top['stats'].get('rx_bytes', 0) if top else 0,
             }
             await asyncio.to_thread(run_cleanup)
             lobby_module.reset_join_server()

@@ -14,10 +14,13 @@ EASY_RSA_SOURCE_DIRS = [
     '/usr/share/doc/easy-rsa',
 ]
 
+connecting_clients = []
+
 def setup_pki():
     os.makedirs(BASE_DIR, exist_ok=True)
     os.makedirs(CLIENT_DIR, exist_ok=True)
 
+    # Attempt all known paths to Easy-RSA
     if not os.path.isdir(EASY_RSA_DIR):
         for source in EASY_RSA_SOURCE_DIRS:
             if os.path.isdir(source):
@@ -35,6 +38,7 @@ def setup_pki():
 
     easyrsa = EASYRSA_BIN
 
+    # Initialize Easy-RSA and Components
     if not os.path.isdir(PKI_DIR):
         run(f'cd {EASY_RSA_DIR} && {easyrsa} init-pki')
 
@@ -51,6 +55,7 @@ def setup_pki():
 
 def get_connected_clients():
     connected_clients = []
+    seen = set()
 
     if not os.path.exists(STATUS_FILE):
         return connected_clients
@@ -59,29 +64,55 @@ def get_connected_clients():
         lines = f.readlines()
 
     in_client_list = False
+    in_routing_table = False
+    # Parse Lines of Status-file
     for line in lines:
         line = line.strip()
         if line == 'OpenVPN CLIENT LIST':
             in_client_list = True
             continue
         if line == 'ROUTING TABLE':
-            break
-        if not in_client_list or line.startswith('Updated') or line.startswith('Common Name'):
+            in_client_list = False
+            in_routing_table = True
             continue
+        if line == 'GLOBAL STATS':
+            break
 
-        parts = line.split(',')
-        if len(parts) >= 5:
-            connected_clients.append({'name': parts[0], 'ip': parts[1].split(':')[1], 'connected_since': parts[4]})
+        # Add Client List entries
+        if in_client_list:
+            if line.startswith('Updated') or line.startswith('Common Name'):
+                continue
+            parts = line.split(',')
+            if len(parts) >= 5 and parts[0] not in seen:
+                seen.add(parts[0])
+                connected_clients.append({'name': parts[0], 'ip': parts[1].split(':')[1], 'connected_since': parts[4]})
+                if parts[0] in connecting_clients:
+                    print(f"[VirtuNet] User {parts[0]} has joined the Network successfully.")
+                    connecting_clients.remove(parts[0])
+
+        # Add Routing Table entries
+        elif in_routing_table:
+            if line.startswith('Virtual Address'):
+                continue
+            parts = line.split(',')
+            if len(parts) >= 4 and parts[1] not in seen:
+                seen.add(parts[1])
+                connected_clients.append({'name': parts[1], 'ip': parts[2].split(':')[0], 'connected_since': parts[3]})
+                if parts[0] in connecting_clients:
+                    print(f"[VirtuNet] User {parts[1]} has joined the Network successfully.")
+                    connecting_clients.remove(parts[1])
 
     return connected_clients
 
 
 def _pem_block(text: str, kind: str) -> str:
+    # Recognize the Pem-Block pattern
+    # Regex: Find Start Point = (-----BEGIN CERTIFICATE-----), Match all characters = (.*?), End Point = (-----END CERTIFICATE-----)
     pattern = rf"-----BEGIN {re.escape(kind)}-----.*?-----END {re.escape(kind)}-----"
-    m = re.search(pattern, text, flags=re.DOTALL)
-    if not m:
+    match = re.search(pattern, text, flags=re.DOTALL)
+    if not match:
         raise RuntimeError(f'No PEM {kind} block found')
-    return m.group(0).strip()
+    return match.group(0).strip()
 
 
 def gen_client(name):
@@ -90,10 +121,11 @@ def gen_client(name):
     port = runtime_config['openvpn_port']
 
     print(f"[VirtuNet] User {name} is joining the Network.")
+    connecting_clients.append(name)
 
     if not os.path.isdir(PKI_DIR):
         error('PKI is not initialized.')
-        sys.exit(1)
+        raise RuntimeError(f'PKI is not initialize (Missing PKI Dir at: {PKI_DIR})')
 
     cert_path = f'{PKI_DIR}/issued/{name}.crt'
     if not os.path.exists(cert_path):
@@ -102,8 +134,8 @@ def gen_client(name):
         info(f'*** Certificate for {name} already exists, reusing.\n')
 
     def read(path):
-        with open(path) as f:
-            return f.read().strip()
+        with open(path) as file:
+            return file.read().strip()
 
     ca = read(f'{PKI_DIR}/ca.crt')
     cert = _pem_block(read(cert_path), "CERTIFICATE")
@@ -157,15 +189,16 @@ verb 3
 def remove_connected_client(name):
     easyrsa = EASYRSA_BIN
 
+    # Remove client from whitelist
     result = run(f'cd {EASY_RSA_DIR} && {easyrsa} --batch revoke {name}')
     if result.returncode != 0:
         error('Failed to revoke the client')
         return False
 
+    # Re-check and Reload configuration
     run(f'cd {EASY_RSA_DIR} && {easyrsa} gen-crl')
     run(f'kill -SIGHUP $(cat {OPENVPN_PID})')
     ovpn_path = f'{CLIENT_DIR}/{name}.ovpn'
     if os.path.exists(ovpn_path):
         os.remove(ovpn_path)
-
     return True
