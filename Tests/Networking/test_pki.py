@@ -8,7 +8,7 @@ class TestPKI:
     @patch('os.path.isdir', side_effect=[False, True, False])  # isdir=False triggers directory creation
     @patch('os.makedirs')
     @patch('Networking.OpenVPN.pki.run')
-    @patch('Networking.OpenVPN.pki.write_server_conf')
+    @patch('Networking.OpenVPN.server.setup_pki')
     def test_setup_pki_initializes_directories(self, mock_write_conf, mock_run, mock_makedirs, mock_isdir, mock_exists):
         from Networking.OpenVPN.pki import setup_pki
 
