@@ -2,6 +2,7 @@ import os
 
 import files
 import webview
+from networkx import exception
 from nicegui import ui, app, native
 from nicegui.elements.list import List
 import asyncio, sys
@@ -16,11 +17,13 @@ from Models.Devices.Vendor.Apple import Apple
 from Models.Devices.Vendor.Desktops import Desktops
 from Models.Devices.Vendor.Samsung import Samsung
 from Models.Devices.Vendor.Sony import Sony
+from Models.Devices.Vendor.LG import LG
 
 from Models.Devices.Apple import AppleWatch, IPhone, MacBook
 from Models.Devices.Desktops import WindowsComputer
 from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungSmartTV
-from Models.Devices.Sony import Playstation5
+from Models.Devices.Sony import Playstation5, SonySmartTV
+from Models.Devices.LG import LGTV
 
 import random
 import pickle
@@ -42,7 +45,8 @@ vendor_dictionary = {
     "Apple": Apple,
     "Samsung": Samsung,
     "Desktops": Desktops,
-    "Sony": Sony
+    "Sony": Sony,
+    "LG": LG,
     }
 
 def build_host_list():

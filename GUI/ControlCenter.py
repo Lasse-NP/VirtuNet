@@ -19,6 +19,8 @@ from Models.Devices.Samsung.SamsungFridge import SamsungFridge
 from Models.Devices.Samsung.SamsungGalaxy import SamsungGalaxy
 from Models.Devices.Samsung.SamsungSmartTV import SamsungSmartTV
 from Models.Devices.Sony.Playstation5 import Playstation5
+from Models.Devices.Sony.SonySmartTV import SonySmartTV
+from Models.Devices.LG.LGTV import LGTV
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -44,6 +46,8 @@ DEVICE_REGISTRY = {
     'SamsungGalaxy': SamsungGalaxy,
     'SamsungSmartTV': SamsungSmartTV,
     'Playstation5': Playstation5,
+    'SonySmartTV': SonySmartTV,
+    'LGTV': LGTV,
 }
 
 device_states: dict[int, bool] = {}
@@ -73,6 +77,7 @@ SERVICE_REGISTRY = {
     'SSH': SSH,
 }
 
+# Potential bug: What if custom devices have been made?
 def deserialize_hosts(raw_list):
     hosts = []
     for d in raw_list:
