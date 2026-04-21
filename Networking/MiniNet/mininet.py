@@ -11,7 +11,6 @@ from mininet.link import TCLink
 def _server_ip() -> str:
     return get_server_ip(runtime_config['lab_subnet'])
 
-
 def _prefix() -> str:
     return runtime_config['lab_subnet'].split('/')[1]
 
@@ -28,14 +27,12 @@ def verify_bridge():
 
     if 's1' not in run('ovs-vsctl show', check=False).stdout:
         return False
-
-    if TAP_IFACE not in run('ovs-vsctl list-ports s1', check=False).stdout:
+    elif TAP_IFACE not in run('ovs-vsctl list-ports s1', check=False).stdout:
         return False
-
-    if _server_ip() not in run('ip addr show s1', check=False).stdout:
+    elif _server_ip() not in run('ip addr show s1', check=False).stdout:
         return False
-
-    return True
+    else:
+        return True
 
 def wait_for_tap(iface, timeout=30):
     print(f'*** Waiting for {iface} to become available...')
@@ -52,6 +49,7 @@ def build_topo():
     prefix = _prefix()
 
     wait_for_tap(TAP_IFACE)
+    # Set IP and Link to Online
     run(f'ovs-vsctl add-port s1 {TAP_IFACE}')
     run(f'ip link set {TAP_IFACE} promisc on')
     run(f'ip link set {TAP_IFACE} up')
@@ -68,6 +66,7 @@ def teardown_topo():
     server_ip = _server_ip()
     prefix = _prefix()
 
+    # Set IP and Link to Online
     run(f'ip addr del {server_ip}/{prefix} dev s1', check=False)
     run(f'ovs-vsctl del-port s1 {TAP_IFACE}', check=False)
     run(f'ip link set {TAP_IFACE} promisc off', check=False)
@@ -94,10 +93,70 @@ class MininetNetwork:
     def get_hosts(self):
         return self._hosts
 
+    def get_device_by_host(self, host_name: str):
+        for host, device in self._hosts.items():
+            if host.name == host_name:
+                return device
+        return None
+
     def get_uptime_minutes(self):
         if self._start_time is None:
             return 0
         return int(time.time() - self._start_time) // 60
+
+    def get_all_hosts_stats(self) -> dict:
+        if self._net is None:
+            return {}
+        return {host.name: self.get_host_stats(host.name) for host in self._net.hosts}
+
+    def get_host_stats(self, host_name: str) -> dict:
+        if self._net is None:
+            return {}
+        host = self._net.get(host_name)
+        if host is None:
+            return {}
+
+        intf_name = str(host.defaultIntf())
+        output = host.cmd(f'cat /proc/net/dev')
+
+        for line in output.splitlines():
+            if intf_name in line:
+                fields = line.split()
+                try:
+                    return {
+                        'rx_bytes': int(fields[1]),
+                        'rx_packets': int(fields[2]),
+                        'tx_bytes': int(fields[9]),
+                        'tx_packets': int(fields[10]),
+                    }
+                except (IndexError, ValueError):
+                    return {}
+
+        return {}
+
+    def get_top_host(self, metric: str = 'rx_bytes') -> dict | None:
+        all_stats = self.get_all_hosts_stats()
+        if not all_stats:
+            return None
+        host_name = max(all_stats, key=lambda name: all_stats[name].get(metric, 0))
+        return {
+            'host': host_name,
+            'device': self.get_device_by_host(host_name),
+            'stats': all_stats[host_name],
+        }
+
+    def get_host_latency(self, host_name: str) -> float | None:
+        host = self._net.get(host_name)
+        ip = _server_ip()
+        output = host.cmd(f'ping -c 3 -q {ip}')
+        for line in output.splitlines():
+            if 'avg' in line:
+                try:
+                    return float(line.split('/')[4])
+                except (IndexError, ValueError):
+                    return None
+        return None
+
 
     def configuration(self, device_list):
         base_ip = get_base_ip(runtime_config['lab_subnet'])
@@ -174,31 +233,6 @@ class MininetNetwork:
         host.cmd(f'tc qdisc del dev {intf} root 2>/dev/null || true')
         host.cmd(f'tc qdisc add dev {intf} root netem delay {delay}')
         print(f'*** Applied {delay} latency to {host_name}')
-
-    def get_host_stats(self, host_name: str) -> dict:
-        if self._net is None:
-            return {}
-        host = self._net.get(host_name)
-        if host is None:
-            return {}
-
-        intf_name = str(host.defaultIntf())
-        output = host.cmd(f'cat /proc/net/dev')
-
-        for line in output.splitlines():
-            if intf_name in line:
-                fields = line.split()
-                try:
-                    return {
-                        'rx_bytes': int(fields[1]),
-                        'rx_packets': int(fields[2]),
-                        'tx_bytes': int(fields[9]),
-                        'tx_packets': int(fields[10]),
-                    }
-                except (IndexError, ValueError):
-                    return {}
-
-        return {}
 
     def stop(self):
         for host_name, proc in self._daemon_procs.items():

@@ -1,4 +1,5 @@
 import os
+import signal
 import sys
 import time
 from Networking.config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID
@@ -10,18 +11,22 @@ from mininet.log import error, info
 def kill_current():
     if os.path.exists(OPENVPN_PID):
         with open(OPENVPN_PID) as f:
-            pid = f.read().strip()
-        run(f'kill {pid}', check=False)
-        os.remove(OPENVPN_PID)
+            pid = int(f.read().strip())
+        os.kill(pid, signal.SIGTERM)
+        time.sleep(3)
+        try:
+            os.kill(pid, 0)
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
 
 def verify_openvpn():
-    if not openvpn_server.get_running:
+    if not openvpn_server.get_running():
         return False
     tap = run(f'ip link show {TAP_IFACE}', check=False)
     return tap.returncode == 0
 
 class OpenVPNServer:
-
     def __init__(self):
         self._running = False
 
@@ -30,11 +35,16 @@ class OpenVPNServer:
 
     def start(self):
         if not os.path.exists(SERVER_CONF):
-            error(f'Server config not found at {SERVER_CONF}. Run --setup first.\n')
-            sys.exit(1)
+            error(f'Server config not found at {SERVER_CONF}. Initialize first.\n')
+            raise RuntimeError(f'OpenVPN failed to start,'
+                               f'OpenVPN not Initialized (Missing config at: {SERVER_CONF})')
 
         info('*** Starting OpenVPN server\n')
-        run(f'openvpn --config {SERVER_CONF} --daemon')
+        result = run(f'openvpn --config {SERVER_CONF} --daemon')
+
+        if result.returncode != 0:
+            error(f'OpenVPN failed to start. Check {LOG_FILE}')
+            raise RuntimeError(f'OpenVPN failed to start (exit {result.returncode})')
 
         # Check if OpenVPN server started and is up and ready for 10 seconds.
         for _ in range(20):

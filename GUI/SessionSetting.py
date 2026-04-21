@@ -2,6 +2,7 @@ import os
 
 import files
 import webview
+from networkx import exception
 from nicegui import ui, app, native
 from nicegui.elements.list import List
 import asyncio, sys
@@ -16,11 +17,13 @@ from Models.Devices.Vendor.Apple import Apple
 from Models.Devices.Vendor.Desktops import Desktops
 from Models.Devices.Vendor.Samsung import Samsung
 from Models.Devices.Vendor.Sony import Sony
+from Models.Devices.Vendor.LG import LG
 
 from Models.Devices.Apple import AppleWatch, IPhone, MacBook
 from Models.Devices.Desktops import WindowsComputer
 from Models.Devices.Samsung import GalaxyBook, SamsungFridge, SamsungSmartTV
-from Models.Devices.Sony import Playstation5
+from Models.Devices.Sony import Playstation5, SonySmartTV
+from Models.Devices.LG import LGTV
 
 import random
 import pickle
@@ -42,7 +45,8 @@ vendor_dictionary = {
     "Apple": Apple,
     "Samsung": Samsung,
     "Desktops": Desktops,
-    "Sony": Sony
+    "Sony": Sony,
+    "LG": LG,
     }
 
 def build_host_list():
@@ -178,19 +182,18 @@ async def save_preset():
     result = await app.native.main_window.create_file_dialog(
         webview.FileDialog.SAVE, directory='Device_Presets', save_filename='test', file_types=["Pickle (*.pkl)"]
     )
-    # Force the extension if not already there
     file = str(result[0])
     if not file.endswith(".pkl"):
         file += ".pkl"
-    with open(file, "wb") as f:  # "wb" = write bytes
-        pickle.dump(session_rows, f)  # converts list → bytes → writes to file
+    with open(file, "wb") as f:
+        pickle.dump(session_rows, f)
 
 async def load_preset():
     file = await app.native.main_window.create_file_dialog(allow_multiple=False, directory="Device_Presets", file_types=["Pickle (*.pkl)"])
     print(file)
     global session_rows
-    with open(file[0], "rb") as f:  # "rb" = read bytes
-        my_list = pickle.load(f)  # reads bytes → reconstructs your list
+    with open(file[0], "rb") as f:
+        my_list = pickle.load(f)
     session_rows = my_list
     render_devices(device_list)
 

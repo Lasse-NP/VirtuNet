@@ -19,6 +19,8 @@ from Models.Devices.Samsung.SamsungFridge import SamsungFridge
 from Models.Devices.Samsung.SamsungGalaxy import SamsungGalaxy
 from Models.Devices.Samsung.SamsungSmartTV import SamsungSmartTV
 from Models.Devices.Sony.Playstation5 import Playstation5
+from Models.Devices.Sony.SonySmartTV import SonySmartTV
+from Models.Devices.LG.LGTV import LGTV
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -44,6 +46,8 @@ DEVICE_REGISTRY = {
     'SamsungGalaxy': SamsungGalaxy,
     'SamsungSmartTV': SamsungSmartTV,
     'Playstation5': Playstation5,
+    'SonySmartTV': SonySmartTV,
+    'LGTV': LGTV,
 }
 
 device_states: dict[int, bool] = {}
@@ -73,6 +77,7 @@ SERVICE_REGISTRY = {
     'SSH': SSH,
 }
 
+# Potential bug: What if custom devices have been made?
 def deserialize_hosts(raw_list):
     hosts = []
     for d in raw_list:
@@ -272,14 +277,36 @@ def control_center_page():
             await asyncio.sleep(0.1)
 
             uptime = mininet_network.get_uptime_minutes()
-            total_devices = len(mininet_network.get_hosts())
+            hosts = mininet_network.get_hosts()
+            total_devices = len(hosts)
             disabled = sum(1 for v in device_states.values() if not v)
+
+            devices = get_devices()
+            device_breakdown = []
+            for dev in devices:
+                stats = mininet_network.get_host_stats(dev['device'].name)
+                device_breakdown.append({
+                    'id': dev['id'],
+                    'name': dev['device'].name,
+                    'ip': dev['ip'],
+                    'os': type(dev['os']).__name__ if dev['os'] else 'Unknown',
+                    'found': not dev['enabled'],
+                    'rx_bytes': stats.get('rx_bytes', 0),
+                    'tx_bytes': stats.get('tx_bytes', 0),
+                    'rx_packets': stats.get('rx_packets', 0),
+                    'tx_packets': stats.get('tx_packets', 0),
+                })
+
+            top = mininet_network.get_top_host('rx_bytes')
 
             app.storage.user['report'] = {
                 'found_devices': disabled,
                 'missing_devices': total_devices - disabled,
                 'session_duration': uptime,
                 'avg_time_per_device': uptime // disabled if disabled else 0,
+                'device_breakdown': device_breakdown,
+                'top_host': top['host'] if top else None,
+                'top_host_rx': top['stats'].get('rx_bytes', 0) if top else 0,
             }
             await asyncio.to_thread(run_cleanup)
             lobby_module.reset_join_server()

@@ -1,5 +1,4 @@
 import socket
-import urllib.request
 import ipaddress
 
 def get_base_ip(subnet):

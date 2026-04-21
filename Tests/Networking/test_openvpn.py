@@ -16,8 +16,9 @@ class TestOpenVPNServer:
 
     @patch('os.path.exists', return_value=False)
     def test_start_exits_if_no_config(self, mock_exists):
-        # Act & Assert
-        with pytest.raises(SystemExit):
+        # Arrange & Assert
+        with pytest.raises(RuntimeError):
+            # Act
             self.server.start()
 
     @patch('Networking.OpenVPN.server.run')
