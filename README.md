@@ -45,7 +45,7 @@ Therefore we advise you stick to the tested distros, unless you want to potentia
 ### Supported Distros
 | Distro             | Status                                                             |
 | ----------------- | ------------------------------------------------------------------ |
-| Arch Linux (Manjaro) | :white_check_mark: Tested and Working |
+| Arch Linux (Manjaro & CachyOS) | :white_check_mark: Tested and Working |
 | Debian (Ubuntu) | :white_check_mark: Tested and Working |
 | Fedora | :warning: Untested |
 | OpenSuse | :warning: Untested |
