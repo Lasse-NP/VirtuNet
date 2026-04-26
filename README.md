@@ -101,6 +101,9 @@ If the install.sh fails to automatically install the program, more manual means 
 - AvahiDNS
 - Libnetfilter-queue
 - xcb-util-cursor
+- libcgroup
+  - net-tools
+  - iperf
 - build-essentials
   - gcc
   - makepkg
