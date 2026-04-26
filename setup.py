@@ -22,7 +22,7 @@ DISTRO_FAMILIES = {
 
 ALWAYS_INSTALL_PACKAGES = {
     "debian": ["libnetfilter-queue-dev", "build-essential", "python3.13-dev", "libxcb-cursor0", "openvswitch-testcontroller"],
-    "arch":   ["libnetfilter_queue", "xcb-util-cursor"],
+    "arch":   ["libnetfilter_queue", "xcb-util-cursor", "net-tools", "iperf"],
     "fedora": ["libnetfilter_queue-devel", "gcc", "python3-devel", "xcb-util-cursor"],
     "opensuse": ["libnetfilter_queue-devel", "gcc", "python313-devel", "xcb-util-cursor"],
 }
@@ -187,14 +187,12 @@ def ensure_root():
 
 
 def build_from_source(package: str):
-    original_user = os.environ.get("SUDO_USER")
-    if not original_user:
-        raise RuntimeError("Cannot determine original user for makepkg")
+    original_user = subprocess.check_output(['logname'], text=True).strip()
 
     with tempfile.TemporaryDirectory() as tmpdir:
         os.chown(tmpdir, pwd.getpwnam(original_user).pw_uid, -1)
         subprocess.run(["sudo", "-u", original_user, "git", "clone", f"https://aur.archlinux.org/{package}.git"], cwd=tmpdir, check=True, text=True)
-        subprocess.run(["sudo", "-u", original_user, "makepkg", "-si", "--noconfirm"], cwd=f"{tmpdir}/{package}", check=True, text=True)
+        subprocess.run(["sudo", "-u", original_user, "makepkg", "-si", "--noconfirm", "--skippgpcheck"], cwd=f"{tmpdir}/{package}", check=True, text=True)
 
 
 def install_debian_deps(packages):
@@ -215,9 +213,16 @@ def install_arch_deps(packages):
     subprocess.run(["pacman", "-S", "--noconfirm", "--needed", "base-devel", "git"], check=True, text=True)
     for pack in packages:
         if pack == "mininet":
+            if not check_installed("arch", "libcgroup"):
+                build_from_source("libcgroup")
             build_from_source("mininet")
         else:
             subprocess.run(["pacman", "-S", "--noconfirm", pack], check=True, text=True)
+
+    if shutil.which('easyrsa') is None:
+        easyrsa_src = '/usr/share/easy-rsa/easyrsa'
+        if os.path.exists(easyrsa_src):
+            os.symlink(easyrsa_src, '/usr/local/bin/easyrsa')
 
 
 def install_fedora_deps(packages):

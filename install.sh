@@ -65,4 +65,16 @@ sudo PYWEBVIEW_GUI=qt /opt/virtunet/.venv/bin/python main.py
 EOF
 chmod +x /usr/local/bin/virtunet
 
+echo "[VirtuNet] Creating Desktop Instance."
+cat > /usr/share/applications/virtunet.desktop << 'EOF'
+[Desktop Entry]
+Name=VirtuNet
+Comment=Network Simulation Tool
+Exec=sudo virtunet
+Icon=/opt/virtunet/GUI/Assets/VirtuNetIcon.png
+Terminal=true
+Type=Application
+Categories=Network;Education;
+EOF
+
 echo "[VirtuNet] Installation Complete. To Launch Virtunet: sudo virtunet"

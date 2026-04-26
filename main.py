@@ -1,5 +1,3 @@
-from Networking.cleanup import run_cleanup
-from Networking.MiniNet.mdns import setup_avahi
 import setup
 import os
 import argparse
@@ -76,6 +74,10 @@ if __name__ == '__main__':
 
     setup.ensure_root()
     setup.check_dependencies()
+
+    from Networking.cleanup import run_cleanup
+    from Networking.MiniNet.mdns import setup_avahi
+
     setup_avahi()
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
