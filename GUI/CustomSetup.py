@@ -131,7 +131,7 @@ def custom_setup_page():
                 ui.notify("Name cannot be above 10 characters.", type='negative')
                 return
 
-            if len(input_name.strip()) > 0:
+            if len(input_name.strip()) == 0:
                 ui.notify("Name must consist of at least 1 character.", type='negative')
                 return
 
