@@ -9,7 +9,7 @@ class SonySmartTV(Sony):
     def __init__(self):
         fake = Faker()
         super().__init__(
-            f"{fake.first.name()[:4]}-SonTV"[:10],
-            AndroidTV,
+            f"{fake.first_name()[:4]}-SonTV"[:10],
+            AndroidTV(),
             services=[HTTP(), HTTPS()]
         )
