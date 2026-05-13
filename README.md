@@ -28,10 +28,26 @@
 - [Dependencies](#dependencies)
 
 ## About the Project
-VirtuNet is a complex virtual network builder that allows you to create virtual training environments specifically for NMAP. 
+VirtuNet is a complex virtual network builder that allows you to create virtual training/testing environments specifically for NMAP. 
 This program is made specifically with NMAP in mind, which means that other network scanning tools haven't been tested properly.
 
-**Keep in mind that you will also need clients to connect to the virtual network through the [VirtuNet-Client](https://github.com/Lasse-NP/VirtuNet-Client) sister project**
+The system gives you, the user, full control of: Where the server is set up, what virtual devices exist on the server, when the devices are visible, etc. This allows you to personally control and configure specific scenarios through virtual means. The program makes use of a variety of technologies to make convincing virtual devices, that would be able to hold up under scrutiny, such as:
+
+ - **MiniNet** (Building Virtual Devices
+ - **Avahi** mDNS (Broadcasting .local names)
+ - **Scapy** (Rewriting packets to match OS Fingerprints)
+ - **Faker** (Randomly generated names for each device) (Configurable)
+
+If you have experience with MiniNet, you would know that each virtual MiniNet device is built into it's own Linux Network Namespace. This makes it tricky to expose them to external connections, such as potential clients. We therefore needed to carve out an area where BOTH MiniNet and Clients would be able to reach. Here we made use of **OpenVPN** to designate an area in the local network as the virtual network subnet.
+
+<img width="1920" height="1080" alt="Networking4" src="https://github.com/user-attachments/assets/d81aed8f-86e4-4a29-906a-9b9a8eae2bcb" />
+
+OpenVPN is especially suited for this situation, due to it's ability to accept an L2-Bridge connection through it's Tap-Interface. We now have a spot for a bridge to plug into our VPN Overlay, so we gather our MiniNet devices into an OVSwitch (L2-Bridge) which then plugs into the OpenVPN server through the Tap. We have now created a direct connection where packets can travel to and from the otherwise isolated virtual MiniNet devices.
+
+Now any external clients connecting to the OpenVPN server on the local network, will now be able to see these MiniNet devices on the VPN, as if they exist on the VPN itself.
+
+> [!IMPORTANT] 
+> Keep in mind that you will also need clients to connect to the virtual network through the [VirtuNet-Client](https://github.com/Lasse-NP/VirtuNet-Client) sister-project.
 
 ### Screenshots
 <img width="200" height="auto" alt="image" src="https://github.com/user-attachments/assets/dbcaa2db-8afa-4b87-baae-081fbf020661" />
@@ -45,7 +61,7 @@ Therefore we advise you stick to the tested distros, unless you want to potentia
 ### Supported Distros
 | Distro             | Status                                                             |
 | ----------------- | ------------------------------------------------------------------ |
-| Arch Linux (Manjaro & CachyOS) | :white_check_mark: Tested and Working |
+| Arch Linux (Manjaro & CachyOS) | :white_check_mark: Tested and Working **RECOMMENDED** |
 | Debian (Ubuntu) | :white_check_mark: Tested and Working |
 | Fedora | :warning: Untested |
 | OpenSuse | :warning: Untested |
@@ -54,7 +70,7 @@ Therefore we advise you stick to the tested distros, unless you want to potentia
 Getting started with VirtuNet is straightforward. VirtuNet comes packaged with an Install script that will take care of the initial setup.
 However, you will need to install Python 3.13 before the installation will be able to take place.
 
-**If the install script fails to install certain dependencies, you will have to find and install them yourself**
+**If the install script fails to install certain dependencies, you will have to find and install them yourself.**
 
 ```sh
 # Fetch and Install Python3.13
@@ -107,3 +123,5 @@ If the install.sh fails to automatically install the program, more manual means 
 - build-essentials
   - gcc
   - makepkg
+
+Other Dependencies might exist that have been added since this list was last updated. This list includes most, but maybe not all dependencies.
