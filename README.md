@@ -28,6 +28,9 @@
 - [Dependencies](#dependencies)
 
 ## About the Project
+> [!IMPORTANT] 
+> Keep in mind that you will also need clients to connect to the virtual network through the [VirtuNet-Client](https://github.com/Lasse-NP/VirtuNet-Client) sister-project.
+
 VirtuNet is a complex virtual network builder that allows you to create virtual training/testing environments specifically for NMAP. 
 This program is made specifically with NMAP in mind, which means that other network scanning tools haven't been tested properly.
 
@@ -45,9 +48,6 @@ If you have experience with MiniNet, you would know that each virtual MiniNet de
 OpenVPN is especially suited for this situation, due to it's ability to accept an L2-Bridge connection through it's Tap-Interface. We now have a spot for a bridge to plug into our VPN Overlay, so we gather our MiniNet devices into an OVSwitch (L2-Bridge) which then plugs into the OpenVPN server through the Tap. We have now created a direct connection where packets can travel to and from the otherwise isolated virtual MiniNet devices.
 
 Now any external clients connecting to the OpenVPN server on the local network, will now be able to see these MiniNet devices on the VPN, as if they exist on the VPN itself.
-
-> [!IMPORTANT] 
-> Keep in mind that you will also need clients to connect to the virtual network through the [VirtuNet-Client](https://github.com/Lasse-NP/VirtuNet-Client) sister-project.
 
 ### Screenshots
 <img width="200" height="auto" alt="image" src="https://github.com/user-attachments/assets/dbcaa2db-8afa-4b87-baae-081fbf020661" />
