@@ -124,7 +124,6 @@ if __name__ == '__main__':
     os.environ['PYWEBVIEW_GUI'] = 'qt'
     # Disable the Chrome sandbox, which does not work inside the Mininet network namespace.
     os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
-    print(f'*** PYTHON_PATH: {sys.executable}')
     # Register the async shutdown handler so NiceGUI calls cleanup when the window is closed.
     app.on_shutdown(on_shutdown)
     # Set a minimum window size to prevent the layout from breaking on small displays.
