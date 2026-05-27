@@ -22,23 +22,31 @@ _thread: threading.Thread | None = None
 _active_code: str | None = None
 _port_diagnostics: str | None = None
 
+#Creates a random string with 6 characters
 def _make_code(length=6) -> str:
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 class _Handler(BaseHTTPRequestHandler):
+    #Defines simple get router, every get request will hit this function
     def do_GET(self):
+
+        #Splits the routing to extract the code from the routing
         parts = self.path.strip("/").split("/")
 
+        #If the split does not have 2 something is wrong
         if len(parts) != 2:
             self._respond(400, "Expected /Code/Name")
             return
 
+        #Creates variable for code and name from the routing
         code, name = parts[0].upper(), parts[1]
 
+        #If the join code does not match the code generated throw code 403 Forbidden
         if code != _active_code:
             self._respond(403, "Invalid Join Code")
             return
 
+        #This creates another routing, writing to the host files
         if name == 'hosts':
             try:
                 hosts = mininet_network.get_hosts()
@@ -52,7 +60,7 @@ class _Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._respond(500, f"Failed to get hosts: {e}")
             return
-
+        #Checks if name is (a-z, A-Z) or a digit (0-9)
         if not name.isalnum():
             self._respond(400, "Name must be alphanumeric.")
             return
@@ -69,6 +77,7 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(ovpn_content.encode())
 
+    #Creates the respond with the code and message
     def _respond(self, code, msg):
         body = msg.encode()
         self.send_response(code)
@@ -99,13 +108,18 @@ def get_port_diagnostics() -> str | None:
 def start_join_server() -> str | None:
     global _server, _thread, _active_code, _port_diagnostics
 
+    #If server is up, shut it down
     if _server:
         stop_join_server()
 
+    #Finds the port to start the server
     port = runtime_config['join_server_port']
 
     try:
+        #Creates a join code and sets the variable
         _active_code = _make_code()
+
+        #Starts the http server
         _server = ReusableHTTPServer(("0.0.0.0", port), _Handler)
     except OSError as e:
         print(f"[VirtuNet] ERROR: Could not bind join server to port {port}: {e}")
@@ -132,6 +146,7 @@ def start_join_server() -> str | None:
     print(f"[VirtuNet] Join code: {_active_code}")
     return _active_code
 
+#Function for starting the http server
 def stop_join_server():
     global _server, _thread, _active_code
     if _server:
