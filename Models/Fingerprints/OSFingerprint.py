@@ -130,24 +130,21 @@ class OSFingerprint:
                 stderr=subprocess.PIPE
             )
 
-            time.sleep(1.5)
-            poll = proc.poll()
-            if poll is None:
-                print(f'*** [{host.name}] Scapy daemon running (PID={proc.pid})')
+            for _ in range(20):
+                poll = proc.poll()
+                if poll is None:
+                    print(f'*** [{host.name}] Scapy daemon running (PID={proc.pid})')
+                    break
+                time.sleep(0.25)
             else:
                 stdout, stderr = proc.communicate()
-                print(f'*** [{host.name}] Scapy daemon CRASHED (exit code={poll})')
+                print(f'*** [{host.name}] Scapy daemon CRASHED (exit code={proc.poll()})')
                 if stdout:
                     print(f'*** [{host.name}] stdout: {stdout.decode().strip()}')
                 if stderr:
                     print(f'*** [{host.name}] stderr: {stderr.decode().strip()}')
-
-            print(f'*** [{host.name}] Scapy daemon started (PID={proc.pid})')
+            
             start_mdns(host)
-
-            result = host.cmd('iptables -t mangle -L OUTPUT -v -n')
-            print(f'*** [{host.name}] iptables rules:\n{result}')
-
             return proc
 
         start_mdns(host)
