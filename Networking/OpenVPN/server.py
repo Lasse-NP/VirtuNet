@@ -2,8 +2,7 @@ import os
 import signal
 import sys
 import time
-from Networking.config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID, BASE_DIR, CLIENT_DIR
-from .serverconfig import write_server_conf
+from Networking.config import SERVER_CONF, TAP_IFACE, LOG_FILE, PKI_DIR, OPENVPN_PID, BASE_DIR, CLIENT_DIR, write_server_conf
 from .pki import setup_pki
 from Networking.terminal import run
 from mininet.log import error, info
@@ -39,7 +38,7 @@ class OpenVPNServer:
                 run(f'ip link set {TAP_IFACE} up')
                 self._running = True
                 break
-            time.sleep(0.5)
+            time.sleep(0.25)
         
         if self._running == True:
             info(f'*** TAP Interface {TAP_IFACE} is up\n')
@@ -53,9 +52,9 @@ class OpenVPNServer:
             info('*** OpenVPN was not running, nothing to stop \n')
             return
 
-        run(f'ip addr flush dev {TAP_IFACE}', check=False)
         with open(OPENVPN_PID) as f:
             pid = f.read().strip()
+        run(f'ip addr flush dev {TAP_IFACE}', check=False)
         run(f'kill {pid} && rm -f {OPENVPN_PID}', check=False)
 
         info('*** OpenVPN server stopped\n')
@@ -73,6 +72,7 @@ class OpenVPNServer:
             if os.path.exists(OPENVPN_PID):
                 with open(OPENVPN_PID) as f:
                     pid = f.read().strip()
+                run(f'ip addr flush dev {TAP_IFACE}', check=False)
                 run(f'kill -9 {pid} && rm -f {OPENVPN_PID}', check=False)
             self.start()
             

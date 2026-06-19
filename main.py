@@ -67,6 +67,8 @@ if __name__ == '__main__':
     parser.add_argument('--list-presets', action='store_true')
     args, _ = parser.parse_known_args()
 
+    # CLI Startup
+
     if args.list_presets:
         from Logic.Presets import PRESET_CONFIGS
         print("Available presets:", ', '.join(PRESET_CONFIGS))
@@ -85,6 +87,8 @@ if __name__ == '__main__':
     if args.preset:
         cli_quickstart(args.preset)
         sys.exit(0)
+
+    # GUI Startup
 
     from nicegui import ui, app
     import GUI.Frontpage

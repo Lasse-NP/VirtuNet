@@ -2,8 +2,7 @@ import os
 import sys
 import re
 
-from Networking.config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE, \
-    runtime_config
+from Networking.config import BASE_DIR, CLIENT_DIR, OPENVPN_PID, PKI_DIR, EASY_RSA_DIR, EASYRSA_BIN, STATUS_FILE, runtime_config
 from .network import get_local_ip
 from Networking.terminal import run
 from mininet.log import error, info
@@ -95,8 +94,6 @@ def get_connected_clients():
 
 
 def _pem_block(text: str, kind: str) -> str:
-    # Recognize the Pem-Block pattern
-    # Regex: Find Start Point = (-----BEGIN CERTIFICATE-----), Match all characters = (.*?), End Point = (-----END CERTIFICATE-----)
     pattern = rf"-----BEGIN {re.escape(kind)}-----.*?-----END {re.escape(kind)}-----"
     match = re.search(pattern, text, flags=re.DOTALL)
     if not match:

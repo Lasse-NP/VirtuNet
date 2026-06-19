@@ -191,6 +191,7 @@ class MininetNetwork:
             print(f'{h.name} ({device.latency}) : {h.IP()}')
 
         build_topo()
+        
         for index in range(1, len(self._hosts) + 1):
             ip = f'{base_ip}.{index + 2}'
             run(f'ping -c 1 -W 1 {ip}', check=False)

@@ -2,15 +2,13 @@ import os
 import re
 import subprocess
 import textwrap
+from Networking.config import write_avahi_conf
 
 _publish_procs: dict[str, subprocess.Popen] = {}
 
 HOSTS_FILE = '/etc/hosts'
 HOSTS_MARKER_START = '# virtunet-start'
 HOSTS_MARKER_END = '# virtunet-end'
-
-AVAHI_CONF_PATH = '/etc/avahi/avahi-daemon.conf'
-AVAHI_INTERFACE  = 's1'
 
 _resolved_original_state: str | None = None
 
@@ -44,34 +42,7 @@ def setup_avahi():
                        capture_output=True)
         print('*** Disabled systemd-resolved mDNS to avoid port 5353 conflict')
 
-    os.makedirs('/etc/avahi', exist_ok=True)
-    avahi_conf = textwrap.dedent(f"""\
-[server]
-use-ipv4=yes
-use-ipv6=no
-allow-interfaces={AVAHI_INTERFACE}
-ratelimit-interval-usec=1000000
-ratelimit-burst=1000
-
-[wide-area]
-enable-wide-area=no
-
-[publish]
-publish-addresses=yes
-publish-hinfo=no
-publish-workstation=no
-publish-domain=yes
-
-[reflector]
-enable-reflector=no
-
-[rlimits]
-""")
-
-    with open(AVAHI_CONF_PATH, 'w') as f:
-        f.write(avahi_conf)
-    print(f'*** Wrote avahi config (interface: {AVAHI_INTERFACE})')
-
+    write_avahi_conf()
     subprocess.run(['systemctl', 'enable', '--now', 'avahi-daemon'],
                    capture_output=True)
     result = subprocess.run(
