@@ -2,22 +2,6 @@ import pytest
 from unittest.mock import patch, mock_open
 
 class TestPKI:
-
-    @patch('builtins.open', mock_open())
-    @patch('os.path.exists', return_value=False)  # Prevents open() on vars file
-    @patch('os.path.isdir', side_effect=[False, True, False])  # isdir=False triggers directory creation
-    @patch('os.makedirs')
-    @patch('Networking.OpenVPN.pki.run')
-    @patch('Networking.OpenVPN.server.setup_pki')
-    def test_setup_pki_initializes_directories(self, mock_write_conf, mock_run, mock_makedirs, mock_isdir, mock_exists):
-        from Networking.OpenVPN.pki import setup_pki
-
-        # Act
-        setup_pki()
-
-        # Assert
-        mock_makedirs.assert_called()
-
     @patch('Networking.OpenVPN.pki.get_local_ip', return_value='10.0.0.1')
     @patch('os.path.isdir', return_value=True)  # PKI_DIR exists, so sys.exit is not triggered
     @patch('os.path.exists', return_value=True)  # Cert already present, skips build-client-full

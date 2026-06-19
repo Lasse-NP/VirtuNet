@@ -13,7 +13,7 @@ class OSFingerprint:
     aliases: list = []
 
     # OS-Defining Setting Defaults
-    probe_responses: list = [True, True, True, True, True]
+    probe_responses: list = [True, True, True, True, True, True]
     tcp_options_order: list = None
     ttl: int = 64
     df_bit: int = 1
@@ -64,20 +64,19 @@ class OSFingerprint:
             f'sysctl -w net.ipv4.tcp_wmem="{self.tcp_mem["wmem"]}"',
             f'sysctl -w net.ipv4.ip_no_pmtu_disc={0 if self.df_bit == 1 else 1}',
         ]
+
         if self.ip_id_random == 0:
             cmds.append('sysctl -w net.ipv4.ip_local_port_range="1024 65535"')
 
         for cmd in cmds:
-            print(f'*** [{host.name}] Running: {cmd}')
             result = host.cmd(cmd)
-            print(f'*** [{host.name}] Result:  {result.strip()}')
+            print(f'*** [{host.name}] Ran: {cmd} | Result:  {result.strip()}')
 
         # ── iptables / mangle rules ───────────────────────────────────────────
         host.cmd('iptables -t mangle -F OUTPUT 2>/dev/null || true')
         host.cmd(f'iptables -t mangle -A OUTPUT -j TTL --ttl-set {self.ttl}')
 
         if self.df_bit == 1:
-            host.cmd('iptables -t mangle -A OUTPUT -j MARK --set-mark 1')
             host.cmd(f'ip link set {host.defaultIntf().name} mtu 1600')
             host.cmd(f'ip route del default 2>/dev/null || true')
             host.cmd(f'ip route add default dev {host.defaultIntf().name} advmss {self.tcp_mss} mtu lock 1500')
@@ -85,24 +84,8 @@ class OSFingerprint:
         # ── Firewall / INPUT rules ────────────────────────────────────────────
         host.cmd('iptables -I INPUT -p tcp --dport 81 -j REJECT --reject-with tcp-reset')
 
-        # ── Probe response suppression ────────────────────────────────────────
-        t2, t3, t4, t6, t7 = self.probe_responses
-
-        if not t2: # Drop Probe 2 Response
-            host.cmd('iptables -A OUTPUT -p tcp --tcp-flags ALL NONE -j DROP')
-        if not t3: # Drop Probe 3 Response
-            host.cmd('iptables -A OUTPUT -p tcp --tcp-flags SYN,FIN,URG,PSH SYN,FIN,URG,PSH -j DROP')
-        if not t4: # Drop Probe 4 Response
-            host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport --sports {open_ports} -j DROP')
-        if not t6: # Drop Probe 6 Response
-            host.cmd(f'iptables -A OUTPUT -p tcp --tcp-flags ALL RST -m multiport ! --sports {open_ports} -j DROP')
-        if not t7: # Drop Probe 7 Response
-            host.cmd('iptables -t mangle -A PREROUTING -p tcp --dport 1 --tcp-flags FIN,PSH,URG FIN,PSH,URG -j DROP')
-
         # ── Scapy daemon ──────────────────────────────────────────────────────
-        ip = host.IP()
-        queue_num = int(ip.split('.')[-1])
-
+        queue_id = int(host.IP().split('.')[-1])
         if self.tcp_options_order is not None:
             config = json.dumps({
                 'ip_id_random': self.ip_id_random,
@@ -121,13 +104,15 @@ class OSFingerprint:
                 'icmp_echo_df': self.icmp_echo_df,
                 'icmp_unreach_ruck_zero': self.icmp_unreach_ruck_zero,
                 'df_bit': self.df_bit,
-                'queue_num': queue_num,
+                'probe_responses': self.probe_responses,
+                'open_ports': open_ports,
+                'queue_id': queue_id,
             })
 
             if self.tcp_ecn == 2:
                 cmd = (
                     f'iptables -t mangle -A PREROUTING -p tcp '
-                    f'--syn -j NFQUEUE --queue-num {queue_num}'
+                    f'--syn -j NFQUEUE --queue-num {queue_id}'
                 )
                 print(f'*** [{host.name}] Running PREROUTING cmd: {cmd}')
                 result = host.cmd(cmd)
@@ -136,11 +121,8 @@ class OSFingerprint:
                 else:
                     print(f'*** [{host.name}] PREROUTING Failed: {result}')
 
-            host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN -j NFQUEUE --queue-num {queue_num}')
-            host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags SYN,ACK SYN,ACK -j NFQUEUE --queue-num {queue_num}')
-            host.cmd(f'iptables -t mangle -A OUTPUT -p tcp --tcp-flags RST RST -j NFQUEUE --queue-num {queue_num}')
-            host.cmd(f'iptables -t mangle -A OUTPUT -p udp -j NFQUEUE --queue-num {queue_num}')
-            host.cmd(f'iptables -t mangle -A OUTPUT -p icmp -j NFQUEUE --queue-num {queue_num}')
+            host.cmd(f'iptables -t mangle -A OUTPUT -p udp --dport 5353 -j ACCEPT')
+            host.cmd(f'iptables -t mangle -A OUTPUT -j NFQUEUE --queue-num {queue_id}')
 
             proc = host.popen(
                 [PYTHON_PATH, str(DAEMON_PATH), config],

@@ -5,7 +5,7 @@ class Linux(OSFingerprint):
     name = "linux_5_x"
     aliases = ["linux5", "linux 5", "linux_5", "ubuntu20", "ubuntu22", "debian11"]
     tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
-    probe_responses = [False, False, False, True, True]
+    probe_responses = [False, False, False, False, True, True]
 
     ttl = 64
     tcp_timestamps = 1
@@ -38,7 +38,7 @@ class AndroidTV(OSFingerprint):
     name = "android_tv_os_11"
     aliases = ["android_tv", "android_tv_11", "ATV"]
     tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
-    probe_responses = [False, False, True, True, True]
+    probe_responses = [False, False, True, True, True, True]
 
     ttl = 64
     tcp_timestamps = 1

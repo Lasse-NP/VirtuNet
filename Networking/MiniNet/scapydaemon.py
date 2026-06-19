@@ -3,7 +3,7 @@ import json
 import random
 import sys
 from scapy.layers.inet import TCP, IP, ICMP, UDP
-from netfilterqueue import NetfilterQueue
+from netfilterqueue import NetfilterQueue, Packet
 from scapy.packet import Raw
 
 ICMP_ERROR_TYPES = {3, 4, 5, 11, 12}
@@ -42,38 +42,32 @@ def _init_state():
 def _ri_step(current_id):
     for _ in range(100):
         step = random.randint(1001, 19999)
-        if step % 256 == 0:
-            step += 1
-        new_id = (current_id + step) % max_16bit_value
-        diff = (new_id - current_id) % max_16bit_value
-        if 1001 <= diff <= 19999 and diff % 256 != 0:
-            return new_id
-    fallback = (current_id + 1001) % max_16bit_value
-    return fallback
+        if step % 256 != 0:
+            return (current_id + step) % max_16bit_value
+    return (current_id + 1001) % max_16bit_value
 
 
 def _rewrite_options(pkt_options, desired_order):
-    existing = {opt[0]: (opt[1] if len(opt) > 1 else None) for opt in pkt_options}
+    existing_values = {}
+    for opt in pkt_options:
+        existing_values[opt[0]] = opt[1] if len(opt) > 1 else None
 
     rewritten = []
     for kind in desired_order:
-        scapy_name, default_val = OPTION_MAP[kind]
-        if scapy_name in ('NOP', 'EOL'):
-            rewritten.append((scapy_name, None))
-        elif scapy_name == 'WScale':
+        option_name, default_val = OPTION_MAP[kind]
+        if option_name in ('NOP', 'EOL'):
+            rewritten.append((option_name, None))
+        elif option_name == 'WScale':
             rewritten.append(('WScale', CFG['tcp_wscale']))
-        elif scapy_name == 'MSS':
+        elif option_name == 'MSS':
             rewritten.append(('MSS', CFG['tcp_mss']))
-        elif scapy_name == 'SAckOK':
-            if 'SAckOK' in existing:
-                rewritten.append(('SAckOK', existing['SAckOK']))
-            else:
-                rewritten.append(('NOP', None))
-                rewritten.append(('NOP', None))
-        elif scapy_name in existing:
-            rewritten.append((scapy_name, existing[scapy_name]))
+        elif option_name == 'SAckOK' and 'SAckOK' not in existing_values:
+            rewritten.append(('NOP', None))
+            rewritten.append(('NOP', None))
+        elif option_name in existing_values:
+            rewritten.append((option_name, existing_values[option_name]))
         elif default_val is not None:
-            rewritten.append((scapy_name, default_val))
+            rewritten.append((option_name, default_val))
 
     return rewritten
 
@@ -81,83 +75,95 @@ def _rewrite_options(pkt_options, desired_order):
 # ----------------------------------------    TCP    -------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------
 
-def _handle_tcp(scapy_pkt, pkt):
+def _handle_tcp(scapy_pkt: IP, pkt: Packet):
     tcp = scapy_pkt[TCP]
     
     flags_int = int(tcp.flags)                                  # Cast flags to Integer for accurate Equals (==) Math Operations.
+    is_ack_only = flags_int & ~0x10 == 0 and bool(tcp.flags & 0x10)
     is_rst    = bool(tcp.flags & 0x04)                          # Is an RST (Reset Packet)
     is_synack = bool(tcp.flags & 0x02) and bool(tcp.flags & 0x10)           # Is a Syn (Synchronize), But is also Ack (Acknowledge).
     is_syn    = bool(tcp.flags & 0x02) and not bool(tcp.flags & 0x10)       # Is a Syn (Synchronize), But NOT also Ack (Acknowledge).
     is_ecn_syn = is_syn and (flags_int & TCP_FLAGS_ECN_SYN) == TCP_FLAGS_ECN_SYN    # Has both ECE (ECN-Echo) and CWR (Congestion Window Reduced) flags.
-
     src, dst = scapy_pkt.src, scapy_pkt.dst
 
-    if is_ecn_syn:
+    if is_ecn_syn: # ECN SYN TCP
         ecn_connections.add((src, tcp.sport, dst, tcp.dport))
         pkt.accept()
         return
 
-    if is_syn:
+    if is_syn: # SYN TCP
         pkt.accept()
         return
 
-    if is_rst:
+    t2, t3, t4, t5, t6, t7 = CFG['probe_responses']
+
+    if not t2 and flags_int == 0:
+        pkt.drop(); return
+    if not t3 and flags_int & 0x2B == 0x2B:
+        pkt.drop(); return
+    if not t4 and is_rst and tcp.sport in CFG['open_ports']:
+        pkt.drop(); return
+    if not t5 and is_ack_only and tcp.sport in CFG['open_ports']:
+        pkt.drop(); return
+    if not t6 and is_rst and tcp.sport not in CFG['open_ports']:
+        pkt.drop(); return
+    if not t7 and (flags_int & 0x29 == 0x29):
+        pkt.drop(); return
+
+    if is_rst: # RST TCP
         rst_ip_id = CFG['rst_ip_id']
         if rst_ip_id == 'rd':
             new_id = (shared_id_state[0] + random.randint(20001, 40000)) % max_16bit_value
+            shared_id_state[0] = new_id
         elif rst_ip_id == 'ri':
             new_id = _ri_step(shared_id_state[0])
+            shared_id_state[0] = new_id
         elif rst_ip_id == 'zero':
             new_id = 0
         else:
             new_id = next(tcp_id_counter) % max_16bit_value
 
-        shared_id_state[0] = new_id
         scapy_pkt[IP].id = new_id
 
-        old_flags = scapy_pkt[IP].flags
         rst_df_bit = CFG['rst_df_bit']
         scapy_pkt[IP].flags = 'DF' if rst_df_bit == 1 else 0
 
         if CFG['rst_ack_seq_only']:
             scapy_pkt[TCP].ack = scapy_pkt[TCP].seq
-
-    elif CFG['tcp_ip_id_zero'] == 1:
-        scapy_pkt[IP].id = 0
-    elif CFG['ip_id_random'] == 1:
-        new_id = random.randint(1, max_16bit_value)
-        scapy_pkt[IP].id = new_id
-    else:
-        new_id = next(tcp_id_counter) % max_16bit_value
-        scapy_pkt[IP].id = new_id
-
-    if is_synack and CFG['tcp_options_order']:
-        effective_order = [
-            o for o in CFG['tcp_options_order']
-            if o != 'TS' or CFG['tcp_options_timestamps']
-        ]
-
-        ws_present = 'WScale' in [opt[0] for opt in tcp.options]
-        
-        if not ws_present and 'WS' in effective_order and not CFG['tcp_wscale_always']:
-            ws_index = effective_order.index('WS')
+    elif is_synack: # SYN-ACK TCP
+        if CFG['tcp_options_order']:
             effective_order = [
-                o for i, o in enumerate(effective_order)
-                if o != 'WS' and not (o == 'NOP' and i == ws_index - 1)
+                o for o in CFG['tcp_options_order']
+                if o != 'TS' or CFG['tcp_options_timestamps']
             ]
 
-        tcp.options = _rewrite_options(tcp.options, effective_order)
-        tcp.window = CFG['tcp_window_size']
+            ws_present = 'WScale' in [opt[0] for opt in tcp.options]
+            
+            if not ws_present and 'WS' in effective_order and not CFG['tcp_wscale_always']:
+                ws_index = effective_order.index('WS')
+                effective_order = [
+                    o for i, o in enumerate(effective_order)
+                    if o != 'WS' and not (o == 'NOP' and i == ws_index - 1)
+                ]
 
-        opts_len = len(bytes(TCP(options=tcp.options))) - 20
-        tcp.dataofs = (20 + opts_len) // 4
+            tcp.options = _rewrite_options(tcp.options, effective_order)
+            tcp.window = CFG['tcp_window_size']
 
-    if is_synack:
+            opts_len = len(bytes(TCP(options=tcp.options))) - 20
+            tcp.dataofs = (20 + opts_len) // 4
+
         reverse_key = (dst, tcp.dport, src, tcp.sport)
         if CFG['tcp_ecn'] == 2 and reverse_key in ecn_connections:
             old_flags = int(tcp.flags)
             tcp.flags = old_flags | TCP_FLAG_ECE
             ecn_connections.discard(reverse_key)
+    else:  # Other TCP (ACK, FIN, data, etc.)
+        if CFG['tcp_ip_id_zero'] == 1:
+            scapy_pkt[IP].id = 0
+        elif CFG['ip_id_random'] == 1:
+            scapy_pkt[IP].id = random.randint(1, max_16bit_value)
+        else:
+            scapy_pkt[IP].id = next(tcp_id_counter) % max_16bit_value
 
     scapy_pkt[IP].len = None
     scapy_pkt[IP].chksum = None
@@ -170,7 +176,7 @@ def _handle_tcp(scapy_pkt, pkt):
 # ----------------------------------------    UDP    -------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------
 
-def _handle_udp(scapy_pkt, pkt):
+def _handle_udp(scapy_pkt: IP, pkt: Packet):
     if CFG['ip_id_random'] == 0:
         new_id = next(udp_id_counter) % max_16bit_value
     else:
@@ -181,7 +187,9 @@ def _handle_udp(scapy_pkt, pkt):
     if CFG['df_bit'] == 1:
         scapy_pkt[IP].flags = 'DF'
 
+    scapy_pkt[IP].len = None
     scapy_pkt[IP].chksum = None
+    scapy_pkt[UDP].chksum = None
     rebuilt = IP(bytes(scapy_pkt))
     pkt.set_payload(bytes(rebuilt))
     pkt.accept()
@@ -190,7 +198,7 @@ def _handle_udp(scapy_pkt, pkt):
 # ----------------------------------------    ICMP    ------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------
 
-def _handle_icmp(scapy_pkt, pkt):
+def _handle_icmp(scapy_pkt: IP, pkt: Packet):
     icmp = scapy_pkt[ICMP]
     
     icmp_ip_id = CFG['icmp_ip_id']
@@ -207,7 +215,6 @@ def _handle_icmp(scapy_pkt, pkt):
         new_id = next(icmp_id_counter) % max_16bit_value
 
     scapy_pkt[IP].id = new_id
-
     
     is_error = icmp.type in ICMP_ERROR_TYPES # {3, 4, 5, 11, 12}
     if is_error:
@@ -232,24 +239,23 @@ def _handle_icmp(scapy_pkt, pkt):
 
     scapy_pkt[IP].len = None
     scapy_pkt[IP].chksum = None
-    del scapy_pkt[ICMP].chksum
+    scapy_pkt[ICMP].chksum = None
     rebuilt = IP(bytes(scapy_pkt))
     pkt.set_payload(bytes(rebuilt))
     pkt.accept()
 
 
-def callback(pkt):
+def callback(pkt: Packet):
     try:
         scapy_pkt = IP(pkt.get_payload())
-
-        if scapy_pkt.haslayer(TCP):
-            _handle_tcp(scapy_pkt, pkt) # Modify and requeue TCP packet
-        elif scapy_pkt.haslayer(UDP):
-            _handle_udp(scapy_pkt, pkt) # Modify and requeue UDP packet
-        elif scapy_pkt.haslayer(ICMP):
-            _handle_icmp(scapy_pkt, pkt) # Modify and requeue ICMP packet
-        else:
-            pkt.set_payload(bytes(scapy_pkt))
+        
+        if scapy_pkt.haslayer(TCP): # Modify and requeue TCP packet
+            _handle_tcp(scapy_pkt, pkt)
+        elif scapy_pkt.haslayer(UDP): # Modify and requeue UDP packet
+            _handle_udp(scapy_pkt, pkt)
+        elif scapy_pkt.haslayer(ICMP): # Modify and requeue ICMP packet
+            _handle_icmp(scapy_pkt, pkt)
+        else: # Unidentified Type, Let go.
             pkt.accept()
     except Exception:
         pkt.accept()
@@ -275,16 +281,18 @@ if __name__ == '__main__':
         'icmp_echo_df':            raw.get('icmp_echo_df', raw.get('df_bit', 1)),
         'icmp_unreach_ruck_zero':  raw.get('icmp_unreach_ruck_zero', 0),
         'tcp_ecn':                 raw.get('tcp_ecn', 0),
+        'open_ports':              raw.get('open_ports', [80, 443]),
+        'probe_responses':         raw.get('probe_responses', [True, True, True, True, True, True])
     })
     
-    queue_num = raw.get('queue_num', 1)
+    queue_id = raw.get('queue_id', 1)
     _init_state()
     nfq = NetfilterQueue()
-    nfq.bind(queue_num, callback)
+    nfq.bind(queue_id, callback)
     
     try:
         nfq.run()
     except KeyboardInterrupt:
         pass
-    
-    nfq.unbind()
+    finally:
+        nfq.unbind()

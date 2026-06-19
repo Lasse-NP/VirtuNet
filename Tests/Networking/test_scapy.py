@@ -44,6 +44,8 @@ def get_callback(**kwargs):
         icmp_echo_df=1,
         icmp_unreach_ruck_zero=0,
         tcp_ecn=0,
+        open_ports=[80, 443],
+        probe_responses=[True, True, True, True, True, True],
     )
     cfg.update(kwargs)
 
@@ -90,7 +92,7 @@ class TestTCPCallback:
     def test_tcp_ip_id_zero_sets_id_to_zero(self):
         # Arrange - tcp_ip_id_zero applies to non-SYN, non-RST TCP; use SYN-ACK
         pkt = IP(src='1.1.1.1', dst='2.2.2.2') / TCP(
-            flags='SA', options=[('MSS', 1460)]
+            flags='A', options=[('MSS', 1460)]
         )
         mock_pkt = make_mock_pkt(pkt)
         cb = get_callback(tcp_ip_id_zero=1)
@@ -123,7 +125,7 @@ class TestTCPCallback:
         # Act
         for _ in range(5):
             pkt = IP(src='1.1.1.1', dst='2.2.2.2') / TCP(
-                flags='SA', options=[('MSS', 1460)]
+                flags='A', options=[('MSS', 1460)]
             )
             mock_pkt = make_mock_pkt(pkt)
             cb(mock_pkt)

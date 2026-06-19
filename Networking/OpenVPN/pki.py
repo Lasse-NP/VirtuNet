@@ -17,10 +17,6 @@ EASY_RSA_SOURCE_DIRS = [
 connecting_clients = []
 
 def setup_pki():
-    os.makedirs(BASE_DIR, exist_ok=True)
-    os.makedirs(CLIENT_DIR, exist_ok=True)
-
-    # Attempt all known paths to Easy-RSA
     if not os.path.isdir(EASY_RSA_DIR):
         for source in EASY_RSA_SOURCE_DIRS:
             if os.path.isdir(source):
@@ -36,21 +32,14 @@ def setup_pki():
             f.write('set_var EASYRSA_DIGEST sha512\n')
             f.write('set_var EASYRSA_CERT_EXPIRE 3650\n')
 
-    easyrsa = EASYRSA_BIN
-
-    # Initialize Easy-RSA and Components
     if not os.path.isdir(PKI_DIR):
-        run(f'cd {EASY_RSA_DIR} && {easyrsa} init-pki')
-
+        run(f'cd {EASY_RSA_DIR} && {EASYRSA_BIN} init-pki')
     if not os.path.exists(f'{PKI_DIR}/ca.crt'):
-        run(f'cd {EASY_RSA_DIR} && {easyrsa} --batch build-ca nopass')
-
+        run(f'cd {EASY_RSA_DIR} && {EASYRSA_BIN} --batch build-ca nopass')
     if not os.path.exists(f'{PKI_DIR}/issued/server.crt'):
-        run(f'cd {EASY_RSA_DIR} && {easyrsa} --batch build-server-full server nopass')
-
-    tls_key = f'{BASE_DIR}/ta.key'
-    if not os.path.exists(tls_key):
-        run(f'openvpn --genkey secret {tls_key}')
+        run(f'cd {EASY_RSA_DIR} && {EASYRSA_BIN} --batch build-server-full server nopass')
+    if not os.path.exists(f'{BASE_DIR}/ta.key'):
+        run(f'openvpn --genkey secret {BASE_DIR}/ta.key')
 
 
 def get_connected_clients():

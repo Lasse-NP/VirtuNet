@@ -5,7 +5,7 @@ class MacOS(OSFingerprint):
     name = "macos"
     aliases = ["mac", "osx", "macosx", "mac os", "mac os x", "darwin", "macos"]
     tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK']
-    probe_responses = [False, False, True, True, True]
+    probe_responses = [False, False, True, True, True, True]
 
     ttl = 64
     tcp_timestamps = 0
@@ -38,7 +38,7 @@ class FreeBSD(OSFingerprint):
     name = "freebsd"
     aliases = ["bsd", "free bsd", "freebsd7", "freebsd8"]
     tcp_options_order = ['MSS', 'NOP', 'WS', 'SACK', 'TS']
-    probe_responses = [False, False, True, True, False]
+    probe_responses = [False, False, True, True, True, False]
 
     ttl = 64
     tcp_timestamps = 1

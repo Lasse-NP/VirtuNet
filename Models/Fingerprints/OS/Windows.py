@@ -5,7 +5,7 @@ class Windows(OSFingerprint):
     name = "windows"
     aliases = ["win10", "windows 10"]
     tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'SACK']
-    probe_responses = [False, False, False, False, False]
+    probe_responses = [False, False, False, False, False, False]
 
     ttl = 128
     tcp_timestamps = 1

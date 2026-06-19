@@ -49,17 +49,15 @@ def build_topo():
     prefix = _prefix()
 
     wait_for_tap(TAP_IFACE)
-    # Set IP and Link to Online
     run(f'ovs-vsctl add-port s1 {TAP_IFACE}')
     run(f'ip link set {TAP_IFACE} promisc on')
     run(f'ip link set {TAP_IFACE} up')
     run(f'ip addr del {server_ip}/{prefix} dev {TAP_IFACE}', check=False)
     run(f'ip addr add {server_ip}/{prefix} dev s1')
-    run(f'ip link set s1 up')
-
-    run(f'ovs-ofctl add-flow s1 priority=100,arp,actions=flood')
-    run(f'ovs-ofctl add-flow s1 priority=100,icmp,actions=flood')
-    run(f'ovs-ofctl add-flow s1 priority=1,actions=normal')
+    run('ip link set s1 up')
+    run('ovs-ofctl add-flow s1 priority=100,arp,actions=flood')
+    run('ovs-ofctl add-flow s1 priority=100,icmp,actions=flood')
+    run('ovs-ofctl add-flow s1 priority=1,actions=normal')
 
 
 def teardown_topo():
@@ -167,42 +165,33 @@ class MininetNetwork:
         c0 = self._net.addController('c0')
         s1 = self._net.addSwitch('s1', cls=OVSBridge, failMode='standalone')
 
-        hosted_hosts = {}
         for index, device in enumerate(device_list, start=1):
             ip = f'{base_ip}.{index + 2}/{prefix}'
             h = net.addHost(device.name, ip=ip, mac=device.macAddress)
-            hosted_hosts[h] = device
+            self._hosts[h] = device
             self._net.addLink(h, s1)
 
         self._net.build()
         c0.start()
         s1.start([c0])
 
-        for h, device in hosted_hosts.items():
+        for h, device in self._hosts.items():
             if device.os is not None:
                 tcp_services = [s for s in device.services if s.protocol == 'tcp']
-                open_ports = ','.join(str(s.port) for s in tcp_services) or '80,443'
-                proc = device.os.apply(h, open_ports)
-                if proc:
-                    self._daemon_procs[h.name] = proc
-
-        for h, device in hosted_hosts.items():
-            self._host_services[h.name] = device.services
-            for service in device.services:
-                service.apply(h)
-
-        for h, device in hosted_hosts.items():
-            self.apply_latency(h.name, device.latency)
-
-        for h, device in hosted_hosts.items():
+                open_ports = [s.port for s in tcp_services] or [80, 443]
+                scapy_proc = device.os.apply(h, open_ports)
+                if scapy_proc:
+                    self._daemon_procs[h.name] = scapy_proc
+            if len(device.services) > 0:
+                self._host_services[h.name] = device.services
+                for service in device.services:
+                    service.apply(h)
+            if device.latency == None:
+                self.apply_latency(h.name, device.latency)
             print(f'{h.name} ({device.latency}) : {h.IP()}')
 
-        self._hosts = hosted_hosts
-        print (self._hosts)
-
         build_topo()
-
-        for index in range(1, len(hosted_hosts) + 1):
+        for index in range(1, len(self._hosts) + 1):
             ip = f'{base_ip}.{index + 2}'
             run(f'ping -c 1 -W 1 {ip}', check=False)
             print(f'*** ARP primed for {ip}')
@@ -240,9 +229,7 @@ class MininetNetwork:
                 host = self._net.get(host_name)
                 if host:
                     queue_num = int(host.IP().split('.')[-1])
-                    host.cmd(f'iptables -t mangle -D OUTPUT -p tcp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
-                    host.cmd(f'iptables -t mangle -D OUTPUT -p udp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
-                    host.cmd(f'iptables -t mangle -D OUTPUT -p icmp -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
+                    host.cmd(f'iptables -t mangle -D OUTPUT -j NFQUEUE --queue-num {queue_num} 2>/dev/null || true')
             except KeyError:
                 print(f"[VirtuNet] WARNING: Host '{host_name}' not found in Mininet during shutdown, skipping.")
                 continue

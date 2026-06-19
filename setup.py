@@ -105,10 +105,14 @@ def install_python_deps():
     if not REQUIREMENTS_FILE.exists():
         print('*** No requirements.txt found, skipping pip install')
         return
-    result = subprocess.run(
-        [sys.executable, '-m', 'pip', 'install', '-r', str(REQUIREMENTS_FILE)],
-        capture_output=True, text=True
-    )
+
+    uv = shutil.which('uv')
+    if uv:
+        cmd = [uv, 'pip', 'install', '-r', str(REQUIREMENTS_FILE)]
+    else:
+        cmd = [sys.executable, '-m', 'pip', 'install', '-r', str(REQUIREMENTS_FILE)]
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f'Failed to install Python dependencies:\n{result.stderr}')
         sys.exit(1)

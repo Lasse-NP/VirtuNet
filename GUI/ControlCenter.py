@@ -7,7 +7,7 @@ import GUI.Lobby as lobby_module
 from Models.Fingerprints.Services import HTTP, HTTPS, FTP, SMTP, TFTP, SSH
 from Networking.cleanup import run_cleanup
 from Networking.MiniNet.mininet import verify_mininet, verify_bridge, mininet_network, teardown_topo
-from Networking.OpenVPN.server import verify_openvpn
+from Networking.OpenVPN.server import verify_tap
 
 from Models.Devices.Apple.IPhone import IPhone
 from Models.Devices.Apple.AppleWatch import AppleWatch
@@ -99,7 +99,7 @@ def get_pipline_status():
     return {
         'MiniNet': verify_mininet(),
         'Bridge': verify_bridge(),
-        'VPN': verify_openvpn()
+        'VPN': verify_tap()
     }
 
 @ui.refreshable

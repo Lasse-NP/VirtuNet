@@ -5,7 +5,7 @@ class Android(OSFingerprint):
     name = "android"
     aliases = ["android", "android 10", "android 11", "android 12", "android 13", "android 14"]
     tcp_options_order = ['MSS', 'SACK', 'TS', 'NOP', 'WS']
-    probe_responses = [False, False, True, True, True]
+    probe_responses = [False, False, True, True, True, True]
 
     ttl = 64
     tcp_timestamps = 1
@@ -39,7 +39,7 @@ class iOS(OSFingerprint):
     name = "ios"
     aliases = ["ios", "iphone", "ipad", "ipados", "ios9"]
     tcp_options_order = ['MSS', 'NOP', 'WS', 'NOP', 'NOP', 'TS', 'SACK']
-    probe_responses = [False, False, True, True, True]
+    probe_responses = [False, False, True, True, True, True]
 
     ttl = 64
     tcp_timestamps = 1
